@@ -27,6 +27,11 @@
 (require 'org)
 
 
+(defgroup gnorb-org nil
+  "The Org bits of Gnorb."
+  :tag "Gnorb Org"
+  :group 'gnorb)
+
 
 (provide 'gnorb-org)
 ;;; gnorb-org.el ends here

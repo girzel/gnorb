@@ -26,6 +26,11 @@
 
 (require 'bbdb)
 
+(defgroup gnorb-bbdb nil
+  "The BBDB bits of gnorb."
+  :tag "Gnorb BBDB"
+  :group 'gnorb)
+
 
 (provide 'gnorb-bbdb)
 ;;; gnorb-bbdb.el ends here

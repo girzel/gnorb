@@ -31,6 +31,10 @@
 (require 'gnorb-org)
 (require 'gnorb-bbdb)
 
+(defgroup gnorb nil
+  "Glue code between Gnus, Org, and BBDB."
+  :tag "Gnorb")
+
 
 (provide 'gnorb)
 ;;; gnorb.el ends here

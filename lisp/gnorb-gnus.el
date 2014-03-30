@@ -26,6 +26,12 @@
 
 (require 'gnus)
 
+(defgroup gnorb-gnus nil
+  "The Gnus bits of Gnorb."
+  :tag "Gnorb Gnus"
+  :group 'gnorb)
+
+
 
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here
