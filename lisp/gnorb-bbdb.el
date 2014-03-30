@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(require 'bbdb)
+(require 'gnorb-utils)
 
 (defgroup gnorb-bbdb nil
   "The BBDB bits of gnorb."

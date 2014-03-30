@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(require 'gnus)
+(require 'gnorb-utils)
 
 (defgroup gnorb-gnus nil
   "The Gnus bits of Gnorb."

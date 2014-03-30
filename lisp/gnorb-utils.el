@@ -1,9 +1,9 @@
-;;; gnorb-org.el --- The Org-centric functions of gnorb
+;;; gnorb-utils.el --- Common utilities for all gnorb stuff.
 
 ;; Copyright (C) 2014  Eric Abrahamsen
 
-;; Author: Eric Abrahamsen  <eric@ericabrahamsen.net>
-;; Keywords: 
+;; Author: Eric Abrahamsen <eric@ericabrahamsen.net>
+;; Keywords:
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,18 +20,18 @@
 
 ;;; Commentary:
 
-;; 
+;;
 
 ;;; Code:
 
-(require 'gnorb-utils)
+(require 'gnus)
+(require 'org)
+(require 'bbdb)
 
 
-(defgroup gnorb-org nil
-  "The Org bits of Gnorb."
-  :tag "Gnorb Org"
-  :group 'gnorb)
+(defgroup gnorb nil
+  "Glue code between Gnus, Org, and BBDB."
+  :tag "Gnorb")
 
-
-(provide 'gnorb-org)
-;;; gnorb-org.el ends here
+(provide 'gnorb-utils)
+;;; gnorb-utils.el ends here
