@@ -66,9 +66,34 @@ records. If you want both, use \"C-u\" before the \"*\"."
 	  (org-tags-view nil tag-string))
       (error "No org-tags field present"))))
 
+
+(defun gnorb-bbdb-mail-search (records)
+  "Initiate a mail search from the BBDB buffer. Use the prefix
+arg to edit the search string first."
+  ;; Currently only notmuch implemented, do the same for mairix,
+  ;; namazu, etc.
+  (interactive (list (bbdb-do-records))) 
+  (unless (and (eq major-mode 'bbdb-mode)
+	       (equal (buffer-name) bbdb-buffer-name))
+    (error "Only works in the BBDB buffer"))
+  (setq records (bbdb-record-list records))
+  (let* ((mails (cl-mapcan 'bbdb-record-mail records))
+	 (search-string  
+	  (mapconcat
+	   (lambda (m)
+	     (replace-regexp-in-string "\\." "\\\\." m))
+	   mails " OR ")))
+    (require 'notmuch)
+    (when (equal current-prefix-arg '(4))
+	(setq search-string
+	      (read-from-minibuffer "Search string: " search-string)))
+    (notmuch-search search-string)
+    (delete-other-windows)))  
+
 ;; (eval-after-load "gnorb-bbdb"
 ;;   '(progn
-;;      (define-key bbdb-mode-map (kbd "O") 'gnorb-bbdb-tag-agenda)))
+;;      (define-key bbdb-mode-map (kbd "O") 'gnorb-bbdb-tag-agenda)
+;;      (define-key bbdb-mode-map (kbd "S") 'gnorb-bbdb-mail-search)))
 
 
 

@@ -24,3 +24,6 @@ Current functions include:
 * gnorb-bbdb-tag-agenda: Give BBDB records an org-tag field
   (customizable), then call this function on the current records(s) to
   open an Org agenda tags search using those tags.
+* gnorb-bbdb-mail-search: Call with current records(s) to search for
+  all mail messages from those records. Currently only implemented for
+  the notmuch search backend.
