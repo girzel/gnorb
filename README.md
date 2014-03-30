@@ -15,3 +15,12 @@ stable releases of those packages, but I'm not promising anything.
 Put "gnorb/lisp" in your load path, then either require "gnorb" to
 load everything, or pick bits and pieces: "gnorb-gnus", "gnorb-org",
 or "gnorb-bbdb".
+
+gnorb-bbdb
+----------
+
+Current functions include:
+
+* gnorb-bbdb-tag-agenda: Give BBDB records an org-tag field
+  (customizable), then call this function on the current records(s) to
+  open an Org agenda tags search using those tags.
