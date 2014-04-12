@@ -66,34 +66,72 @@ records. If you want both, use \"C-u\" before the \"*\"."
 	  (org-tags-view nil tag-string))
       (error "No org-tags field present"))))
 
+(defcustom gnorb-bbdb-mail-search-backends
+  '((notmuch (lambda (terms)
+	       (mapconcat
+		(lambda (m)
+		  (replace-regexp-in-string "\\." "\\\\." m))
+		terms " OR "))
+	     notmuch-search)
+    (mairix (lambda (terms)
+	      (mapconcat 'identity
+			 terms ","))
+	    mairix-search)
+    (namazu (lambda (terms)
+	      (mapconcat 'identity
+			 terms " or "))
+	    namazu-search))
+  "Various backends for mail search.
+
+An alist of backends, where each element consists of three parts:
+the symbol name of the backend, a lambda form which receives a
+list of email addresses and returns a properly-formatted search
+string, and the symbol name of the function used to initiate the
+search."
+  :group 'gnorb-bbdb
+  :type 'list)
+
+(defcustom gnorb-bbdb-mail-search-backend nil
+  "Mail search backend currently in use."
+  :group 'gnorb-bbdb
+  :type 'symbol)
 
 (defun gnorb-bbdb-mail-search (records)
-  "Initiate a mail search from the BBDB buffer. Use the prefix
-arg to edit the search string first."
-  ;; Currently only notmuch implemented, do the same for mairix,
-  ;; namazu, etc.
+  "Initiate a mail search from the BBDB buffer.
+
+Use the prefix arg to edit the search string first, and the \"*\"
+prefix to search mails from all visible contacts. When using both
+a prefix arg and \"*\", the prefix arg must come first."
   (interactive (list (bbdb-do-records))) 
   (unless (and (eq major-mode 'bbdb-mode)
 	       (equal (buffer-name) bbdb-buffer-name))
     (error "Only works in the BBDB buffer"))
   (setq records (bbdb-record-list records))
-  (let* ((mails (cl-mapcan 'bbdb-record-mail records))
-	 (search-string  
-	  (mapconcat
-	   (lambda (m)
-	     (replace-regexp-in-string "\\." "\\\\." m))
-	   mails " OR ")))
-    (require 'notmuch)
+  (let* ((backend (or (assoc gnorb-bbdb-mail-search-backend
+			     gnorb-bbdb-mail-search-backends)
+		      (error "No search backend specified")))
+	 (search-string
+	  (funcall (second backend)
+		   (cl-mapcan 'bbdb-record-mail records))))
     (when (equal current-prefix-arg '(4))
-	(setq search-string
-	      (read-from-minibuffer "Search string: " search-string)))
-    (notmuch-search search-string)
+      (setq search-string
+	    (read-from-minibuffer
+	     (format "%s search string: " (first backend)) search-string)))
+    (funcall (third backend) search-string)
     (delete-other-windows)))  
+
+(defun gnorb-bbdb-cite-contact (rec)
+  (interactive (list (gnorb-prompt-for-bbdb-record)))
+  (let ((mail-string (bbdb-dwim-mail rec)))
+   (if (called-interactively-p)
+       (insert mail-string)
+     mail-string)))
 
 ;; (eval-after-load "gnorb-bbdb"
 ;;   '(progn
 ;;      (define-key bbdb-mode-map (kbd "O") 'gnorb-bbdb-tag-agenda)
-;;      (define-key bbdb-mode-map (kbd "S") 'gnorb-bbdb-mail-search)))
+;;      (define-key bbdb-mode-map (kbd "S") 'gnorb-bbdb-mail-search)
+;;      (global-set-key (kbd "C-c C") 'gnorb-bbdb-cite-contact)))
 
 
 
