@@ -33,5 +33,17 @@
   "Glue code between Gnus, Org, and BBDB."
   :tag "Gnorb")
 
+(defun gnorb-prompt-for-bbdb-record ()
+  "Prompt the user for a BBDB record."
+  (let ((recs (bbdb-records))
+	name)
+    (while (> (length recs) 1)
+      (setq name
+	    (completing-read
+	     (format "Filter by regexp (%d remaining): " (length recs))
+	     (mapcar 'bbdb-record-name recs)))
+      (setq recs (bbdb-search recs name name name nil nil)))
+    (car recs)))
+
 (provide 'gnorb-utils)
 ;;; gnorb-utils.el ends here
