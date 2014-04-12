@@ -26,11 +26,24 @@
 
 (require 'gnorb-utils)
 
-
 (defgroup gnorb-org nil
   "The Org bits of Gnorb."
   :tag "Gnorb Org"
   :group 'gnorb)
+
+(defun gnorb-org-contact-link (rec)
+  (interactive (list (gnorb-prompt-for-bbdb-record)))
+  (let* ((name (bbdb-record-name rec))
+	 (link (concat "bbdb:" (org-link-escape name))))
+    (org-store-link-props :type "bbdb" :name name
+			  :link link :description name)
+    (if (called-interactively-p)
+	(insert (format "[[%s][%s]]" link name))
+      link)))
+
+;; (eval-after-load "gnorb-org"
+;;   '(progn
+;;      (global-set-key (kbd "C-c C") 'gnorb-bbdb-cite-contact)))
 
 
 (provide 'gnorb-org)
