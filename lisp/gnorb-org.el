@@ -32,6 +32,8 @@
   :group 'gnorb)
 
 (defun gnorb-org-contact-link (rec)
+  "Prompt for a BBDB record and insert a link to that record at
+point."
   (interactive (list (gnorb-prompt-for-bbdb-record)))
   (let* ((name (bbdb-record-name rec))
 	 (link (concat "bbdb:" (org-link-escape name))))
