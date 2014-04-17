@@ -1,0 +1,66 @@
+* Gnorb
+
+Glue code between the Gnus, Org, and BBDB packages for Emacs.
+
+This package connects Emacs-based email, project management, and
+contact management a little more closely together. The goal is to
+reduce friction when manipulating TODOs, contacts, messages, and
+files. An underlying principle is that one should stay in the Org
+Agenda as much as possible: Gnus should serve as input/output for the
+Agenda, and BBDB should serve as an alternate view on information.
+This isn't actually enforced, of course, it's just an ideal.
+
+Put "gnorb/lisp" in your load path, then either require "gnorb" to
+load everything, or pick bits and pieces: "gnorb-gnus", "gnorb-org",
+or "gnorb-bbdb". As much as possible, I've tried to keep the included
+functions discrete and modular: each can be used in isolation, and
+there's little or no package-level lock-in.
+
+Each file comes with a commented section at the bottom with
+recommended keybindings. Copy them into your init files and edit as
+you see fit.
+
+Code in this package is aimed at the development (git) versions of
+Gnus, Org, and BBDB. I'll try to make it work with the most recent
+stable releases of those packages, but I'm not promising anything.
+
+** Gnorb-BBDB
+*** gnorb-bbdb-tag-agenda
+Give BBDB records an org-tag field (customizable), then call this
+function on the current records(s) to open an Org agenda tags search
+using those tags.
+*** gnorb-bbdb-mail-search
+Search for all mail messages from the record(s) displayed. Currently
+supports the notmuch, mairix, and namazu search backends; set
+`gnorb-bbdb-mail-search-backend' to one of those symbol values.
+** Gnorb-Org
+*** gnorb-org-contact-link
+Prompt for a BBDB record and insert a link to that record at
+point.
+*** gnorb-org-handle-mail(-agenda)
+Call these functions on a headline containing links to Gnus messages,
+or mailto links, or BBDB links. Either start a reply to the linked
+message, or a new message to the linked addresses, or both (just try
+it). When the message is sent, return to the original Org buffer and
+prompt to mark the TODO as done.
+
+This works best with a matching capture template: if the template
+stores a link to the message under point within the headline text,
+this command will reply to that message in a DWIM style.
+** Gnorb-Gnus
+*** gnorb-gnus-article-org-attach
+When called on an article with attached files, prompt for an Org
+heading and attach the files to that heading using org-attach.
+** Wishlist/TODO
+- Make the gnus-to-org attachment thing work in capture templates.
+- Support adding X-Org-Id headers to Gnus messages, which point at
+  relevant Org headings (possibly not really useful).
+- When doing an Org agenda tag search, pop up a BBDB window showing
+  all records that are marked with that tag. Provide a customizable
+  option for doing this automatically, and bind a key for doing it
+  manually.
+- Look into message tagging in Gnus -- what are the options? Is it
+  possible to search for tagged messages when we do an Org agenda tag
+  search?
+- Create a BBDB field holding Org links to the N most recently
+  received mails from the contact.
