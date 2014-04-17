@@ -25,9 +25,10 @@
 ;;; Code:
 
 (require 'gnus)
-(require 'org)
 (require 'bbdb)
-
+(require 'org)
+(require 'org-bbdb)
+(require 'org-gnus)
 
 (defgroup gnorb nil
   "Glue code between Gnus, Org, and BBDB."
@@ -44,6 +45,9 @@
 	     (mapcar 'bbdb-record-name recs)))
       (setq recs (bbdb-search recs name name name nil nil)))
     (car recs)))
+
+(defvar gnorb-tmp-dir (make-temp-file "emacs-gnorb" t)
+  "Temporary directory where attachments etc are saved.")
 
 (provide 'gnorb-utils)
 ;;; gnorb-utils.el ends here
