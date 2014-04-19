@@ -24,6 +24,7 @@
 
 ;;; Code:
 
+(require 'cl)
 (require 'gnus)
 (require 'bbdb)
 (require 'org)
