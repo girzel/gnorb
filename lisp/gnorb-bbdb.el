@@ -127,13 +127,5 @@ a prefix arg and \"*\", the prefix arg must come first."
        (insert mail-string)
      mail-string)))
 
-;; (eval-after-load "gnorb-bbdb"
-;;   '(progn
-;;      (define-key bbdb-mode-map (kbd "O") 'gnorb-bbdb-tag-agenda)
-;;      (define-key bbdb-mode-map (kbd "S") 'gnorb-bbdb-mail-search)
-;;      (global-set-key (kbd "C-c C") 'gnorb-bbdb-cite-contact)))
-
-
-
 (provide 'gnorb-bbdb)
 ;;; gnorb-bbdb.el ends here

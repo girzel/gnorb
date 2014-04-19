@@ -206,13 +206,5 @@ default set of parameters."
        nil "attachment"))
     (message-goto-to)))
 
-;; (eval-after-load "gnorb-org"
-;;   '(progn
-;;      (global-set-key (kbd "C-c C") 'gnorb-bbdb-cite-contact)
-;;      (org-defkey org-mode-map (kbd "C-c H") 'gnorb-org-handle-mail)
-;;      (org-defkey org-mode-map (kbd "C-c E") 'gnorb-org-email-subtree))
-;; (eval-after-load 'org-agenda
-;;   '(org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail-agenda))
-
 (provide 'gnorb-org)
 ;;; gnorb-org.el ends here

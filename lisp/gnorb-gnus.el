@@ -131,19 +131,5 @@ save them into `gnorb-tmp-dir'."
 (add-hook 'org-capture-prepare-finalize-hook
 	  'gnorb-gnus-capture-abort-cleanup)
 
-
-;;; Something is still slightly wrong about the following -- it
-;;; doesn't provide "a" as a key on the button itself, which is what I
-;;; was hoping.
-
-;; (gnus-define-keys (gnus-summary-mime-map "K" gnus-summary-mode-map)
-;;   "a" gnorb-gnus-article-org-attach)
-
-;; (push '("attach to org heading" . gnorb-gnus-mime-org-attach)
-;;       gnus-mime-action-alist)
-
-;; (push '(gnorb-gnus-mime-org-attach "a" "Attach to Org heading")
-;;       gnus-mime-button-commands)
-
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here

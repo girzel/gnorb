@@ -25,19 +25,32 @@ Gnus, Org, and BBDB. I'll try to make it work with the most recent
 stable releases of those packages, but I'm not promising anything.
 
 ** Gnorb-BBDB
-*** gnorb-bbdb-tag-agenda
+*** Functions
+**** gnorb-bbdb-tag-agenda
 Give BBDB records an org-tag field (customizable), then call this
 function on the current records(s) to open an Org agenda tags search
 using those tags.
-*** gnorb-bbdb-mail-search
+**** gnorb-bbdb-mail-search
 Search for all mail messages from the record(s) displayed. Currently
 supports the notmuch, mairix, and namazu search backends; set
 `gnorb-bbdb-mail-search-backend' to one of those symbol values.
+**** gnorb-bbdb-cite-contact
+Prompt for a BBDB record and insert a string of the type "Bob Smith
+<bob@smith.com>".
+*** Suggested Keybindings
+#+BEGIN_SRC emacs-lisp
+  (eval-after-load "gnorb-bbdb"
+    '(progn
+       (define-key bbdb-mode-map (kbd "O") 'gnorb-bbdb-tag-agenda)
+       (define-key bbdb-mode-map (kbd "S") 'gnorb-bbdb-mail-search)
+       (global-set-key (kbd "C-c C") 'gnorb-bbdb-cite-contact)))
+#+END_SRC
 ** Gnorb-Org
-*** gnorb-org-contact-link
+*** Functions
+**** gnorb-org-contact-link
 Prompt for a BBDB record and insert a link to that record at
 point.
-*** gnorb-org-handle-mail(-agenda)
+**** gnorb-org-handle-mail(-agenda)
 Call these functions on a headline containing links to Gnus messages,
 or mailto links, or BBDB links. Either start a reply to the linked
 message, or a new message to the linked addresses, or both (just try
@@ -47,7 +60,7 @@ prompt to mark the TODO as done.
 This works best with a matching capture template: if the template
 stores a link to the message under point within the headline text,
 this command will reply to that message in a DWIM style.
-*** gnorb-org-email-subtree
+**** gnorb-org-email-subtree
 Call on a Org subtree to export the subtree as either text or a file,
 then compose a message with the text in the message body, or the file
 attached to the message.
@@ -55,14 +68,37 @@ attached to the message.
 There's a little overlap with org-mime, but this function allows for
 attaching files, and does not compose an HTML message. I may look into
 integrating it a bit with org-mime later.
+*** Suggested Keybindings
+#+BEGIN_SRC emacs-lisp
+  (eval-after-load "gnorb-org"
+    '(progn
+       (org-defkey org-mode-map (kbd "C-c C") 'gnorb-org-contact-link)
+       (org-defkey org-mode-map (kbd "C-c H") 'gnorb-org-handle-mail)
+       (org-defkey org-mode-map (kbd "C-c E") 'gnorb-org-email-subtree)
+       (eval-after-load "org-agenda"
+         '(org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail-agenda))))
+#+END_SRC
 ** Gnorb-Gnus
-*** gnorb-gnus-article-org-attach
+*** Functions
+**** gnorb-gnus-article-org-attach
 When called on an email with attached files, prompt for an Org heading
 and attach the files to that heading using org-attach.
-*** Using attach with org capture
+**** Using attach with org capture
 Set the new :gnus-attachments key to "t" in a capture template that
 you use on mail messages, and all the attachments on the message will
 be attached to the newly-captured heading.
+*** Suggested Keybindings
+#+BEGIN_SRC emacs-lisp
+  (eval-after-load "gnus-art"
+    '(progn 
+       (gnus-define-keys (gnus-summary-mime-map "K" gnus-summary-mode-map)
+         "a" gnorb-gnus-article-org-attach)
+       (push '("attach to org heading" . gnorb-gnus-mime-org-attach)
+             gnus-mime-action-alist)
+       ;; this doesn't actually work
+       (push '(gnorb-gnus-mime-org-attach "A" "Attach to Org heading")
+             gnus-mime-button-commands)))
+#+END_SRC
 ** Wishlist/TODO
 - Support adding X-Org-Id headers to Gnus messages, which point at
   relevant Org headings (possibly not really useful).
