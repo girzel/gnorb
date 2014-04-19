@@ -49,10 +49,13 @@ stores a link to the message under point within the headline text,
 this command will reply to that message in a DWIM style.
 ** Gnorb-Gnus
 *** gnorb-gnus-article-org-attach
-When called on an article with attached files, prompt for an Org
-heading and attach the files to that heading using org-attach.
+When called on an email with attached files, prompt for an Org heading
+and attach the files to that heading using org-attach.
+*** Using attach with org capture
+Set the new :gnus-attachments key to "t" in a capture template that
+you use on mail messages, and all the attachments on the message will
+be attached to the newly-captured heading.
 ** Wishlist/TODO
-- Make the gnus-to-org attachment thing work in capture templates.
 - Support adding X-Org-Id headers to Gnus messages, which point at
   relevant Org headings (possibly not really useful).
 - When doing an Org agenda tag search, pop up a BBDB window showing
