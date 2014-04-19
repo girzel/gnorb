@@ -25,11 +25,14 @@
 ;;; Code:
 
 (require 'cl)
+(require 'mailcap)
 (require 'gnus)
 (require 'bbdb)
 (require 'org)
 (require 'org-bbdb)
 (require 'org-gnus)
+
+(mailcap-parse-mimetypes)
 
 (defgroup gnorb nil
   "Glue code between Gnus, Org, and BBDB."
