@@ -47,6 +47,14 @@ prompt to mark the TODO as done.
 This works best with a matching capture template: if the template
 stores a link to the message under point within the headline text,
 this command will reply to that message in a DWIM style.
+*** gnorb-org-email-subtree
+Call on a Org subtree to export the subtree as either text or a file,
+then compose a message with the text in the message body, or the file
+attached to the message.
+
+There's a little overlap with org-mime, but this function allows for
+attaching files, and does not compose an HTML message. I may look into
+integrating it a bit with org-mime later.
 ** Gnorb-Gnus
 *** gnorb-gnus-article-org-attach
 When called on an email with attached files, prompt for an Org heading
