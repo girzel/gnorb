@@ -53,7 +53,8 @@ point."
     (set-window-configuration gnorb-org-window-conf))
   ; Should check here that we actually made it back to the right org
   ; heading. Could save an ID prop on the heading and check for that.
-  (call-interactively 'org-agenda-todo))
+  (when (eql major-mode org-agenda-mode)
+   (call-interactively 'org-agenda-todo)))
 
 (defun gnorb-org-handle-mail (&optional from-agenda)
   "Handle mail-related links for current headline."
@@ -113,10 +114,103 @@ point."
       (goto-char pos)
       (gnorb-org-handle-mail t))))
 
+;;; Email subtree
+
+(defcustom gnorb-org-email-subtree-parameters nil
+  "A plist of export parameters corresponding to the EXT-PLIST
+  argument to the export functions."
+  :group 'gnorb-org)
+
+(defcustom gnorb-org-email-subtree-text-options '(nil t nil t)
+  "A list of ts and nils corresponding to Org's export options,
+to be used when exporting to text. The options, in order, are
+async, subtreep, visible-only, and body-only."
+  :group 'gnorb-org)
+
+(defcustom gnorb-org-email-subtree-file-options '(nil t nil nil)
+  "A list of ts and nils corresponding to Org's export options,
+to be used when exporting to a file. The options, in order, are
+async, subtreep, visible-only, and body-only."
+  :group 'gnorb-org)
+
+(defcustom gnorb-org-export-extensions
+  '((latex ".tex")
+    (ascii ".txt")
+    (html ".html")
+    (org ".org")
+    (icalendar ".ics")
+    (man ".man")
+    (md ".md")
+    (odt ".odt") ; not really, though
+    (texinfo ".texi")
+    (beamer ".tex"))
+  "Correspondence between export backends and their
+respective (usual) file extensions. Ugly way to do it, but what
+the hey..."
+  :group 'gnorb-org)
+
+(defun gnorb-org-email-subtree ()
+  "Call on a subtree to export it either to a text string or a file,
+then compose a mail message either with the exported text
+inserted into the message body, or the exported file attached to
+the message.
+
+Export options default to the following: When exporting to a
+buffer: async = nil, subtreep = t, visible-only = nil, body-only
+= t. Options are the same for files, except body-only is set to
+nil. Customize `gnorb-org-email-subtree-text-options' and
+`gnorb-org-email-subtree-file-options', respectively.
+
+Customize `gnorb-org-email-subtree-parameters' to your preferred
+default set of parameters."
+  ;; I sure would have liked to use the built-in dispatch ui, but it's
+  ;; got too much hard-coded stuff.
+  (interactive)
+  (let* ((backend-string
+	  (org-completing-read
+	   "Export backend: "
+	   (mapcar (lambda (b)
+		     (symbol-name (org-export-backend-name b)))
+		   org-export--registered-backends) nil t))
+	 (backend-symbol (intern backend-string))
+	 (f-or-b (org-completing-read "Export as file or text? "
+				      '("file" "text") nil t))
+	 (org-export-show-temporary-export-buffer nil)
+	 (opts (if (equal f-or-b "text")
+		   gnorb-org-email-subtree-text-options
+		 gnorb-org-email-subtree-file-options))
+	 (result
+	  (if (equal f-or-b "text")
+	      (apply 'org-export-to-buffer
+		     `(,backend-symbol
+		       "*Gnorb Export*"
+		       ,@opts
+		       ,gnorb-org-email-subtree-parameters))
+	    (apply 'org-export-to-file
+		   `(,backend-symbol
+		     ,(org-export-output-file-name
+		       (second (assoc backend-symbol gnorb-org-export-extensions))
+		       t gnorb-tmp-dir)
+		     ,@opts
+		     ,gnorb-org-email-subtree-parameters)))))
+    (setq gnorb-org-window-conf (current-window-configuration))
+    (compose-mail nil nil nil nil nil nil nil
+		  'org-gnorb-restore-after-send)
+    (message-goto-body)
+    (insert "\n")
+    (if (equal f-or-b "text")
+	(insert-buffer result)
+      (mml-attach-file
+       result
+       (mm-default-file-encoding result)
+       nil "attachment"))
+    (message-goto-to)))
+
 ;; (eval-after-load "gnorb-org"
 ;;   '(progn
 ;;      (global-set-key (kbd "C-c C") 'gnorb-bbdb-cite-contact)
-;;      (global-set-key (kbd "C-c H") 'gnorb-org-handle-mail)))
+;;      (org-defkey org-mode-map (kbd "C-c H") 'gnorb-org-handle-mail)
+;;      (org-defkey org-mode-map (kbd "C-c E") 'gnorb-org-email-subtree))
 ;; (eval-after-load 'org-agenda
 ;;   '(org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail-agenda))
 
