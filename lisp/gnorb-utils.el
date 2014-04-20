@@ -45,7 +45,8 @@
     (while (> (length recs) 1)
       (setq name
 	    (completing-read
-	     (format "Filter by regexp (%d remaining): " (length recs))
+	     (format "Filter records by regexp (%d remaining): "
+		     (length recs))
 	     (mapcar 'bbdb-record-name recs)))
       (setq recs (bbdb-search recs name name name nil nil)))
     (car recs)))
