@@ -31,6 +31,12 @@
   :tag "Gnorb Org"
   :group 'gnorb)
 
+(defcustom gnorb-org-mail-todos '("MAIL" "REPLY")
+  "TODO keywords that are considered mail related -- functions in
+this library may, after completion, call org-agenda-todo on
+relevant headings with these keywords."
+  :group 'gnorb-org)
+
 (defun gnorb-org-contact-link (rec)
   "Prompt for a BBDB record and insert a link to that record at
 point."
@@ -51,10 +57,9 @@ point."
   (gnus-summary-exit nil t)
   (when (window-configuration-p gnorb-org-window-conf)
     (set-window-configuration gnorb-org-window-conf))
-  ; Should check here that we actually made it back to the right org
-  ; heading. Could save an ID prop on the heading and check for that.
-  (when (eql major-mode org-agenda-mode)
-   (call-interactively 'org-agenda-todo)))
+  (let ((todo (org-entry-get (point) "TODO")))
+    (when (member todo gnorb-org-mail-todos)
+     (call-interactively 'org-agenda-todo))))
 
 (defun gnorb-org-handle-mail (&optional from-agenda)
   "Handle mail-related links for current headline."
