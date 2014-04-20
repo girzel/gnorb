@@ -89,15 +89,24 @@ you use on mail messages, and all the attachments on the message will
 be attached to the newly-captured heading.
 *** Suggested Keybindings
 #+BEGIN_SRC emacs-lisp
-  (eval-after-load "gnus-art"
+  (eval-after-load "gnorb-gnus"
     '(progn 
        (gnus-define-keys (gnus-summary-mime-map "K" gnus-summary-mode-map)
          "a" gnorb-gnus-article-org-attach)
        (push '("attach to org heading" . gnorb-gnus-mime-org-attach)
              gnus-mime-action-alist)
-       ;; this doesn't actually work
-       (push '(gnorb-gnus-mime-org-attach "A" "Attach to Org heading")
-             gnus-mime-button-commands)))
+       ;; The only way to add mime button command keys is by redefining
+       ;; gnus-mime-button-map, possibly not ideal. Ideal would be a
+       ;; setter function in gnus itself.
+       (push '(gnorb-gnus-mime-org-attach "a" "Attach to Org heading")
+             gnus-mime-button-commands)
+       (setq gnus-mime-button-map
+             (let ((map (make-sparse-keymap)))
+               (define-key map gnus-mouse-2 'gnus-article-push-button)
+               (define-key map gnus-down-mouse-3 'gnus-mime-button-menu)
+               (dolist (c gnus-mime-button-commands)
+                 (define-key map (cadr c) (car c)))
+               map))))
 #+END_SRC
 ** Wishlist/TODO
 - Support adding X-Org-Id headers to Gnus messages, which point at
