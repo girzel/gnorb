@@ -84,7 +84,7 @@ point."
   (if (not message)
       (compose-mail (mapconcat 'identity mails ", ")
 		    nil nil nil nil nil nil
-		    'gnorb-org-restore-after-send)
+		    '(gnorb-org-restore-after-send))
     (org-gnus-open (org-link-unescape (car message)))
     (call-interactively
      'gnus-summary-wide-reply-with-original)
