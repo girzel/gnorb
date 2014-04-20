@@ -80,7 +80,7 @@
 (defun gnorb-gnus-collect-all-attachments (&optional capture-p)
   "Collect all the attachments from the message under point, and
 save them into `gnorb-tmp-dir'."
-  (save-excursion
+  (save-window-excursion
     (when capture-p
       (set-buffer (org-capture-get :original-buffer)))
     (unless (memq major-mode '(gnus-summary-mode gnus-article-mode))
