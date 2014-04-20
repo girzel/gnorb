@@ -61,6 +61,47 @@ point."
     (when (member todo gnorb-org-mail-todos)
      (call-interactively 'org-agenda-todo))))
 
+(defsubst gnorb-org-extract-mail-stuff ()
+  (let (message mails)
+    (while (re-search-forward org-any-link-re (line-end-position) t)
+      (let ((addr (or (match-string-no-properties 2)
+		      (match-string-no-properties 0))))
+	(cond
+	 ((string-match "^<?gnus:" addr)
+	  (push (substring addr (match-end 0)) message))
+	 ((string-match "^<?mailto:" addr)
+	  (push (substring addr (match-end 0)) mails))
+	 ((string-match-p "^<?bbdb:" addr)
+	  (with-current-buffer bbdb-buffer-name
+	    (let ((recs bbdb-records))
+	      (org-open-link-from-string addr)
+	      (let ((mail (bbdb-mail-address (bbdb-current-record))))
+		(bbdb-display-records recs)
+		(push mail mails))))))))
+    (list message mails)))
+
+(defsubst gnorb-org-setup-message (message mails)
+  (if (not message)
+      (compose-mail (mapconcat 'identity mails ", ")
+		    nil nil nil nil nil nil
+		    'gnorb-org-restore-after-send)
+    (org-gnus-open (org-link-unescape (car message)))
+    (call-interactively
+     'gnus-summary-wide-reply-with-original)
+    (when mails
+      (message-goto-to)
+      (insert ", ")
+      (insert (mapconcat 'identity mails ", ")))
+    (add-to-list 'message-exit-actions
+		 'gnorb-org-restore-after-send t)
+    (message-goto-body)))
+
+(defsubst gnorb-org-attachment-list ()
+  (when (featurep 'org-attach)
+    (let* ((attach-dir (org-attach-dir t))
+	   (files (org-attach-file-list attach-dir)))
+      files)))
+
 (defun gnorb-org-handle-mail (&optional from-agenda)
   "Handle mail-related links for current headline."
   (interactive)
@@ -69,40 +110,16 @@ point."
   (unless from-agenda
     ;; window conf should return to the agenda.
     (setq gnorb-org-window-conf (current-window-configuration)))
-  (let (message mailto)
-    (while (re-search-forward org-any-link-re (line-end-position) t)
-      (let ((addr (or (match-string-no-properties 2)
-		      (match-string-no-properties 0))))
-	(cond
-	 ((string-match "^<?gnus:" addr)
-	  (push (substring addr (match-end 0)) message))
-	 ((string-match "^<?mailto:" addr)
-	  (push (substring addr (match-end 0)) mailto))
-	 ((string-match-p "^<?bbdb:" addr)
-	  (with-current-buffer bbdb-buffer-name
-	    (let ((recs bbdb-records))
-	      (org-open-link-from-string addr)
-	      (let ((mail (bbdb-mail-address (bbdb-current-record))))
-		(bbdb-display-records recs)
-		(push mail mailto))))))))
-    (cond
-     (message
-      (org-gnus-open (org-link-unescape (car message)))
-      (call-interactively
-       'gnus-summary-wide-reply-with-original)
-      (when mailto
-	(message-goto-to)
-	(insert ", ")
-	(insert (mapconcat 'identity mailto ", ")))
-      (add-to-list 'message-exit-actions
-		   'gnorb-org-restore-after-send t)
-      (message-goto-body))
-     (mailto
-      (compose-mail (mapconcat 'identity mailto ", ")
-		    nil nil nil nil nil nil
-		    'gnorb-org-restore-after-send))
-     (t
-      (error "No mail-related links in headline")))))
+  (let ((mail-stuff (gnorb-org-extract-mail-stuff))
+	(attachments (gnorb-org-attachment-list)))
+    (gnorb-org-setup-message (first mail-stuff) (second mail-stuff))
+    (message-goto-body)
+    (when attachments
+      (dolist (a attachments)
+	(and (yes-or-no-p (format "Attach %s to outgoing message? " a))
+	     (mml-attach-file a
+	      (mm-default-file-encoding a)
+	      nil "attachment"))))))
 
 (defun gnorb-org-handle-mail-agenda ()
   "Examine item at point for mail-related links, and handle them."
@@ -171,6 +188,7 @@ default set of parameters."
   ;; I sure would have liked to use the built-in dispatch ui, but it's
   ;; got too much hard-coded stuff.
   (interactive)
+  (org-back-to-heading t)
   (let* ((backend-string
 	  (org-completing-read
 	   "Export backend: "
@@ -197,10 +215,11 @@ default set of parameters."
 		       (second (assoc backend-symbol gnorb-org-export-extensions))
 		       t gnorb-tmp-dir)
 		     ,@opts
-		     ,gnorb-org-email-subtree-parameters)))))
+		     ,gnorb-org-email-subtree-parameters))))
+	 (mail-stuff (gnorb-org-extract-mail-stuff))
+	 (attachments (gnorb-org-attachment-list)))
     (setq gnorb-org-window-conf (current-window-configuration))
-    (compose-mail nil nil nil nil nil nil nil
-		  'org-gnorb-restore-after-send)
+    (gnorb-org-setup-message (first mail-stuff) (second mail-stuff))
     (message-goto-body)
     (insert "\n")
     (if (equal f-or-b "text")
@@ -209,7 +228,12 @@ default set of parameters."
        result
        (mm-default-file-encoding result)
        nil "attachment"))
-    (message-goto-to)))
+    (when attachments
+      (dolist (a attachments)
+	(and (yes-or-no-p (format "Attach %s to outgoing message? " a))
+	     (mml-attach-file a
+			      (mm-default-file-encoding a)
+			      nil "attachment"))))))
 
 (provide 'gnorb-org)
 ;;; gnorb-org.el ends here
