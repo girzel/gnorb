@@ -53,21 +53,43 @@ point.
 **** gnorb-org-handle-mail(-agenda)
 Call these functions on a headline containing links to Gnus messages,
 or mailto links, or BBDB links. Either start a reply to the linked
-message, or a new message to the linked addresses, or both (just try
-it). When the message is sent, return to the original Org buffer and
-prompt to mark the TODO as done.
+message, or a new message, with the linked addresses in the "To"
+field. When the message is sent, return to the original Org buffer. If
+the TODO keyword is a member of `gnorb-org-mail-todos' (by default,
+"MAIL" and "REPLY"), then call `org-agenda-todo' and prompt to mark
+the TODO as done.
 
 This works best with a matching capture template: if the template
 stores a link to the message under point within the headline text,
 this command will reply to that message in a DWIM style.
+
+If the heading has org-attach'ed attachments, prompt to attach them to
+the outgoing message.
 **** gnorb-org-email-subtree
-Call on a Org subtree to export the subtree as either text or a file,
-then compose a message with the text in the message body, or the file
+Call on a Org subtree to export the subtree as either text or a file.
+Then compose a message with the text in the message body, or the file
 attached to the message.
 
 There's a little overlap with org-mime, but this function allows for
 attaching files, and does not compose an HTML message. I may look into
 integrating it a bit with org-mime later.
+
+This function is also a bit similar to
+`gnorb-org-handle-mail(-agenda)': it will also collect email address
+links from the heading and put them in the "To" field of the message,
+and also prompt to send org-attach'ed attachments along with the
+email.
+
+What's the difference, then? Use `gnorb-org-handle-mail(-agenda)' when
+the primary purpose of the heading is as a TODO reminding you to send
+or reply to an email. Any text under the heading will be disregarded.
+
+Use `gnorb-org-email-subtree' when the primary purpose of the heading
+is the text (or tables or lists or...) of its subtree, and you just
+happen to want to email that content to someone.
+
+I need to think about merging these functions, or else making them
+more distinct.
 *** Suggested Keybindings
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "gnorb-org"
