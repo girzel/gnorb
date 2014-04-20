@@ -99,7 +99,10 @@ point."
 (defsubst gnorb-org-attachment-list ()
   (when (featurep 'org-attach)
     (let* ((attach-dir (org-attach-dir t))
-	   (files (org-attach-file-list attach-dir)))
+	   (files
+	    (mapcar (lambda (f)
+		      (expand-file-name f attach-dir))
+		    (org-attach-file-list attach-dir))))
       files)))
 
 (defun gnorb-org-handle-mail (&optional from-agenda)
@@ -116,7 +119,9 @@ point."
     (message-goto-body)
     (when attachments
       (dolist (a attachments)
-	(and (yes-or-no-p (format "Attach %s to outgoing message? " a))
+	(and (yes-or-no-p
+	      (format "Attach %s to outgoing message? "
+		      (file-name-nondirectory a)))
 	     (mml-attach-file a
 	      (mm-default-file-encoding a)
 	      nil "attachment"))))))
@@ -230,7 +235,9 @@ default set of parameters."
        nil "attachment"))
     (when attachments
       (dolist (a attachments)
-	(and (yes-or-no-p (format "Attach %s to outgoing message? " a))
+	(and (yes-or-no-p (format
+			   "Attach %s to outgoing message? "
+			   (file-name-nondirectory a)))
 	     (mml-attach-file a
 			      (mm-default-file-encoding a)
 			      nil "attachment"))))))
