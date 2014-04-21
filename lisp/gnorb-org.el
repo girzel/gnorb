@@ -54,7 +54,8 @@ point."
   after the mail is sent.")
 
 (defun gnorb-org-restore-after-send ()
-  (gnus-summary-exit nil t)
+  (when (eq major-mode 'gnus-summary-exit)
+    (gnus-summary-exit nil t))
   (when (window-configuration-p gnorb-org-window-conf)
     (set-window-configuration gnorb-org-window-conf))
   (let ((todo (org-entry-get (point) "TODO")))
