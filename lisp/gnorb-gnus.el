@@ -58,12 +58,12 @@
   "Attach HANDLE to an existing org heading."
   (let ((filename (gnorb-gnus-save-part handle))
 	(org-heading (or org-heading
-			 (org-refile-get-location "Attach part to")))))
-  (require 'org-attach)
-  (save-window-excursion
-    (find-file (nth 1 org-heading))
-    (goto-char (nth 3 org-heading))
-    (org-attach-attach filename nil 'mv)))
+			 (org-refile-get-location "Attach part to" nil t))))
+    (require 'org-attach)
+    (save-window-excursion
+      (find-file (nth 1 org-heading))
+      (goto-char (nth 3 org-heading))
+      (org-attach-attach filename nil 'mv))))
 
 (defun gnorb-gnus-save-part (handle)
   (let ((filename (or (mail-content-type-get
