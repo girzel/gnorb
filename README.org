@@ -112,9 +112,8 @@ be attached to the newly-captured heading.
 *** Suggested Keybindings
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "gnorb-gnus"
-    '(progn 
-       (gnus-define-keys (gnus-summary-mime-map "K" gnus-summary-mode-map)
-         "a" gnorb-gnus-article-org-attach)
+    '(progn
+       (define-key gnus-summary-mime-map "a" 'gnorb-gnus-article-org-attach)
        (push '("attach to org heading" . gnorb-gnus-mime-org-attach)
              gnus-mime-action-alist)
        ;; The only way to add mime button command keys is by redefining
