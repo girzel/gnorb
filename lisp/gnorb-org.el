@@ -158,10 +158,6 @@ current heading."
 	(message-goto-body)
       (message-goto-to))))
 
-(defun gnorb-org-handle-mail-agenda ()
-  "Examine item at point for mail-related links, and handle them."
-  (interactive))
-
 ;;; Email subtree
 
 (defcustom gnorb-org-email-subtree-parameters nil
