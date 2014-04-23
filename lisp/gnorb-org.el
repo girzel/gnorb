@@ -75,7 +75,7 @@ point."
 	 ((string-match-p "^<?bbdb:" addr)
 	  (with-current-buffer bbdb-buffer-name
 	    (let ((recs bbdb-records))
-	      (org-open-link-from-string addr)
+	      (org-open-link-from-string (concat "[[" addr "]]"))
 	      (let ((mail (bbdb-mail-address (bbdb-current-record))))
 		(bbdb-display-records recs)
 		(push mail mails))))))))
