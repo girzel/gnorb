@@ -62,7 +62,7 @@ point."
     (when (member todo gnorb-org-mail-todos)
      (call-interactively 'org-agenda-todo))))
 
-(defsubst gnorb-org-extract-mail-stuff ()
+(defun gnorb-org-extract-mail-stuff ()
   (let (message mails)
     (while (re-search-forward org-any-link-re (line-end-position) t)
       (let ((addr (or (match-string-no-properties 2)
@@ -81,7 +81,7 @@ point."
 		(push mail mails))))))))
     (list message mails)))
 
-(defsubst gnorb-org-setup-message (message mails)
+(defun gnorb-org-setup-message (message mails)
   (if (not message)
       (compose-mail (mapconcat 'identity mails ", ")
 		    nil nil nil nil nil nil
@@ -97,7 +97,9 @@ point."
 		 'gnorb-org-restore-after-send t)
     (message-goto-body)))
 
-(defsubst gnorb-org-attachment-list ()
+(defun gnorb-org-attachment-list ()
+  "Get a list of files (absolute filenames) attached to the
+current heading."
   (when (featurep 'org-attach)
     (let* ((attach-dir (org-attach-dir t))
 	   (files
