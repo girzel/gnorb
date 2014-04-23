@@ -96,6 +96,12 @@ happen to want to email that content to someone.
 
 I need to think about merging these functions, or else making them
 more distinct.
+*** User Options
+**** gnorb-org-capture-collect-link-p
+When this is set to t, the capture process will always store a link to
+the Gnus message or BBDB record under point, even when the link isn't
+part of the capture template. It can then be added to the captured
+heading with org-insert-link, as usual.
 *** Suggested Keybindings
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "gnorb-org"

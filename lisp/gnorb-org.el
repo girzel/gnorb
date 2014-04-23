@@ -243,5 +243,23 @@ default set of parameters."
      attachments
      '("file" "files" "attach"))))
 
+(defcustom gnorb-org-capture-collect-link-p t
+  "Should the capture process store a link to the gnus message or
+  BBDB record under point, even if it's not part of the
+  template?"
+  :group 'gnorb-org)
+
+(defun gnorb-org-capture-collect-link ()
+  (when gnorb-org-capture-collect-link-p
+    (let ((buf (org-capture-get :original-buffer)))
+      (when buf
+	(with-current-buffer buf
+	  (when (memq major-mode '(gnus-summary-mode
+				   gnus-article-mode
+				   bbdb-mode))
+	    (call-interactively 'org-store-link)))))))
+
+(add-hook 'org-capture-mode-hook 'gnorb-org-capture-collect-link)
+
 (provide 'gnorb-org)
 ;;; gnorb-org.el ends here
