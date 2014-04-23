@@ -54,5 +54,34 @@
 (defvar gnorb-tmp-dir (make-temp-file "emacs-gnorb" t)
   "Temporary directory where attachments etc are saved.")
 
+;;; see map-y-or-n-p, you idiot
+
+;; (defun gnorb-query-attach (attachments action)
+;;   "Run through the attachments, make some queries, do the
+;;   action."
+;;   (let (continue-switch)
+;;     (dolist (a attachments)
+;;       (cond ((eq continue-switch 'none)
+;; 	     nil)
+;; 	    ((eq continue-switch 'all)
+;; 	     (funcall action a))
+;; 	    (t
+;; 	     (let ((input-char
+;; 		    (read-char-choice
+;; 			(format
+;; 			 "Attach %s? (y, n, Y, N): "
+;; 			 (file-name-nondirectory a))
+;; 			'(?y ?n ?Y ?N))))
+;; 	       (cond
+;; 		((eq input-char ?y)
+;; 		 (funcall action a))
+;; 		((equal input-char ?n)
+;; 		 nil)
+;; 		((equal input-char ?N)
+;; 		 (setq continue-switch 'none))
+;; 		((equal input-char ?Y)
+;; 		 (funcall action a)
+;; 		 (setq continue-switch 'all)))))))))
+
 (provide 'gnorb-utils)
 ;;; gnorb-utils.el ends here
