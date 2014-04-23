@@ -136,6 +136,9 @@ be attached to the newly-captured heading.
   all records that are marked with that tag. Provide a customizable
   option for doing this automatically, and bind a key for doing it
   manually.
+- Provide a command that, when in the Org Agenda, does an email search
+  for messages received in the visible date span, or day under point,
+  etc. Make it work in the calendar, as well.
 - Look into message tagging in Gnus -- what are the options? Is it
   possible to search for tagged messages when we do an Org agenda tag
   search?
