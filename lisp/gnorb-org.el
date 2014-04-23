@@ -106,14 +106,22 @@ point."
 		    (org-attach-file-list attach-dir))))
       files)))
 
-(defun gnorb-org-handle-mail (&optional from-agenda)
+(defun gnorb-org-handle-mail ()
   "Handle mail-related links for current headline."
   (interactive)
+  (setq gnorb-org-window-conf (current-window-configuration))
+  (when (eq major-mode 'org-agenda-mode)
+    (org-agenda-check-type t 'agenda 'timeline 'todo 'tags)
+    (org-agenda-check-no-diary)
+    (let* ((marker (or (org-get-at-bol 'org-hd-marker)
+		       (org-agenda-error)))
+	   (buffer (marker-buffer marker))
+	   (pos (marker-position marker)))
+      (switch-to-buffer buffer)
+      (widen)
+      (goto-char pos)))
   (unless (org-back-to-heading t)
     (error "Not in an org item"))
-  (unless from-agenda
-    ;; window conf should return to the agenda.
-    (setq gnorb-org-window-conf (current-window-configuration)))
   (let ((mail-stuff (gnorb-org-extract-mail-stuff))
 	(attachments (gnorb-org-attachment-list)))
     (gnorb-org-setup-message (first mail-stuff) (second mail-stuff))
@@ -131,18 +139,7 @@ point."
 
 (defun gnorb-org-handle-mail-agenda ()
   "Examine item at point for mail-related links, and handle them."
-  (interactive)
-  (org-agenda-check-type t 'agenda 'timeline 'todo 'tags)
-  (org-agenda-check-no-diary)
-  (let* ((marker (or (org-get-at-bol 'org-hd-marker)
-		     (org-agenda-error)))
-	 (buffer (marker-buffer marker))
-	 (pos (marker-position marker)))
-    (setq gnorb-org-window-conf (current-window-configuration))
-    (with-current-buffer buffer
-      (widen)
-      (goto-char pos)
-      (gnorb-org-handle-mail t))))
+  (interactive))
 
 ;;; Email subtree
 

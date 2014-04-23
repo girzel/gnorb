@@ -50,37 +50,43 @@ Prompt for a BBDB record and insert a string of the type "Bob Smith
 **** gnorb-org-contact-link
 Prompt for a BBDB record and insert a link to that record at
 point.
-**** gnorb-org-handle-mail(-agenda)
-Call these functions on a headline containing links to Gnus messages,
-or mailto links, or BBDB links. Either start a reply to the linked
-message, or a new message, with the linked addresses in the "To"
-field. When the message is sent, return to the original Org buffer. If
-the TODO keyword is a member of `gnorb-org-mail-todos' (by default,
-"MAIL" and "REPLY"), then call `org-agenda-todo' and prompt to mark
-the TODO as done.
+**** gnorb-org-handle-mail
+This function does its best to interpret the heading under point as an
+email action.
 
-This works best with a matching capture template: if the template
-stores a link to the message under point within the headline text,
-this command will reply to that message in a DWIM style.
+If the heading text contains a link to a Gnus message then start a
+reply to that message, otherwise start composing a new message. If the
+heading contains mailto links or BBDB links, put those addresses in
+the "To" field of the new message (or reply). If the heading has
+org-attach'ed attachments, prompt to attach them to the outgoing
+message.
 
-If the heading has org-attach'ed attachments, prompt to attach them to
-the outgoing message.
+When the message is sent, return to the original Org buffer. If the
+heading's TODO keyword is a member of `gnorb-org-mail-todos' (by
+default, "MAIL" and "REPLY"), then call `org-agenda-todo' and prompt
+to mark the TODO as done. Set that option to nil to prompt for all
+TODO keywords.
+
+This works best with a matching capture template: the template stores
+a link to the message under point within the headline text, and this
+command replies to that message in a DWIM style.
+
 **** gnorb-org-email-subtree
 Call on a Org subtree to export the subtree as either text or a file.
 Then compose a message with the text in the message body, or the file
 attached to the message.
 
 There's a little overlap with org-mime, but this function allows for
-attaching files, and does not compose an HTML message. I may look into
-integrating it a bit with org-mime later.
+exporting the subtree as a file, and does not compose a MIME-multipart
+HTML message. I may look into integrating it a bit with org-mime
+later.
 
-This function is also a bit similar to
-`gnorb-org-handle-mail(-agenda)': it will also collect email address
-links from the heading and put them in the "To" field of the message,
-and also prompt to send org-attach'ed attachments along with the
-email.
+This function is also overlaps with `gnorb-org-handle-mail':
+it will also collect email address links from the heading and put them
+in the "To" field of the message, and also prompts to send
+org-attach'ed attachments along with the email.
 
-What's the difference, then? Use `gnorb-org-handle-mail(-agenda)' when
+What's the difference, then? Use `gnorb-org-handle-mail' when
 the primary purpose of the heading is as a TODO reminding you to send
 or reply to an email. Any text under the heading will be disregarded.
 
@@ -98,7 +104,7 @@ more distinct.
        (org-defkey org-mode-map (kbd "C-c H") 'gnorb-org-handle-mail)
        (org-defkey org-mode-map (kbd "C-c E") 'gnorb-org-email-subtree)
        (eval-after-load "org-agenda"
-         '(org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail-agenda))))
+         '(org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail))))
 #+END_SRC
 ** Gnorb-Gnus
 *** Functions
