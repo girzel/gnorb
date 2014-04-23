@@ -16,13 +16,13 @@ or "gnorb-bbdb". As much as possible, I've tried to keep the included
 functions discrete and modular: each can be used in isolation, and
 there's little or no package-level lock-in.
 
-Each file comes with a commented section at the bottom with
-recommended keybindings. Copy them into your init files and edit as
-you see fit.
+Recommended keybindings/integration measures are shown below. Copy
+them into your init files and edit as you see fit.
 
 Code in this package is aimed at the development (git) versions of
-Gnus, Org, and BBDB. I'll try to make it work with the most recent
-stable releases of those packages, but I'm not promising anything.
+Gnus, Org, and BBDB (that means BBDB 3: upgrade, already!). I'll try
+to make it work with the most recent stable releases of those
+packages, but I'm not promising anything.
 
 ** Gnorb-BBDB
 *** Functions
@@ -155,4 +155,4 @@ be attached to the newly-captured heading.
   possible to search for tagged messages when we do an Org agenda tag
   search?
 - Create a BBDB field holding Org links to the N most recently
-  received mails from the contact.
+  received (or recently viewed) mails from the contact.
