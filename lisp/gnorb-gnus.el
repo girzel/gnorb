@@ -31,6 +31,13 @@
   :tag "Gnorb Gnus"
   :group 'gnorb)
 
+(defcustom gnorb-gnus-capture-always-attach nil
+  "Always prompt about attaching attachments when capturing from
+  a Gnus message, even if the template being used hasn't
+  specified the :gnus-attachments key.
+
+Basically behave as if all attachments have \":gnus-attachments t\".")
+
 ;;; What follows is a very careful copy-pasta of bits and pieces from
 ;;; mm-decode.el and gnus-art.el. Voodoo was involved.
 
@@ -106,7 +113,8 @@ save them into `gnorb-tmp-dir'."
 ;;; Make the above work in the capture process
 
 (defun gnorb-gnus-capture-attach ()
-  (when (and (org-capture-get :gnus-attachments)
+  (when (and (or gnorb-gnus-capture-always-attach
+		 (org-capture-get :gnus-attachments))
 	     (with-current-buffer
 		 (org-capture-get :original-buffer)
 	       (memq major-mode '(gnus-summary-mode gnus-article-mode))))
