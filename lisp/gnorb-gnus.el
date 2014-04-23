@@ -113,9 +113,13 @@ save them into `gnorb-tmp-dir'."
     (require 'org-attach)
     (setq gnorb-gnus-capture-attachments nil)
     (gnorb-gnus-collect-all-attachments t)
-    (when gnorb-gnus-capture-attachments
-      (dolist (a gnorb-gnus-capture-attachments)
-	(org-attach-attach a nil 'mv)))))
+    (map-y-or-n-p
+     (lambda (a)
+       (format "Attach %s to capture heading? "
+	       (file-name-nondirectory a)))
+     (lambda (a) (org-attach-attach a nil 'mv))
+     gnorb-gnus-capture-attachments
+     '("file" "files" "attach"))))
 
 (add-hook 'org-capture-mode-hook 'gnorb-gnus-capture-attach)
 

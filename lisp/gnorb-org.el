@@ -118,14 +118,16 @@ point."
 	(attachments (gnorb-org-attachment-list)))
     (gnorb-org-setup-message (first mail-stuff) (second mail-stuff))
     (message-goto-body)
-    (when attachments
-      (dolist (a attachments)
-	(and (yes-or-no-p
-	      (format "Attach %s to outgoing message? "
-		      (file-name-nondirectory a)))
-	     (mml-attach-file a
-	      (mm-default-file-encoding a)
-	      nil "attachment"))))))
+    (map-y-or-n-p
+     (lambda (a)
+       (format "Attach %s to outgoing message? "
+	       (file-name-nondirectory a)))
+     (lambda (a)
+       (mml-attach-file
+	a (mm-default-file-encoding a)
+	nil "attachment"))
+     attachments
+     '("file" "files" "attach"))))
 
 (defun gnorb-org-handle-mail-agenda ()
   "Examine item at point for mail-related links, and handle them."
@@ -234,14 +236,15 @@ default set of parameters."
        result
        (mm-default-file-encoding result)
        nil "attachment"))
-    (when attachments
-      (dolist (a attachments)
-	(and (yes-or-no-p (format
-			   "Attach %s to outgoing message? "
-			   (file-name-nondirectory a)))
-	     (mml-attach-file a
-			      (mm-default-file-encoding a)
-			      nil "attachment"))))))
+    (map-y-or-n-p
+     (lambda (a) (format "Attach %s to outgoing message? "
+			 (file-name-nondirectory a)))
+     (lambda (a)
+       (mml-attach-file
+	a (mm-default-file-encoding a)
+	nil "attachment"))
+     attachments
+     '("file" "files" "attach"))))
 
 (provide 'gnorb-org)
 ;;; gnorb-org.el ends here
