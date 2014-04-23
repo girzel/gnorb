@@ -153,7 +153,10 @@ current heading."
 	a (mm-default-file-encoding a)
 	nil "attachment"))
      attachments
-     '("file" "files" "attach"))))
+     '("file" "files" "attach"))
+    (if (second mail-stuff)
+	(message-goto-body)
+      (message-goto-to))))
 
 (defun gnorb-org-handle-mail-agenda ()
   "Examine item at point for mail-related links, and handle them."
@@ -259,7 +262,10 @@ default set of parameters."
 	a (mm-default-file-encoding a)
 	nil "attachment"))
      attachments
-     '("file" "files" "attach"))))
+     '("file" "files" "attach"))
+    (if (second mail-stuff)
+	(message-goto-body)
+      (message-goto-to))))
 
 (defcustom gnorb-org-capture-collect-link-p t
   "Should the capture process store a link to the gnus message or
