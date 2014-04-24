@@ -81,21 +81,19 @@ exporting the subtree as a file, and does not compose a MIME-multipart
 HTML message. I may look into integrating it a bit with org-mime
 later.
 
-This function is also overlaps with `gnorb-org-handle-mail':
-it will also collect email address links from the heading and put them
-in the "To" field of the message, and also prompts to send
-org-attach'ed attachments along with the email.
+This function also overlaps with `gnorb-org-handle-mail'. The only
+difference is that it will first prompt to export the subtree of the
+heading under point. After that, it behaves much like
+`gnorb-org-handle-mail'.
 
-What's the difference, then? Use `gnorb-org-handle-mail' when
-the primary purpose of the heading is as a TODO reminding you to send
-or reply to an email. Any text under the heading will be disregarded.
+Use `gnorb-org-handle-mail' when the primary purpose of the heading is
+as a TODO reminding you to send or reply to an email. Any text under
+the heading will be disregarded.
 
 Use `gnorb-org-email-subtree' when the primary purpose of the heading
 is the text (or tables or lists or...) of its subtree, and you just
 happen to want to email that content to someone.
 
-I need to think about merging these functions, or else making them
-more distinct.
 *** User Options
 **** gnorb-org-capture-collect-link-p
 When this is set to t, the capture process will always store a link to
