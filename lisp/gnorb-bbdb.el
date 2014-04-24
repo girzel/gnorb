@@ -66,36 +66,6 @@ records. If you want both, use \"C-u\" before the \"*\"."
 	  (org-tags-view nil tag-string))
       (error "No org-tags field present"))))
 
-(defcustom gnorb-bbdb-mail-search-backends
-  '((notmuch (lambda (terms)
-	       (mapconcat
-		(lambda (m)
-		  (replace-regexp-in-string "\\." "\\\\." m))
-		terms " OR "))
-	     notmuch-search)
-    (mairix (lambda (terms)
-	      (mapconcat 'identity
-			 terms ","))
-	    mairix-search)
-    (namazu (lambda (terms)
-	      (mapconcat 'identity
-			 terms " or "))
-	    namazu-search))
-  "Various backends for mail search.
-
-An alist of backends, where each element consists of three parts:
-the symbol name of the backend, a lambda form which receives a
-list of email addresses and returns a properly-formatted search
-string, and the symbol name of the function used to initiate the
-search."
-  :group 'gnorb-bbdb
-  :type 'list)
-
-(defcustom gnorb-bbdb-mail-search-backend nil
-  "Mail search backend currently in use."
-  :group 'gnorb-bbdb
-  :type 'symbol)
-
 (defun gnorb-bbdb-mail-search (records)
   "Initiate a mail search from the BBDB buffer.
 
@@ -107,8 +77,9 @@ a prefix arg and \"*\", the prefix arg must come first."
 	       (equal (buffer-name) bbdb-buffer-name))
     (error "Only works in the BBDB buffer"))
   (setq records (bbdb-record-list records))
-  (let* ((backend (or (assoc gnorb-bbdb-mail-search-backend
-			     gnorb-bbdb-mail-search-backends)
+  (require 'gnorb-gnus)
+  (let* ((backend (or (assoc gnorb-gnus-mail-search-backend
+			     gnorb-gnus-mail-search-backends)
 		      (error "No search backend specified")))
 	 (search-string
 	  (funcall (second backend)

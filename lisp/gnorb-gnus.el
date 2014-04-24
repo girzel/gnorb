@@ -31,6 +31,37 @@
   :tag "Gnorb Gnus"
   :group 'gnorb)
 
+
+(defcustom gnorb-gnus-mail-search-backends
+  '((notmuch (lambda (terms)
+	       (mapconcat
+		(lambda (m)
+		  (replace-regexp-in-string "\\." "\\\\." m))
+		terms " OR "))
+	     notmuch-search)
+    (mairix (lambda (terms)
+	      (mapconcat 'identity
+			 terms ","))
+	    mairix-search)
+    (namazu (lambda (terms)
+	      (mapconcat 'identity
+			 terms " or "))
+	    namazu-search))
+  "Various backends for mail search.
+
+An alist of backends, where each element consists of three parts:
+the symbol name of the backend, a lambda form which receives a
+list of email addresses and returns a properly-formatted search
+string, and the symbol name of the function used to initiate the
+search."
+  :group 'gnorb-bbdb
+  :type 'list)
+
+(defcustom gnorb-gnus-mail-search-backend nil
+  "Mail search backend currently in use."
+  :group 'gnorb-bbdb
+  :type 'symbol)
+
 (defcustom gnorb-gnus-capture-always-attach nil
   "Always prompt about attaching attachments when capturing from
   a Gnus message, even if the template being used hasn't

@@ -33,7 +33,7 @@ using those tags.
 **** gnorb-bbdb-mail-search
 Search for all mail messages from the record(s) displayed. Currently
 supports the notmuch, mairix, and namazu search backends; set
-`gnorb-bbdb-mail-search-backend' to one of those symbol values.
+`gnorb-gnus-mail-search-backend' to one of those symbol values.
 **** gnorb-bbdb-cite-contact
 Prompt for a BBDB record and insert a string of the type "Bob Smith
 <bob@smith.com>".
