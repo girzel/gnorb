@@ -37,6 +37,11 @@ supports the notmuch, mairix, and namazu search backends; set
 **** gnorb-bbdb-cite-contact
 Prompt for a BBDB record and insert a string of the type "Bob Smith
 <bob@smith.com>".
+*** User Options
+**** gnorb-bbdb-org-tag-field
+The name of the BBDB xfield that holds Org-related tags. Specified as
+a string with the ":" separator between tags, same as for Org
+headings. Defaults to 'org-tag.
 *** Suggested Keybindings
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "gnorb-bbdb"
@@ -94,12 +99,24 @@ Use `gnorb-org-email-subtree' when the primary purpose of the heading
 is the text (or tables or lists or...) of its subtree, and you just
 happen to want to email that content to someone.
 
+**** gnorb-org-agenda-popup-bbdb
+Call this function in an Org Agenda buffer currently displaying an
+`org-tags-view' search (ie called with the "m" or "M" keys). It will
+look through your BBDB database and pop up a BBDB buffer displaying
+all records that match the current tags search.
 *** User Options
 **** gnorb-org-capture-collect-link-p
 When this is set to t, the capture process will always store a link to
 the Gnus message or BBDB record under point, even when the link isn't
 part of the capture template. It can then be added to the captured
 heading with org-insert-link, as usual.
+**** gnorb-org-agenda-popup-bbdb
+Set to t to automatically pop up the BBDB buffer displaying records
+corresponding to the Org Agenda tags search underway. If this is nil
+you can always do it manually with the command of the same name.
+**** gnorb-org-bbdb-popup-layout
+Controls the layout of the Agenda-related BBDB popup, takes the same
+values as bbdb-pop-up-layout.
 *** Suggested Keybindings
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "gnorb-org"
@@ -107,6 +124,7 @@ heading with org-insert-link, as usual.
        (org-defkey org-mode-map (kbd "C-c C") 'gnorb-org-contact-link)
        (org-defkey org-mode-map (kbd "C-c H") 'gnorb-org-handle-mail)
        (org-defkey org-mode-map (kbd "C-c E") 'gnorb-org-email-subtree)
+       (setq gnorb-org-agenda-popup-bbdb t)
        (eval-after-load "org-agenda"
          '(org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail))))
 #+END_SRC
@@ -117,8 +135,17 @@ When called on an email with attached files, prompt for an Org heading
 and attach the files to that heading using org-attach.
 **** Using attach with org capture
 Set the new :gnus-attachments key to "t" in a capture template that
-you use on mail messages, and all the attachments on the message will
-be attached to the newly-captured heading.
+you use on mail messages, and you'll be queried to re-attach the
+message's attachments onto the newly-captured heading.
+*** User Options
+**** gnorb-gnus-mail-search-backend
+Specifies the search backend that you use for searching mails.
+Currently supports notmuch, mairix, and namazu: set this option to one
+of those symbols.
+**** gnorb-gnus-capture-always-attach
+Treat all capture templates as if they had the :gnus-attachments key
+set to "t". This only has any effect if you're capturing from a Gnus
+summary or article buffer.
 *** Suggested Keybindings
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "gnorb-gnus"
@@ -142,13 +169,9 @@ be attached to the newly-captured heading.
 ** Wishlist/TODO
 - Support adding X-Org-Id headers to Gnus messages, which point at
   relevant Org headings (possibly not really useful).
-- When doing an Org agenda tag search, pop up a BBDB window showing
-  all records that are marked with that tag. Provide a customizable
-  option for doing this automatically, and bind a key for doing it
-  manually.
 - Provide a command that, when in the Org Agenda, does an email search
   for messages received in the visible date span, or day under point,
-  etc. Make it work in the calendar, as well.
+  etc. Make it work in the calendar, as well?
 - Look into message tagging in Gnus -- what are the options? Is it
   possible to search for tagged messages when we do an Org agenda tag
   search?

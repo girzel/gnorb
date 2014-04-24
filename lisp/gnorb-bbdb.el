@@ -72,7 +72,7 @@ records. If you want both, use \"C-u\" before the \"*\"."
 Use the prefix arg to edit the search string first, and the \"*\"
 prefix to search mails from all visible contacts. When using both
 a prefix arg and \"*\", the prefix arg must come first."
-  (interactive (list (bbdb-do-records))) 
+  (interactive (list (bbdb-do-records)))
   (unless (and (eq major-mode 'bbdb-mode)
 	       (equal (buffer-name) bbdb-buffer-name))
     (error "Only works in the BBDB buffer"))
