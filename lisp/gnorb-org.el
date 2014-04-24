@@ -97,21 +97,45 @@ point."
 		(push mail mails))))))))
     (list message mails)))
 
-(defun gnorb-org-setup-message (message mails)
-  (if (not message)
+(defun gnorb-org-setup-message (&optional messages mails attachments text)
+  "Common message setup routine for other gnorb-org commands."
+  (if (not messages)
+      ; either compose new message...
       (compose-mail (mapconcat 'identity mails ", ")
 		    nil nil nil nil nil nil
 		    '(gnorb-org-restore-after-send))
-    (org-gnus-open (org-link-unescape (car message)))
+    ; ...or follow link and start reply
+    (org-gnus-open (org-link-unescape (car messages)))
     (call-interactively
      'gnus-summary-wide-reply-with-original)
+    ; add MAILS to message To header
     (when mails
       (message-goto-to)
       (insert ", ")
       (insert (mapconcat 'identity mails ", ")))
     (add-to-list 'message-exit-actions
-		 'gnorb-org-restore-after-send t)
-    (message-goto-body)))
+		 'gnorb-org-restore-after-send t))
+  ; attach ATTACHMENTS
+  (map-y-or-n-p
+   (lambda (a) (format "Attach %s to outgoing message? "
+		       (file-name-nondirectory a)))
+   (lambda (a)
+     (mml-attach-file
+      a (mm-default-file-encoding a)
+      nil "attachment"))
+   attachments
+   '("file" "files" "attach"))
+  ; insert text, if any
+  (when text
+    (message-goto-body)
+    (insert"\n")
+    (if (bufferp text)
+	(insert-buffer text)
+      (insert text)))
+  ; put point somewhere reasonable
+  (if mails
+      (message-goto-body)
+    (message-goto-to)))
 
 (defun gnorb-org-attachment-list ()
   "Get a list of files (absolute filenames) attached to the
@@ -125,7 +149,7 @@ current heading."
       files)))
 
 (defun gnorb-org-handle-mail ()
-  "Handle mail-related links for current headline."
+  "Handle current headline as a mail TODO."
   (interactive)
   (setq gnorb-org-window-conf (current-window-configuration))
   (when (eq major-mode 'org-agenda-mode)
@@ -142,21 +166,9 @@ current heading."
     (error "Not in an org item"))
   (let ((mail-stuff (gnorb-org-extract-mail-stuff))
 	(attachments (gnorb-org-attachment-list)))
-    (gnorb-org-setup-message (first mail-stuff) (second mail-stuff))
-    (message-goto-body)
-    (map-y-or-n-p
-     (lambda (a)
-       (format "Attach %s to outgoing message? "
-	       (file-name-nondirectory a)))
-     (lambda (a)
-       (mml-attach-file
-	a (mm-default-file-encoding a)
-	nil "attachment"))
-     attachments
-     '("file" "files" "attach"))
-    (if (second mail-stuff)
-	(message-goto-body)
-      (message-goto-to))))
+    (gnorb-org-setup-message
+     (first mail-stuff) (second mail-stuff)
+     attachments)))
 
 ;;; Email subtree
 
@@ -218,14 +230,14 @@ default set of parameters."
 		     (symbol-name (org-export-backend-name b)))
 		   org-export--registered-backends) nil t))
 	 (backend-symbol (intern backend-string))
-	 (f-or-b (org-completing-read "Export as file or text? "
+	 (f-or-t (org-completing-read "Export as file or text? "
 				      '("file" "text") nil t))
 	 (org-export-show-temporary-export-buffer nil)
-	 (opts (if (equal f-or-b "text")
+	 (opts (if (equal f-or-t "text")
 		   gnorb-org-email-subtree-text-options
 		 gnorb-org-email-subtree-file-options))
 	 (result
-	  (if (equal f-or-b "text")
+	  (if (equal f-or-t "text")
 	      (apply 'org-export-to-buffer
 		     `(,backend-symbol
 		       "*Gnorb Export*"
@@ -239,29 +251,15 @@ default set of parameters."
 		     ,@opts
 		     ,gnorb-org-email-subtree-parameters))))
 	 (mail-stuff (gnorb-org-extract-mail-stuff))
-	 (attachments (gnorb-org-attachment-list)))
+	 (attachments (gnorb-org-attachment-list))
+	 text)
     (setq gnorb-org-window-conf (current-window-configuration))
-    (gnorb-org-setup-message (first mail-stuff) (second mail-stuff))
-    (message-goto-body)
-    (insert "\n")
-    (if (equal f-or-b "text")
-	(insert-buffer result)
-      (mml-attach-file
-       result
-       (mm-default-file-encoding result)
-       nil "attachment"))
-    (map-y-or-n-p
-     (lambda (a) (format "Attach %s to outgoing message? "
-			 (file-name-nondirectory a)))
-     (lambda (a)
-       (mml-attach-file
-	a (mm-default-file-encoding a)
-	nil "attachment"))
-     attachments
-     '("file" "files" "attach"))
-    (if (second mail-stuff)
-	(message-goto-body)
-      (message-goto-to))))
+    (if (bufferp result)
+	(setq text result)
+      (push result attachments))
+    (gnorb-org-setup-message
+     (first mail-stuff) (second mail-stuff)
+     attachments text)))
 
 (defcustom gnorb-org-capture-collect-link-p t
   "Should the capture process store a link to the gnus message or
