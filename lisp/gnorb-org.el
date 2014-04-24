@@ -279,5 +279,76 @@ default set of parameters."
 
 (add-hook 'org-capture-mode-hook 'gnorb-org-capture-collect-link)
 
+(defcustom gnorb-org-agenda-popup-bbdb nil
+  "Should Agenda tags search pop up a BBDB buffer with matching
+  records?
+
+Records are considered matching if they have an `org-tags' field
+matching the current Agenda search. The name of that field can be
+customized with `gnorb-bbdb-org-tag-field'."
+  :group 'gnorb-org)
+
+(defcustom gnorb-org-bbdb-popup-layout 'pop-up-multi-line
+  "Default BBDB buffer layout for automatic Org Agenda display."
+  :group 'gnorb-org
+  :type '(choice (const one-line)
+		 (const multi-line)
+		 (const full-multi-line)
+		 (symbol)))
+
+(defun gnorb-org-agenda-popup-bbdb (&optional str)
+  "In an `org-tags-view' Agenda buffer, pop up a BBDB buffer
+showing records whose `org-tags' field matches the current tags
+search."
+  ;; I was hoping to use `org-make-tags-matcher' directly, then snag
+  ;; the tagmatcher from the resulting value, but there doesn't seem
+  ;; to be a reliable way of only getting the tag-related returns. But
+  ;; I'd still like to use that function. So an ugly hack to first
+  ;; remove non-tag contents from the query string, and then make a
+  ;; new call to `org-make-tags-matcher'.
+  (interactive)
+  (when (and
+	 (and (eq major-mode 'org-agenda-mode)
+	      (eq org-agenda-type 'tags))
+	 (or (called-interactively-p)
+	     gnorb-org-agenda-popup-bbdb))
+    (require 'gnorb-bbdb)
+    (let ((recs (bbdb-records))
+	  (todo-only nil)
+	  (str (or str org-agenda-query-string))
+	  (re "^&?\\([-+:]\\)?\\({[^}]+}\\|LEVEL\\([<=>]\\{1,2\\}\\)\\([0-9]+\\)\\|\\(\\(?:[[:alnum:]_]+\\(?:\\\\-\\)*\\)+\\)\\([<>=]\\{1,2\\}\\)\\({[^}]+}\\|\"[^\"]*\"\\|-?[.0-9]+\\(?:[eE][-+]?[0-9]+\\)?\\)\\|[[:alnum:]_@#%]+\\)")
+	  or-terms term rest out-or acc tag-clause)
+      (setq or-terms (org-split-string str "|"))
+      (while (setq term (pop or-terms))
+	(setq acc nil)
+	(while (string-match re term)
+	  (setq rest (substring term (match-end 0)))
+	  (let ((sub-term (match-string 0 term)))
+	    (unless (save-match-data ; this isn't a tag, don't want it
+		      (string-match "\\([<>=]\\)" sub-term))
+	      (push sub-term acc))
+	    (setq term rest)))
+	(push (mapconcat 'identity (nreverse acc) "") out-or))
+      (setq str (mapconcat 'identity (nreverse out-or) "|"))
+      (setq tag-clause (cdr (org-make-tags-matcher str)))
+      (setq recs
+	    (remove-if-not
+	     (lambda (r)
+	       (let ((rec-tags (bbdb-record-xfield
+				r gnorb-bbdb-org-tag-field)))
+		 (and rec-tags
+		      (let ((tags-list (org-split-string rec-tags ":"))
+			    (case-fold-search t)
+			    (org-trust-scanner-tags t))
+			(eval tag-clause)))))
+	     recs))
+      (if recs (bbdb-display-records
+		recs gnorb-org-bbdb-popup-layout)
+	(when (get-buffer-window bbdb-buffer-name)
+	  (quit-window nil
+		       (get-buffer-window bbdb-buffer-name)))))))
+
+(add-hook 'org-agenda-finalize-hook 'gnorb-org-agenda-popup-bbdb)
+
 (provide 'gnorb-org)
 ;;; gnorb-org.el ends here
