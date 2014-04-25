@@ -126,7 +126,8 @@ values as bbdb-pop-up-layout.
        (org-defkey org-mode-map (kbd "C-c E") 'gnorb-org-email-subtree)
        (setq gnorb-org-agenda-popup-bbdb t)
        (eval-after-load "org-agenda"
-         '(org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail))))
+         '(org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail)
+         '(org-defkey org-agenda-mode-map (kbd "V") 'gnorb-org-agenda-popup-bbdb))))
 #+END_SRC
 ** Gnorb-Gnus
 *** Functions
