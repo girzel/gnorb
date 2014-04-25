@@ -29,7 +29,8 @@ packages, but I'm not promising anything.
 **** gnorb-bbdb-tag-agenda
 Give BBDB records an org-tag field (customizable), then call this
 function on the current records(s) to open an Org agenda tags search
-using those tags.
+using those tags. Only shows TODOs by default: use a prefix argument
+to show all tagged headings.
 **** gnorb-bbdb-mail-search
 Search for all mail messages from the record(s) displayed. Currently
 supports the notmuch, mairix, and namazu search backends; set

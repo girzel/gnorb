@@ -42,9 +42,10 @@
 
 (defun gnorb-bbdb-tag-agenda (records)
   "Open an Org agenda tags view from the BBDB buffer, using the
-value of the record's org-tags field. A prefix argument limits to
-TODOs only; a \"*\" prefix operates on all currently visible
-records. If you want both, use \"C-u\" before the \"*\"."
+value of the record's org-tags field. This shows only TODOs by
+default; a prefix argument shows all tagged headings; a \"*\"
+prefix operates on all currently visible records. If you want
+both, use \"C-u\" before the \"*\"."
   (interactive (list (bbdb-do-records)))
   (require 'org-agenda)
   (unless (and (eq major-mode 'bbdb-mode)
@@ -60,10 +61,10 @@ records. If you want both, use \"C-u\" before the \"*\"."
 		   records))
 	  "|")))
     (if tag-string
-	;; C-u = todos only
+	;; C-u = all headings, not just todos
 	(if (equal current-prefix-arg '(4))
-	    (org-tags-view t tag-string)
-	  (org-tags-view nil tag-string))
+	    (org-tags-view nil tag-string)
+	  (org-tags-view t tag-string))
       (error "No org-tags field present"))))
 
 (defun gnorb-bbdb-mail-search (records)
