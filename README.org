@@ -178,3 +178,5 @@ summary or article buffer.
   search?
 - Create a BBDB field holding Org links to the N most recently
   received (or recently viewed) mails from the contact.
+- Consider merging `gnorb-org-handle-mail' and
+  `gnorb-org-email-subtree' altogether.
