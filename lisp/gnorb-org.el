@@ -133,7 +133,7 @@ point."
 	(insert-buffer text)
       (insert text)))
   ; put point somewhere reasonable
-  (if mails
+  (if (or mails message)
       (message-goto-body)
     (message-goto-to)))
 
