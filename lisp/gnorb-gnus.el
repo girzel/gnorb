@@ -174,5 +174,42 @@ save them into `gnorb-tmp-dir'."
 (add-hook 'org-capture-prepare-finalize-hook
 	  'gnorb-gnus-capture-abort-cleanup)
 
+;;; Storing, removing, and acting on Org headers in messages.
+
+(defcustom gnorb-gnus-org-header "X-Org-ID"
+  "Name of the mail header used to store the ID of a related Org
+  heading. Only used locally: always stripped when the mail is
+  sent."
+  :group 'gnorb-gnus
+  :type 'string)
+
+;;; this is just ghastly, but the value of this var is single regexp
+;;; group containing various header names, and we want our value
+;;; inside that group.
+(eval-after-load "message"
+  (let ((ign-headers-list
+	 (org-split-string message-ignored-mail-headers
+			   "|"))
+	(our-val (concat gnorb-org-mail-header "\\")))
+    (unless (member our-val ign-headers-list)
+      (setq ign-headers-list
+	    `(,@(butlast ign-headers-list 1) ,our-val
+	      ,@(last ign-headers-list 1)))
+      (setq message-ignored-mail-headers
+	    (mapconcat
+	     'identity ign-headers-list "|")))))
+
+(defun gnorb-gnus-check-org-header ()
+  "Return the value of the `gnorb-gnus-org-header' for the
+current message; multiple header values returned as a string."
+  (save-restriction
+    (message-narrow-to-headers)
+    (let ((org-ids (mail-fetch-field gnorb-gnus-org-header nil nil t)))
+      (if org-ids
+	  (setq gnorb-message-org-ids org-ids)
+	(setq gnorb-message-org-ids nil)))))
+
+(add-hook 'message-send-hook 'gnorb-gnus-check-org-header)
+
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here

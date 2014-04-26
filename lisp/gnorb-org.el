@@ -55,28 +55,43 @@ point."
   after the mail is sent.")
 
 (defun gnorb-org-restore-after-send ()
-  (when (eq major-mode 'gnus-summary-exit)
+  (when (eq major-mode 'gnus-summary-mode)
     (gnus-summary-exit nil t))
+  ;; this var would have been set in `gnorb-gnus-check-org-header',
+  ;; which was run during `message-send-hook'
+  (when gnorb-message-org-ids
+    (dolist (id gnorb-message-org-ids)
+      (with-demoted-errors
+	(org-id-goto id)
+	(delete-other-windows)
+	(when (or (null gnorb-org-mail-todos)
+		  (member (org-entry-get (point) "TODO")
+			  gnorb-org-mail-todos))
+	  (call-interactively 'org-todo)))))
   (when (window-configuration-p gnorb-org-window-conf)
     (set-window-configuration gnorb-org-window-conf))
-  (cond ((eq major-mode 'org-agenda-mode)
-	 (if (null gnorb-org-mail-todos)
-	     (call-interactively 'org-agenda-todo)
-	   (let* ((marker (or (org-get-at-bol 'org-marker)
-			      (org-agenda-error)))
-		  (buffer (marker-buffer marker)))
-	     (when (save-excursion
-		     (with-current-buffer buffer
-		       (goto-char (marker-position marker))
-		       (member (org-entry-get (point) "TODO")
-			       gnorb-org-mail-todos)))
-	       (call-interactively 'org-agenda-todo)))))
-	((eq major-mode 'org-mode)
-	 (when (or (null gnorb-org-mail-todos)
-		   (member (org-entry-get (point) "TODO")
-			   gnorb-org-mail-todos))
-	   (call-interactively 'org-todo)))
-	(t nil)))
+  ;; this is a little unnecessary, but still...
+  (setq gnorb-org-window-conf nil)
+  (setq gnorb-message-org-ids nil))
+
+   ;; (cond ((eq major-mode 'org-agenda-mode)
+   ;; 	  (if (null gnorb-org-mail-todos)
+   ;; 	      (call-interactively 'org-agenda-todo)
+   ;; 	    (let* ((marker (or (org-get-at-bol 'org-marker)
+   ;; 			       (org-agenda-error)))
+   ;; 		   (buffer (marker-buffer marker)))
+   ;; 	      (when (save-excursion
+   ;; 		      (with-current-buffer buffer
+   ;; 			(goto-char (marker-position marker))
+   ;; 			(member (org-entry-get (point) "TODO")
+   ;; 				gnorb-org-mail-todos)))
+   ;; 		(call-interactively 'org-agenda-todo)))))
+   ;; 	 ((eq major-mode 'org-mode)
+   ;; 	  (when (or (null gnorb-org-mail-todos)
+   ;; 		    (member (org-entry-get (point) "TODO")
+   ;; 			    gnorb-org-mail-todos))
+   ;; 	    (call-interactively 'org-todo)))
+   ;; 	 (t nil))
 
 (defun gnorb-org-extract-mail-stuff ()
   (let (message mails)
@@ -97,43 +112,65 @@ point."
 		(push mail mails))))))))
     (list message mails)))
 
-(defun gnorb-org-setup-message (&optional messages mails attachments text)
-  "Common message setup routine for other gnorb-org commands."
+(defun gnorb-org-setup-message (&optional messages mails attachments text ids)
+  "Common message setup routine for other gnorb-org commands.
+MESSAGES is a list of gnus links pointing to messages -- we
+currently only use the first of the list. MAILS is a list of
+email address strings suitable for inserting in the To header.
+ATTACHMENTS is a list of filenames to attach. TEXT is a string or
+buffer, which is inserted in the message body. IDS is one or more
+Org heading ids, associating the outgoing message with those
+headings."
+  (require 'gnorb-gnus)
   (if (not messages)
       ; either compose new message...
-      (compose-mail (mapconcat 'identity mails ", ")
-		    nil nil nil nil nil nil
-		    '(gnorb-org-restore-after-send))
+      (compose-mail (mapconcat 'identity mails ", "))
     ; ...or follow link and start reply
-    (org-gnus-open (org-link-unescape (car messages)))
-    (call-interactively
-     'gnus-summary-wide-reply-with-original)
-    ; add MAILS to message To header
-    (when mails
-      (message-goto-to)
-      (insert ", ")
-      (insert (mapconcat 'identity mails ", ")))
-    (add-to-list 'message-exit-actions
-		 'gnorb-org-restore-after-send t))
+    (condition-case nil
+	(progn
+	  (org-gnus-open (org-link-unescape (car messages)))
+	  (call-interactively
+	   'gnus-summary-wide-reply-with-original)
+	  ;; add MAILS to message To header
+	  (when mails
+	    (message-goto-to)
+	    (insert ", ")
+	    (insert (mapconcat 'identity mails ", "))))
+      (error (message "Couldn't open linked message"))))
+  ;; return us after message is sent
+  (add-to-list 'message-exit-actions
+	       'gnorb-org-restore-after-send t)
   ; attach ATTACHMENTS
   (map-y-or-n-p
    (lambda (a) (format "Attach %s to outgoing message? "
 		       (file-name-nondirectory a)))
    (lambda (a)
-     (mml-attach-file
-      a (mm-default-file-encoding a)
+     (mml-attach-file a (mm-default-file-encoding a)
       nil "attachment"))
    attachments
    '("file" "files" "attach"))
-  ; insert text, if any
+  ;; insert text, if any
   (when text
     (message-goto-body)
     (insert"\n")
     (if (bufferp text)
 	(insert-buffer text)
       (insert text)))
+  ;; insert org ids, if any
+  (when ids
+    (unless (listp ids)
+      (setq ids (list ids)))
+    (save-excursion
+      (save-restriction
+	(message-narrow-to-headers)
+	(dolist (i ids)
+	  (goto-char (point-at-bol))
+	  (open-line 1)
+	  ;; this function hardly does anything
+	  (message-insert-header
+	   (intern gnorb-gnus-org-header) i)))))
   ; put point somewhere reasonable
-  (if (or mails message)
+  (if (or mails messages)
       (message-goto-body)
     (message-goto-to)))
 
@@ -165,10 +202,11 @@ current heading."
   (unless (org-back-to-heading t)
     (error "Not in an org item"))
   (let ((mail-stuff (gnorb-org-extract-mail-stuff))
-	(attachments (gnorb-org-attachment-list)))
+	(attachments (gnorb-org-attachment-list))
+	(org-id (org-id-get-create)))
     (gnorb-org-setup-message
      (first mail-stuff) (second mail-stuff)
-     attachments)))
+     attachments nil org-id)))
 
 ;;; Email subtree
 
@@ -252,6 +290,7 @@ default set of parameters."
 		     ,gnorb-org-email-subtree-parameters))))
 	 (mail-stuff (gnorb-org-extract-mail-stuff))
 	 (attachments (gnorb-org-attachment-list))
+	 (org-id (org-id-get-create))
 	 text)
     (setq gnorb-org-window-conf (current-window-configuration))
     (if (bufferp result)
@@ -259,7 +298,7 @@ default set of parameters."
       (push result attachments))
     (gnorb-org-setup-message
      (first mail-stuff) (second mail-stuff)
-     attachments text)))
+     attachments text org-id)))
 
 (defcustom gnorb-org-capture-collect-link-p t
   "Should the capture process store a link to the gnus message or
@@ -278,6 +317,8 @@ default set of parameters."
 	    (call-interactively 'org-store-link)))))))
 
 (add-hook 'org-capture-mode-hook 'gnorb-org-capture-collect-link)
+
+;;; Agenda/BBDB popup stuff
 
 (defcustom gnorb-org-agenda-popup-bbdb nil
   "Should Agenda tags search pop up a BBDB buffer with matching
@@ -346,7 +387,9 @@ search."
 		recs gnorb-org-bbdb-popup-layout)
 	(when (get-buffer-window bbdb-buffer-name)
 	  (quit-window nil
-		       (get-buffer-window bbdb-buffer-name)))))))
+		       (get-buffer-window bbdb-buffer-name)))
+	(when (called-interactively-p)
+	  (message "No relevant BBDB records"))))))
 
 (add-hook 'org-agenda-finalize-hook 'gnorb-org-agenda-popup-bbdb)
 

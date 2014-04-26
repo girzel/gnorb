@@ -54,5 +54,14 @@
 (defvar gnorb-tmp-dir (make-temp-file "emacs-gnorb" t)
   "Temporary directory where attachments etc are saved.")
 
+(defvar gnorb-message-org-ids nil
+  "List of Org heading IDs from the outgoing Gnus message, used
+  to mark mail TODOs as done once the message is sent."
+  ;; The send hook either populates this, or sets it to nil, depending
+  ;; on whether the message in question has an Org id header. Then
+  ;; `gnorb-org-restore-after-send' checks for it and acts
+  ;; appropriately.
+)
+
 (provide 'gnorb-utils)
 ;;; gnorb-utils.el ends here
