@@ -168,7 +168,7 @@ headings."
 	  (open-line 1)
 	  ;; this function hardly does anything
 	  (message-insert-header
-	   (intern gnorb-gnus-org-header) i)))))
+	   (intern gnorb-mail-header) i)))))
   ; put point somewhere reasonable
   (if (or mails messages)
       (message-goto-body)

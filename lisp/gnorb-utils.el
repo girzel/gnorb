@@ -27,6 +27,7 @@
 (require 'cl)
 (require 'mailcap)
 (require 'gnus)
+;(require 'message)
 (require 'bbdb)
 (require 'org)
 (require 'org-bbdb)
@@ -62,6 +63,29 @@
   ;; `gnorb-org-restore-after-send' checks for it and acts
   ;; appropriately.
 )
+
+(defcustom gnorb-mail-header "X-Org-ID"
+  "Name of the mail header used to store the ID of a related Org
+  heading. Only used locally: always stripped when the mail is
+  sent."
+  :group 'gnorb
+  :type 'string)
+
+;;; this is just ghastly, but the value of this var is single regexp
+;;; group containing various header names, and we want our value
+;;; inside that group.
+(eval-after-load 'message
+  `(let ((ign-headers-list
+	  (split-string message-ignored-mail-headers
+			"|"))
+	 (our-val (concat gnorb-mail-header "\\")))
+     (unless (member our-val ign-headers-list)
+       (setq ign-headers-list
+	     `(,@(butlast ign-headers-list 1) ,our-val
+	       ,@(last ign-headers-list 1)))
+       (setq message-ignored-mail-headers
+	     (mapconcat
+	      'identity ign-headers-list "|")))))
 
 (provide 'gnorb-utils)
 ;;; gnorb-utils.el ends here
