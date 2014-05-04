@@ -162,12 +162,56 @@ save them into `gnorb-tmp-dir'."
 
 (add-hook 'org-capture-mode-hook 'gnorb-gnus-capture-attach)
 
+;;; Try to save the capture heading id into the message as a custom
+;;; header.
+
+;; Actually, let's leave this as a WIP for now, and have a think about
+;; it.
+
+;; Possible workflow: multiple Org headers can be saved into a single
+;; received Gnus message (but editing received messages is a pain in
+;; the butt, and often doesn't work). That can be done either by
+;; capturing from the message (ie creating a new Org heading), or by
+;; using the (as-yet unwritten) `gnorb-gnus-add-org-heading' (ie
+;; adding the ID of an existing Org heading). If that message is
+;; replied to from within Gnus (you didn't use
+;; `gnorb-org-handle-mail'), then all Org ID headers are carried over
+;; into the reply, and then when the message is sent, all the relevant
+;; IDs are prompted for TODO state-change. If you use
+;; `gnorb-org-handle-mail' to reply to a message, then only the
+;; heading you "depart" from gets prompted -- any other headings are
+;; left alone.
+
+;; Except maybe that doesn't make sense. Maybe all linked headings
+;; should be visited and prompted. Hmm...
+
+;; Also, when a message is sent, we should automatically push a link
+;; to the sent message onto the link stack. That way, when we're
+;; returned to the TODO and prompted for state change, a link to our
+;; message can be inserted into the state-change log.
+
+;; The model we're looking for is a single heading representing an
+;; email conversation, bouncing back and forth between REPLY and WAIT
+;; (for instance) sates, with each state-change logged, and a link to
+;; the relevant message inserted into each log line. This might not
+;; even require editing received messages at all.
+
+;; (defun gnorb-gnus-insert-org-header ()
+;;   (let ((id (org-id-get-create)))
+;;     (with-current-buffer
+;; 	(org-capture-get :original-buffer)
+;;       (when (memq major-mode '(gnus-summary-mode gnus-article-mode)))
+;;       (gnus-with-article-buffer
+;; 	))))
+
 (defun gnorb-gnus-capture-abort-cleanup ()
   (when (and org-note-abort
 	     (org-capture-get :gnus-attachments))
     (condition-case error
 	(progn (org-attach-delete-all)
-	       (setq abort-note 'clean))
+	       (setq abort-note 'clean)
+	       ;; remove any gnorb-mail-header values here
+	       )
       ((error
 	(setq abort-note 'dirty))))))
 
