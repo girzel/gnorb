@@ -40,7 +40,11 @@ org-todo regardless of TODO type."
 
 (defun gnorb-org-contact-link (rec)
   "Prompt for a BBDB record and insert a link to that record at
-point."
+point.
+
+There's really no reason to use this instead of regular old
+`org-insert-link' with BBDB completion. But there might be in the
+future!"
   (interactive (list (gnorb-prompt-for-bbdb-record)))
   (let* ((name (bbdb-record-name rec))
 	 (link (concat "bbdb:" (org-link-escape name))))
@@ -191,9 +195,10 @@ current heading."
   (when (featurep 'org-attach)
     (let* ((attach-dir (org-attach-dir t))
 	   (files
-	    (mapcar (lambda (f)
-		      (expand-file-name f attach-dir))
-		    (org-attach-file-list attach-dir))))
+	    (mapcar
+	     (lambda (f)
+	       (expand-file-name f attach-dir))
+	     (org-attach-file-list attach-dir))))
       files)))
 
 (defun gnorb-org-handle-mail ()
@@ -303,6 +308,8 @@ default set of parameters."
 	 (attachments (gnorb-org-attachment-list))
 	 (org-id (org-id-get-create))
 	 text)
+    ;; this should just go into a call to `org-handle-mail', passing
+    ;; the results of the export as an argument
     (setq gnorb-org-window-conf (current-window-configuration))
     (if (bufferp result)
 	(setq text result)
@@ -313,8 +320,8 @@ default set of parameters."
 
 (defcustom gnorb-org-capture-collect-link-p t
   "Should the capture process store a link to the gnus message or
-  BBDB record under point, even if it's not part of the
-  template?"
+  BBDB record under point, even if it's not part of the template?
+  You'll probably end up needing it, anyway."
   :group 'gnorb-org)
 
 (defun gnorb-org-capture-collect-link ()
