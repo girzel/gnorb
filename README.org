@@ -100,11 +100,18 @@ Use `gnorb-org-email-subtree' when the primary purpose of the heading
 is the text (or tables or lists or...) of its subtree, and you just
 happen to want to email that content to someone.
 
-**** gnorb-org-agenda-popup-bbdb
-Call this function in an Org Agenda buffer currently displaying an
-`org-tags-view' search (ie called with the "m" or "M" keys). It will
-look through your BBDB database and pop up a BBDB buffer displaying
-all records that match the current tags search.
+**** gnorb-org-popup-bbdb
+Pop up a BBDB buffer relevant to the current Org display. This works
+differently depending on whether you're in the Agenda, or in a regular
+Org file.
+
+In an Agenda buffer currently displaying an `org-tags-view' search (ie
+called with the "m" or "M" keys), it will look through your BBDB
+database and pop up a BBDB buffer displaying all records that match
+the current tags search.
+
+In a regular file, it will look at the heading under point for bbdb:
+links, and pop up a BBDB buffer showing those records.
 *** User Options
 **** gnorb-org-capture-collect-link-p
 When this is set to t, the capture process will always store a link to
@@ -125,10 +132,11 @@ values as bbdb-pop-up-layout.
        (org-defkey org-mode-map (kbd "C-c C") 'gnorb-org-contact-link)
        (org-defkey org-mode-map (kbd "C-c H") 'gnorb-org-handle-mail)
        (org-defkey org-mode-map (kbd "C-c E") 'gnorb-org-email-subtree)
+       (org-defkey org-mode-map (kbd "C-c V") 'gnorb-org-popup-bbdb)
        (setq gnorb-org-agenda-popup-bbdb t)
        (eval-after-load "org-agenda"
          '(org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail)
-         '(org-defkey org-agenda-mode-map (kbd "V") 'gnorb-org-agenda-popup-bbdb))))
+         '(org-defkey org-agenda-mode-map (kbd "V") 'gnorb-org-popup-bbdb))))
 #+END_SRC
 ** Gnorb-Gnus
 *** Functions

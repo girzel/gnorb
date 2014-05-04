@@ -337,7 +337,7 @@ customized with `gnorb-bbdb-org-tag-field'."
 		 (const full-multi-line)
 		 (symbol)))
 
-(defun gnorb-org-agenda-popup-bbdb (&optional str)
+(defun gnorb-org-popup-bbdb (&optional str)
   "In an `org-tags-view' Agenda buffer, pop up a BBDB buffer
 showing records whose `org-tags' field matches the current tags
 search."
@@ -348,50 +348,60 @@ search."
   ;; remove non-tag contents from the query string, and then make a
   ;; new call to `org-make-tags-matcher'.
   (interactive)
-  (when (and
-	 (and (eq major-mode 'org-agenda-mode)
-	      (eq org-agenda-type 'tags))
-	 (or (called-interactively-p)
-	     gnorb-org-agenda-popup-bbdb))
-    (require 'gnorb-bbdb)
-    (let ((recs (bbdb-records))
-	  (todo-only nil)
-	  (str (or str org-agenda-query-string))
-	  (re "^&?\\([-+:]\\)?\\({[^}]+}\\|LEVEL\\([<=>]\\{1,2\\}\\)\\([0-9]+\\)\\|\\(\\(?:[[:alnum:]_]+\\(?:\\\\-\\)*\\)+\\)\\([<>=]\\{1,2\\}\\)\\({[^}]+}\\|\"[^\"]*\"\\|-?[.0-9]+\\(?:[eE][-+]?[0-9]+\\)?\\)\\|[[:alnum:]_@#%]+\\)")
-	  or-terms term rest out-or acc tag-clause)
-      (setq or-terms (org-split-string str "|"))
-      (while (setq term (pop or-terms))
-	(setq acc nil)
-	(while (string-match re term)
-	  (setq rest (substring term (match-end 0)))
-	  (let ((sub-term (match-string 0 term)))
-	    (unless (save-match-data ; this isn't a tag, don't want it
-		      (string-match "\\([<>=]\\)" sub-term))
-	      (push sub-term acc))
-	    (setq term rest)))
-	(push (mapconcat 'identity (nreverse acc) "") out-or))
-      (setq str (mapconcat 'identity (nreverse out-or) "|"))
-      (setq tag-clause (cdr (org-make-tags-matcher str)))
-      (setq recs
-	    (remove-if-not
-	     (lambda (r)
-	       (let ((rec-tags (bbdb-record-xfield
-				r gnorb-bbdb-org-tag-field)))
-		 (and rec-tags
-		      (let ((tags-list (org-split-string rec-tags ":"))
-			    (case-fold-search t)
-			    (org-trust-scanner-tags t))
-			(eval tag-clause)))))
-	     recs))
-      (if recs (bbdb-display-records
-		recs gnorb-org-bbdb-popup-layout)
-	(when (get-buffer-window bbdb-buffer-name)
-	  (quit-window nil
-		       (get-buffer-window bbdb-buffer-name)))
-	(when (called-interactively-p)
-	  (message "No relevant BBDB records"))))))
+  (require 'gnorb-bbdb)
+  (let (recs)
+    (cond ((and
+	    (and (eq major-mode 'org-agenda-mode)
+		 (eq org-agenda-type 'tags))
+	    (or (called-interactively-p)
+		gnorb-org-agenda-popup-bbdb))
+	   (let ((todo-only nil)
+		 (str (or str org-agenda-query-string))
+		 (re "^&?\\([-+:]\\)?\\({[^}]+}\\|LEVEL\\([<=>]\\{1,2\\}\\)\\([0-9]+\\)\\|\\(\\(?:[[:alnum:]_]+\\(?:\\\\-\\)*\\)+\\)\\([<>=]\\{1,2\\}\\)\\({[^}]+}\\|\"[^\"]*\"\\|-?[.0-9]+\\(?:[eE][-+]?[0-9]+\\)?\\)\\|[[:alnum:]_@#%]+\\)")
+		 or-terms term rest out-or acc tag-clause)
+	     (setq or-terms (org-split-string str "|"))
+	     (while (setq term (pop or-terms))
+	       (setq acc nil)
+	       (while (string-match re term)
+		 (setq rest (substring term (match-end 0)))
+		 (let ((sub-term (match-string 0 term)))
+		   (unless (save-match-data ; this isn't a tag, don't want it
+			     (string-match "\\([<>=]\\)" sub-term))
+		     (push sub-term acc))
+		   (setq term rest)))
+	       (push (mapconcat 'identity (nreverse acc) "") out-or))
+	     (setq str (mapconcat 'identity (nreverse out-or) "|"))
+	     (setq tag-clause (cdr (org-make-tags-matcher str)))
+	     (setq recs
+		   (remove-if-not
+		    (lambda (r)
+		      (let ((rec-tags (bbdb-record-xfield
+				       r gnorb-bbdb-org-tag-field)))
+			(and rec-tags
+			     (let ((tags-list (org-split-string rec-tags ":"))
+				   (case-fold-search t)
+				   (org-trust-scanner-tags t))
+			       (eval tag-clause)))))
+		    (bbdb-records)))))
+	  ((eq major-mode 'org-mode)
+	   (save-excursion
+	     (org-back-to-heading)
+	     (while (re-search-forward
+		     org-bracket-link-analytic-regexp (line-end-position) t)
+	       (when (string-match-p "bbdb" (match-string 2))
+		 (let* ((desc (match-string 5))
+			(rec (bbdb-search (bbdb-records) desc desc desc)))
+		   (setq recs (append recs rec))))))))
+    (if recs
+	(bbdb-display-records
+	 recs gnorb-org-bbdb-popup-layout)
+      (when (get-buffer-window bbdb-buffer-name)
+	(quit-window nil
+		     (get-buffer-window bbdb-buffer-name)))
+      (when (called-interactively-p)
+	(message "No relevant BBDB records")))))
 
-(add-hook 'org-agenda-finalize-hook 'gnorb-org-agenda-popup-bbdb)
+(add-hook 'org-agenda-finalize-hook 'gnorb-org-popup-bbdb)
 
 (provide 'gnorb-org)
 ;;; gnorb-org.el ends here
