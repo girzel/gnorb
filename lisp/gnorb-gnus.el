@@ -227,7 +227,14 @@ current message; multiple header values returned as a string."
     (message-narrow-to-headers)
     (let ((org-ids (mail-fetch-field gnorb-mail-header nil nil t)))
       (if org-ids
-	  (setq gnorb-message-org-ids org-ids)
+	  (progn
+	    (require 'gnorb-org)
+	    (setq gnorb-message-org-ids org-ids)
+	    ;; `gnorb-org-setup-message' may have put this here, but
+	    ;; if we're working from a draft or whatever, it might not
+	    ;; be there yet
+	    (add-to-list 'message-exit-actions
+			 'gnorb-org-restore-after-send t))
 	(setq gnorb-message-org-ids nil)))))
 
 (add-hook 'message-send-hook 'gnorb-gnus-check-org-header)
