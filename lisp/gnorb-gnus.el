@@ -239,5 +239,47 @@ current message; multiple header values returned as a string."
 
 (add-hook 'message-send-hook 'gnorb-gnus-check-org-header)
 
+;;; If an incoming message should trigger state-change for a Org todo,
+;;; call this function on it.
+
+(defcustom gnorb-gnus-message-trigger-default 'note
+  "What default action should be taken when triggering TODO
+  state-change from a message? Valid values are the symbols note
+  and todo. Whatever the default is, giving the command a prefix
+  argument will do the opposite."
+  :group 'gnorb-gnus
+  :type '(choice (const note)
+		 (const todo)))
+
+(defun gnorb-gnus-message-trigger-todo (arg &optional heading)
+  "Call this function from a received gnus message to store a
+link to the message, prompt for a related Org heading, visit the
+heading, and either add a note or trigger a TODO state change.
+Set `gnorb-gnus-message-trigger-default' to either 'note or
+'todo; you can get the non-default behavior by calling this
+function with a prefix argument."
+  ;; this whole function isn't even going to be that awesome until we
+  ;; teach it how to guess the relevant org heading using message-ids
+  ;; from the References or In-Reply-To headers of the incoming
+  ;; message.
+  (interactive "P")
+  (if (not (memq major-mode '(gnus-summary-mode gnus-article-mode)))
+      (error "Only works in gnus summary or article mode")
+    (org-store-link)
+    (let* ((action (if (not arg)
+		       gnorb-gnus-message-trigger-default
+		     (if (eq gnorb-gnus-message-trigger-default 'todo)
+			 'note
+		       'todo)))
+	   (targ (or heading
+		     (org-refile-get-location
+		      (format "Trigger heading (%s): " action) nil t))))
+      (find-file (nth 1 org-heading))
+      (goto-char (nth 3 org-heading))
+      (call-interactively
+       (if (eq action 'todo)
+	   'org-todo
+	 'org-add-note)))))
+
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here
