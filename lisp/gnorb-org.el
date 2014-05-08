@@ -66,7 +66,6 @@ future!"
   ;; This is some ugly stuff, but it (hopefully) results in smooth
   ;; usage.
   (let* ((agenda-p (eq major-mode 'org-agenda-mode))
-	 ;; all this is still broken. Why?
 	 (ret-dest-id (org-entry-get
 		       (if agenda-p
 			   (org-get-at-bol 'org-hd-marker)
