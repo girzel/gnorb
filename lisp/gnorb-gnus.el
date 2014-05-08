@@ -54,12 +54,12 @@ the symbol name of the backend, a lambda form which receives a
 list of email addresses and returns a properly-formatted search
 string, and the symbol name of the function used to initiate the
 search."
-  :group 'gnorb-bbdb
+  :group 'gnorb-gnus
   :type 'list)
 
 (defcustom gnorb-gnus-mail-search-backend nil
   "Mail search backend currently in use."
-  :group 'gnorb-bbdb
+  :group 'gnorb-gnus
   :type 'symbol)
 
 (defcustom gnorb-gnus-capture-always-attach nil
