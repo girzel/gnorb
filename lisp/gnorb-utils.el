@@ -50,7 +50,9 @@
 		     (length recs))
 	     (mapcar 'bbdb-record-name recs)))
       (setq recs (bbdb-search recs name name name nil nil)))
-    (car recs)))
+    (if recs
+	(car recs)
+      (error "No matching records"))))
 
 (defvar gnorb-tmp-dir (make-temp-file "emacs-gnorb" t)
   "Temporary directory where attachments etc are saved.")

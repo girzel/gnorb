@@ -45,6 +45,7 @@ point.
 There's really no reason to use this instead of regular old
 `org-insert-link' with BBDB completion. But there might be in the
 future!"
+  ;; this needs to handle an active region.
   (interactive (list (gnorb-prompt-for-bbdb-record)))
   (let* ((name (bbdb-record-name rec))
 	 (link (concat "bbdb:" (org-link-escape name))))
@@ -59,6 +60,10 @@ future!"
   after the mail is sent.")
 
 (defun gnorb-org-restore-after-send ()
+  "After an email is sent, clean up the gnus summary buffer, put
+us back where we came from, and go through all the org ids that
+might have been in the outgoing message's headers and call
+`gnorb-org-do-restore-action' on each one."
   (when (eq major-mode 'gnus-summary-mode)
     (gnus-summary-exit nil t))
   (when (window-configuration-p gnorb-org-window-conf)
@@ -213,7 +218,7 @@ current heading."
 	   (pos (marker-position marker)))
       (switch-to-buffer buffer)
       (widen)
-      (goto-char pos)))
+      (goto-char pos))) 
   (unless (org-back-to-heading t)
     (error "Not in an org item"))
   (let ((mail-stuff (gnorb-org-extract-mail-stuff))
@@ -240,7 +245,8 @@ async, subtreep, visible-only, and body-only."
   "A list of ts and nils corresponding to Org's export options,
 to be used when exporting to a file. The options, in order, are
 async, subtreep, visible-only, and body-only."
-  :group 'gnorb-org)
+  :group 'gnorb-org
+  :type 'list)
 
 (defcustom gnorb-org-export-extensions
   '((latex ".tex")

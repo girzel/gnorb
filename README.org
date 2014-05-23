@@ -191,3 +191,6 @@ summary or article buffer.
   received (or recently viewed) mails from the contact.
 - Consider merging `gnorb-org-handle-mail' and
   `gnorb-org-email-subtree' altogether.
+- Come up with some sort of way to have gnus posting styles attached
+  to BBDB records. Should have the full complement of regexp
+  predicates based on name, organization, xfields, etc.

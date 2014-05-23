@@ -58,7 +58,8 @@ search."
   :type 'list)
 
 (defcustom gnorb-gnus-mail-search-backend nil
-  "Mail search backend currently in use."
+  "Mail search backend currently in use. One of the three symbols
+notmuch, namazu, or mairix."
   :group 'gnorb-gnus
   :type 'symbol)
 
@@ -67,7 +68,10 @@ search."
   a Gnus message, even if the template being used hasn't
   specified the :gnus-attachments key.
 
-Basically behave as if all attachments have \":gnus-attachments t\".")
+Basically behave as if all attachments have \":gnus-attachments t\"."
+  :group 'gnorb-gnus
+  :type 'boolean)
+
 
 ;;; What follows is a very careful copy-pasta of bits and pieces from
 ;;; mm-decode.el and gnus-art.el. Voodoo was involved.
@@ -170,14 +174,14 @@ save them into `gnorb-tmp-dir'."
 
 ;; Possible workflow: multiple Org headers can be saved into a single
 ;; received Gnus message (but editing received messages is a pain in
-;; the butt, and often doesn't work). That can be done either by
-;; capturing from the message (ie creating a new Org heading), or by
-;; using the (as-yet unwritten) `gnorb-gnus-add-org-heading' (ie
-;; adding the ID of an existing Org heading). If that message is
-;; replied to from within Gnus (you didn't use
-;; `gnorb-org-handle-mail'), then all Org ID headers are carried over
-;; into the reply, and then when the message is sent, all the relevant
-;; IDs are prompted for TODO state-change. If you use
+;; the butt, and often doesn't work as expecte -- IMAP just makes new
+;; messages). That can be done either by capturing from the message
+;; (ie creating a new Org heading), or by using the (as-yet unwritten)
+;; `gnorb-gnus-add-org-heading' (ie adding the ID of an existing Org
+;; heading). If that message is replied to from within Gnus (you
+;; didn't use `gnorb-org-handle-mail'), then all Org ID headers are
+;; carried over into the reply, and then when the message is sent, all
+;; the relevant IDs are prompted for TODO state-change. If you use
 ;; `gnorb-org-handle-mail' to reply to a message, then only the
 ;; heading you "depart" from gets prompted -- any other headings are
 ;; left alone.
@@ -188,21 +192,15 @@ save them into `gnorb-tmp-dir'."
 ;; Also, when a message is sent, we should automatically push a link
 ;; to the sent message onto the link stack. That way, when we're
 ;; returned to the TODO and prompted for state change, a link to our
-;; message can be inserted into the state-change log.
+;; message can be inserted into the state-change log. Of course, that
+;; only works if you're using archiving, and there's a Fcc header
+;; present.
 
 ;; The model we're looking for is a single heading representing an
 ;; email conversation, bouncing back and forth between REPLY and WAIT
-;; (for instance) sates, with each state-change logged, and a link to
+;; (for instance) states, with each state-change logged, and a link to
 ;; the relevant message inserted into each log line. This might not
 ;; even require editing received messages at all.
-
-;; (defun gnorb-gnus-insert-org-header ()
-;;   (let ((id (org-id-get-create)))
-;;     (with-current-buffer
-;; 	(org-capture-get :original-buffer)
-;;       (when (memq major-mode '(gnus-summary-mode gnus-article-mode)))
-;;       (gnus-with-article-buffer
-;; 	))))
 
 (defun gnorb-gnus-capture-abort-cleanup ()
   (when (and org-note-abort
@@ -255,13 +253,12 @@ current message; multiple header values returned as a string."
   "Call this function from a received gnus message to store a
 link to the message, prompt for a related Org heading, visit the
 heading, and either add a note or trigger a TODO state change.
-Set `gnorb-gnus-message-trigger-default' to either 'note or
-'todo; you can get the non-default behavior by calling this
-function with a prefix argument."
-  ;; this whole function isn't even going to be that awesome until we
-  ;; teach it how to guess the relevant org heading using message-ids
-  ;; from the References or In-Reply-To headers of the incoming
-  ;; message.
+Set `gnorb-trigger-todo-default' to 'note or 'todo (you can
+get the non-default behavior by calling this function with a
+prefix argument), or to 'prompt to always be prompted."
+  ;; this whole function isn't going to be that awesome until we teach
+  ;; it how to guess the relevant org heading using message-ids from
+  ;; the References or In-Reply-To headers of the incoming message.
   (interactive "P")
   (if (not (memq major-mode '(gnus-summary-mode gnus-article-mode)))
       (error "Only works in gnus summary or article mode")
