@@ -42,6 +42,53 @@ org-todo regardless of TODO type."
   "The name of the org property used to store the Message-IDs
   from relevant messages.")
 
+(defcustom gnorb-org-mail-scan-scope 1
+  "When calling `gnorb-org-handle-mail' on a heading, this option
+specifies how much of the heading text will be scanned for
+relevant message and mail links. Set to 0 to only look within the
+heading text itself. Set to an integer to scan that many
+paragraphs of the text body. Set to the symbol 'text to scan all
+the text immediately under the heading (excluding sub-headings),
+and to the symbol 'subtree to scan all the text in the whole
+subtree.
+
+Note that if `gnorb-org-mail-scan-state-changes' is non-nil, and
+there is a gnus message link in the logbook, the above will be
+disregarded in favor of replying to that link."
+  :group 'gnorb-org
+  :type '(or integer symbol))
+
+(defcustom gnorb-org-mail-scan-state-changes 'first
+  "This options influences how `gnorb-org-handle-mail' interprets
+the current heading. If it is non-nil, the heading's state-change
+notes will be given priority when looking for links to respond
+to. If the state-change notes contain a gnus message link, that's
+probably because `gnorb-gnus-message-trigger-todo' put it there,
+and you're using the logbook drawer to keep track of an email
+conversation. In that case, all other links will be disregared,
+and a reply to the linked message will be started. Valid non-nil
+values are 'first (only the most recent state-change note will be
+scanned) and 'all (all notes will be scanned).
+
+If this option is nil, the heading and its text will be scanned
+as usual for links, subject to the value of
+`gnorb-org-mail-scan-scope'."
+  :group 'gnorb-org
+  :type 'symbol)
+
+(defcustom gnorb-org-mail-scan-function
+  'gnorb-org-extract-mail-stuff
+  "The function used to extract message links and email addresses
+  from a heading and its text, for use in the
+  `gnorb-org-handle-mail' and `gnorb-org-email-subtree'
+  functions. It will be called at the heading of the current
+  subtree. It's return value should be a list, containing two
+  more lists: the first list is of links to gnus
+  messages (currently only the first link will be acted upon).
+  The second list is of strings suitable to be used in the To
+  header of an outgoing email, ie \"Billy Bob Thornton
+  <bbt@gmail.com>\".")
+
 (defun gnorb-org-contact-link (rec)
   "Prompt for a BBDB record and insert a link to that record at
 point.
@@ -79,24 +126,144 @@ might have been in the outgoing message's headers and call
   (setq gnorb-gnus-sending-message-info nil)
   (setq gnorb-message-org-ids nil))
 
+(defun gnorb-org-scan-state-notes ()
+  "Look at the state-change notes of the heading and see if we
+should be using links in those notes or not. If
+`gnorb-org-mail-scan-state-changes' is set to 'first, only the
+most recent state-change note is examined. Otherwise, each note
+will be examined in reverse chronological order, and the first
+message link found will be replied to."
+  ;; gruesome
+  (interactive)
+  (let* ((org-log-into-drawer (org-log-into-drawer))
+	 (drawer (cond ((stringp org-log-into-drawer)
+			org-log-into-drawer)
+		       (org-log-into-drawer "LOGBOOK")))
+	 (search-dir (if org-log-states-order-reversed
+			 're-search-forward
+		       're-search-backward))
+	 el type state-list)
+    (save-excursion
+      (forward-line)			; get off the heading
+      (setq el (org-element-at-point)
+	    type (org-element-type el))
+      (while (memq type '(planning property-drawer))
+	(org-forward-element)
+	(setq el (org-element-at-point)
+	      type (org-element-type el)))
+      (cond
+       (drawer
+	(while (and (eq type 'drawer)
+		    (not (equal drawer
+				(org-element-property :drawer-name el))))
+	  (org-forward-element)
+	  (setq el (org-element-at-point)
+		type (org-element-type el)))
+	(when (equal drawer
+		     (org-element-property :drawer-name el))
+	  (forward-line)
+	  (setq state-list (org-list-context))))
+       (org-log-state-notes-insert-after-drawers
+	(while (and (not (eq (point) (point-max)))
+		    (eq type 'drawer))
+	  (org-forward-element)
+	  (setq el (org-element-at-point)
+		type (org-element-type el)))
+	(when (and (eq type 'plain-list)
+		   (looking-at (concat
+				(nth 2 (car (org-list-struct)))
+				"State ")))
+	  (setq state-list (org-list-context))))
+       (t nil))
+      (when state-list
+	(let* ((origin (if org-log-states-order-reversed
+			   (car state-list)
+			 (second state-list)))
+	       (item (org-in-item-p))
+	       (struct (org-list-struct))
+	       (prevs (org-list-prevs-alist struct))
+	       (bound (if (eq gnorb-org-mail-scan-state-changes 'first)
+			  (save-excursion
+			    (goto-char
+			     (if org-log-states-order-reversed
+				 (org-list-get-first-item item struct prevs)
+			       (org-list-get-last-item item struct prevs)))
+			    (org-list-get-item-end item struct))
+			(if org-log-states-order-reversed
+			    (second state-list)
+			  (car state-list)))))
+	  (goto-char origin)
+	  (when (funcall search-dir "\\[\\[\\(gnus:\\|mailto:\\|bbdb:\\)"
+			 bound t)
+	    (cons (min origin bound) (max origin bound))))))))
+
 (defun gnorb-org-extract-mail-stuff ()
-  (let (message mails)
-    (while (re-search-forward org-any-link-re (line-end-position) t)
-      (let ((addr (or (match-string-no-properties 2)
-		      (match-string-no-properties 0))))
-	(cond
-	 ((string-match "^<?gnus:" addr)
-	  (push (substring addr (match-end 0)) message))
-	 ((string-match "^<?mailto:" addr)
-	  (push (substring addr (match-end 0)) mails))
-	 ((string-match-p "^<?bbdb:" addr)
-	  (with-current-buffer bbdb-buffer-name
-	    (let ((recs bbdb-records))
-	      (org-open-link-from-string (concat "[[" addr "]]"))
-	      (let ((mail (bbdb-mail-address (bbdb-current-record))))
-		(bbdb-display-records recs)
-		(push mail mails))))))))
-    (list message mails)))
+  "Extract mail-related information from the current heading. If
+`gnorb-org-mail-scan-state-changes' is non-nil, it will be given
+the chance to override the rest of the process and reply to a
+link found in the state-change notes. Otherwise, the value of
+`gnorb-org-mail-scan-scope' will determine how much of the
+heading text will be scanned for message and mail links."
+  (save-restriction
+    (save-excursion
+      (org-narrow-to-subtree)
+      (let* ((state-info
+	      (and gnorb-org-mail-scan-state-changes
+		   (gnorb-org-scan-state-notes)))
+	     (start
+	      (if state-info
+		  (car state-info)
+		;; get past drawers, and any non-drawer state-change
+		;; list
+		(forward-line)
+		(while (and (not (eq (point) (point-max)))
+			    (or
+			     (memq (org-element-type (org-element-at-point))
+				   '(planning drawer property-drawer))
+			     (and org-log-state-notes-insert-after-drawers
+				  (eq (org-element-type
+				       (org-element-at-point)) 'plain-list)
+				  (looking-at
+				   (concat (nth 2 (car (org-list-struct)))
+					   "State ")))))
+		  (org-forward-element))
+		(point)))
+	     (end
+	      (if state-info
+		  (cdr state-info)
+		(cond ((integerp gnorb-org-mail-scan-scope)
+		       (forward-paragraph gnorb-org-mail-scan-scope))
+		      ((eq gnorb-org-mail-scan-scope 'text)
+		       (outline-next-heading))
+		      ((eq gnorb-org-mail-scan-scope 'subtree)
+		       (goto-char (point-max))))
+		(point)))
+	     message mails)
+	(cl-labels
+	    ((scan-for-links
+	      (bound)
+	      (unless (eq (point) bound)
+		(while (re-search-forward org-any-link-re bound t)
+		  (let ((addr (or (match-string-no-properties 2)
+				  (match-string-no-properties 0))))
+		    (cond
+		     ((string-match "^<?gnus:" addr)
+		      (push (substring addr (match-end 0)) message))
+		     ((string-match "^<?mailto:" addr)
+		      (push (substring addr (match-end 0)) mails))
+		     ((string-match-p "^<?bbdb:" addr)
+		      (with-current-buffer bbdb-buffer-name
+			(let ((recs bbdb-records))
+			  (org-open-link-from-string (concat "[[" addr "]]"))
+			  (let ((mail (bbdb-mail-address (bbdb-current-record))))
+			    (bbdb-display-records recs)
+			    (push mail mails)))))))))))
+	  (org-back-to-heading t)
+	  (unless state-info
+	    (scan-for-links (line-end-position)))
+	  (goto-char start)
+	  (scan-for-links end))
+	(list message mails)))))
 
 (defun gnorb-org-setup-message (&optional messages mails attachments text ids)
   "Common message setup routine for other gnorb-org commands.
@@ -188,7 +355,7 @@ current heading."
       (goto-char pos))) 
   (unless (org-back-to-heading t)
     (error "Not in an org item"))
-  (let ((mail-stuff (gnorb-org-extract-mail-stuff))
+  (let ((mail-stuff (funcall gnorb-org-mail-scan-function))
 	(attachments (gnorb-org-attachment-list))
 	(org-id (org-id-get-create)))
     (gnorb-org-setup-message
@@ -286,6 +453,7 @@ default set of parameters."
 		       t gnorb-tmp-dir)
 		     ,@opts
 		     ,gnorb-org-email-subtree-file-parameters))))
+	 (mail-stuff (funcall gnorb-org-mail-scan-function))
 	 (attachments (gnorb-org-attachment-list))
 	 (org-id (org-id-get-create))
 	 text)
