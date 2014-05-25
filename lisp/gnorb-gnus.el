@@ -72,6 +72,12 @@ Basically behave as if all attachments have \":gnus-attachments t\"."
   :group 'gnorb-gnus
   :type 'boolean)
 
+(defcustom gnorb-gnus-trigger-refile-args '((org-agenda-files :maxlevel . 4))
+  "A value to use as an equivalent of `org-refile-targets' (which
+  see) when offering trigger targets for
+  `gnorb-gnus-message-trigger-todo'."
+  :group 'gnorb-gnus
+  :type 'list)
 
 ;;; What follows is a very careful copy-pasta of bits and pieces from
 ;;; mm-decode.el and gnus-art.el. Voodoo was involved.
@@ -240,16 +246,7 @@ current message; multiple header values returned as a string."
 ;;; If an incoming message should trigger state-change for a Org todo,
 ;;; call this function on it.
 
-(defcustom gnorb-gnus-message-trigger-default 'note
-  "What default action should be taken when triggering TODO
-  state-change from a message? Valid values are the symbols note
-  and todo. Whatever the default is, giving the command a prefix
-  argument will do the opposite."
-  :group 'gnorb-gnus
-  :type '(choice (const note)
-		 (const todo)))
-
-(defun gnorb-gnus-message-trigger-todo (arg &optional heading)
+(defun gnorb-gnus-message-trigger-todo (arg &optional id)
   "Call this function from a received gnus message to store a
 link to the message, prompt for a related Org heading, visit the
 heading, and either add a note or trigger a TODO state change.
@@ -262,21 +259,19 @@ prefix argument), or to 'prompt to always be prompted."
   (interactive "P")
   (if (not (memq major-mode '(gnus-summary-mode gnus-article-mode)))
       (error "Only works in gnus summary or article mode")
-    (org-store-link)
-    (let* ((action (if (not arg)
-		       gnorb-gnus-message-trigger-default
-		     (if (eq gnorb-gnus-message-trigger-default 'todo)
-			 'note
-		       'todo)))
-	   (targ (or heading
+    (call-interactively 'org-store-link)
+    (let* ((org-refile-targets gnorb-gnus-trigger-refile-args)
+	   (targ (or id
 		     (org-refile-get-location
-		      (format "Trigger heading (%s): " action) nil t))))
-      (find-file (nth 1 org-heading))
-      (goto-char (nth 3 org-heading))
-      (call-interactively
-       (if (eq action 'todo)
-	   'org-todo
-	 'org-add-note)))))
+		      "Trigger heading" nil t))))
+      (if id
+	  (gnorb-trigger-todo-action arg id)
+	(find-file (nth 1 targ))
+	(goto-char (nth 3 targ))
+	(gnorb-trigger-todo-action arg)
+	(message
+	 "Insert a link to the message with org-insert-link (%s)"
+	 (mapconcat 'key-description (where-is-internal 'org-insert-link) ", "))))))
 
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here

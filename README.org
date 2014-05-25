@@ -147,6 +147,13 @@ and attach the files to that heading using org-attach.
 Set the new :gnus-attachments key to "t" in a capture template that
 you use on mail messages, and you'll be queried to re-attach the
 message's attachments onto the newly-captured heading.
+**** gnorb-gnus-message-trigger-todo
+Call on an incoming message that should trigger a state change or a
+note on an existing TODO. You'll be asked to locate the appropriate
+TODO, and the action will depend in part on the value of
+`gnorb-gnus-message-trigger-default', which see. Future versions of
+Gnorb will automagically suggest TODOs relevant to the incoming
+message.
 *** User Options
 **** gnorb-gnus-mail-search-backend
 Specifies the search backend that you use for searching mails.
@@ -156,11 +163,17 @@ of those symbols.
 Treat all capture templates as if they had the :gnus-attachments key
 set to "t". This only has any effect if you're capturing from a Gnus
 summary or article buffer.
+**** gnorb-gnus-message-trigger-default
+Set to either 'note or 'todo to tell `gnorb-gnus-message-trigger-todo'
+what to do by default. You can reach the non-default behavior by
+calling that function with a prefix argument. Alternately, set to
+'prompt to always prompt for the appropriate action.
 *** Suggested Keybindings
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "gnorb-gnus"
     '(progn
        (define-key gnus-summary-mime-map "a" 'gnorb-gnus-article-org-attach)
+       (define-key gnus-summary-mode-map (kbd "C-c t") 'gnorb-gnus-message-trigger-todo)
        (push '("attach to org heading" . gnorb-gnus-mime-org-attach)
              gnus-mime-action-alist)
        ;; The only way to add mime button command keys is by redefining

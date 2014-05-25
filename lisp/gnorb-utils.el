@@ -39,6 +39,15 @@
   "Glue code between Gnus, Org, and BBDB."
   :tag "Gnorb")
 
+(defcustom gnorb-trigger-todo-default 'prompt
+  "What default action should be taken when triggering TODO
+  state-change from a message? Valid values are the symbols note
+  and todo, or prompt to pick one of the two."
+  :group 'gnorb
+  :type '(choice (const note)
+		 (const todo)
+		 (const prompt)))
+
 (defun gnorb-prompt-for-bbdb-record ()
   "Prompt the user for a BBDB record."
   (let ((recs (bbdb-records))
@@ -88,6 +97,54 @@
        (setq message-ignored-mail-headers
 	     (mapconcat
 	      'identity ign-headers-list "|")))))
+
+(defun gnorb-trigger-todo-action (arg &optional id)
+  "Do the actual restore action. Two main things here. First: if
+we were in the agenda when this was called, then keep us in the
+agenda. Second: try to figure out the correct thing to do once we
+reach the todo. That depends on `gnorb-trigger-todo-default', and
+the prefix arg."
+  (let* ((agenda-p (eq major-mode 'org-agenda-mode))
+	 (action (cond ((eq gnorb-trigger-todo-default 'prompt)
+			(intern (completing-read
+				 "Take note, or trigger TODO state change? "
+				 '("note" "todo") nil t)))
+		       ((null arg)
+			gnorb-trigger-todo-default)
+		       (t
+			(if (eq gnorb-trigger-todo-default 'todo)
+			    'note
+			  'todo))))
+	 (todo-func (if agenda-p
+			'org-agenda-todo
+		      'org-todo))
+	 (note-func (if agenda-p
+			'org-agenda-add-note
+		      'org-add-note))
+	 root-marker ret-dest-todo)
+    (when (and (not agenda-p) id)
+      (org-id-goto id))
+    (setq root-marker (if agenda-p
+			  (org-get-at-bol 'org-hd-marker)
+			(point-at-bol))
+	  ret-dest-todo (org-entry-get
+			 root-marker "TODO"))
+    (let ((ids (org-entry-get root-marker gnorb-org-msg-id-key))
+	  (sent-id (plist-get gnorb-gnus-sending-message-info :msg-id)))
+      ;; we can use `org-entry-get-multivalued-property' and
+      ;; `org-entry-put-multivalued-property' here.
+      (when sent-id
+	(org-entry-put root-marker
+		       gnorb-org-msg-id-key
+		       (if (stringp ids)
+			   (concat ids "," sent-id)
+			 sent-id)))
+      (if (eq action 'note)
+	  (call-interactively note-func)
+	(when (or (and ret-dest-todo
+		       (null gnorb-org-mail-todos))
+		  (member ret-dest-todo gnorb-org-mail-todos))
+	  (call-interactively todo-func))))))
 
 (provide 'gnorb-utils)
 ;;; gnorb-utils.el ends here

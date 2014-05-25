@@ -68,47 +68,8 @@ might have been in the outgoing message's headers and call
     (gnus-summary-exit nil t))
   (when (window-configuration-p gnorb-org-window-conf)
     (set-window-configuration gnorb-org-window-conf))
-  ;; This is some ugly stuff, but it (hopefully) results in smooth
-  ;; usage.
-  (let* ((agenda-p (eq major-mode 'org-agenda-mode))
-	 (ret-dest-id (org-entry-get
-		       (if agenda-p
-			   (org-get-at-bol 'org-hd-marker)
-			 (point-at-bol)) "ID"))
-	 (ret-dest-todo (org-entry-get
-			 (if agenda-p
-			     (org-get-at-bol 'org-hd-marker)
-			   (point-at-bol)) "TODO")))
-    (if (not gnorb-message-org-ids)
-	;; If there were no Org ID headers, just throw us back where
-	;; we were and hope.
-	(cond ((eq major-mode 'org-agenda-mode)
-	       (call-interactively 'org-agenda-todo))
-	      ((eq major-mode 'org-mode)
-	       (call-interactively 'org-todo))
-	      (t nil))
-      ;; We've been returned to a heading, is it the one referenced by
-      ;; the first of the Org ID headers? This should be the most
-      ;; common case.
-      (when (and (equal ret-dest-id (car gnorb-message-org-ids))
-		 (or (null gnorb-org-mail-todos)
-		     (member ret-dest-todo gnorb-org-mail-todos)))
-	(if agenda-p
-	    (call-interactively 'org-agenda-todo)
-	  (call-interactively 'org-todo))
-	(setq gnorb-message-org-ids
-	      (cdr gnorb-message-org-ids)))
-      ;; there's currently no way to attach multiple Org IDs to a
-      ;; message, but there might be in the future
-      (dolist (id gnorb-message-org-ids)
-	(with-demoted-errors
-	  (org-id-goto id)
-	  (delete-other-windows)
-	  (when (or (null gnorb-org-mail-todos)
-		    (member (org-entry-get (point) "TODO")
-			    gnorb-org-mail-todos))
-	    (call-interactively 'org-todo))))))
-  ;; this is a little unnecessary, but still...
+  (dolist (id gnorb-message-org-ids)
+    (gnorb-trigger-todo-action nil id))
   (setq gnorb-org-window-conf nil)
   (setq gnorb-message-org-ids nil))
 
