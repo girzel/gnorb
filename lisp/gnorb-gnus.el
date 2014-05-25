@@ -72,6 +72,12 @@ Basically behave as if all attachments have \":gnus-attachments t\"."
   :group 'gnorb-gnus
   :type 'boolean)
 
+(defcustom gnorb-gnus-new-todo-capture-key nil
+  "Key for the capture template to use when creating a new TODO
+  from an outgoing message."
+  :group 'gnorb-gnus
+  :type 'string)
+
 (defcustom gnorb-gnus-trigger-refile-args '((org-agenda-files :maxlevel . 4))
   "A value to use as an equivalent of `org-refile-targets' (which
   see) when offering trigger targets for
@@ -224,12 +230,31 @@ save them into `gnorb-tmp-dir'."
 
 ;;; Storing, removing, and acting on Org headers in messages.
 
-(defun gnorb-gnus-check-org-header ()
-  "Return the value of the `gnorb-gnus-org-header' for the
-current message; multiple header values returned as a string."
+(defvar gnorb-gnus-sending-message-info nil
+  "Place to store the To, Subject, Date, and Message-ID headers
+  of the currently-sending or last-sent message.")
+
+(defun gnorb-gnus-check-outgoing-headers ()
+  "Save the value of the `gnorb-mail-header' for the current
+message; multiple header values returned as a string. Also save
+information about the outgoing message into
+`gnorb-gnus-sending-message-info'."
   (save-restriction
     (message-narrow-to-headers)
-    (let ((org-ids (mail-fetch-field gnorb-mail-header nil nil t)))
+    (let ((org-ids (mail-fetch-field gnorb-mail-header nil nil t))
+	  (msg-id (mail-fetch-field "Message-ID"))
+	  (to (mail-fetch-field "To"))
+	  (subject (mail-fetch-field "Subject"))
+	  (date (mail-fetch-field "Date"))
+	  ;; if we can get a link, that's awesome
+	  (link (or (and (mail-fetch-field "Gcc")
+			 (org-store-link))
+		    nil)))
+      ;; if we can't, then save some information so we can fake it
+      (setq gnorb-gnus-sending-message-info
+	    `(:subject ,subject :msg-id ,msg-id
+		       :to ,to :link ,link
+		       :date ,date))
       (if org-ids
 	  (progn
 	    (require 'gnorb-org)
@@ -238,10 +263,67 @@ current message; multiple header values returned as a string."
 	    ;; if we're working from a draft or whatever, it might not
 	    ;; be there yet
 	    (add-to-list 'message-exit-actions
-			 'gnorb-org-restore-after-send t))
+			 'gnorb-org-restore-after-send))
 	(setq gnorb-message-org-ids nil)))))
 
-(add-hook 'message-send-hook 'gnorb-gnus-check-org-header)
+(add-hook 'message-header-hook 'gnorb-gnus-check-outgoing-headers)
+
+(defun gnorb-gnus-outgoing-make-todo (arg)
+  "Call this function to turn the message currently being
+composed into an email todo action. If it's a new message, or a
+reply to a message that isn't referenced by any TODOs, a new TODO
+will be created. If it is referenced, you'll be prompted to
+trigger a state-change or a note on that TODO, via
+`gnorb-gnus-message-trigger-todo' (this is a lie, I haven't
+implemented this yet -- it will only make a new TODO).
+
+You can call this either in the message buffer, while you're
+composing the message, or after the message is sent: information
+is saved for the most recently-sent email.
+
+If a new todo is made, it needs a capture template: set
+`gnorb-gnus-new-todo-capture-key' to the string key for the
+appropriate capture template. If you're using a gnus-based
+archive method (ie you have `gnus-message-archive-group' set to
+something, and your outgoing messages have a \"Fcc\" header),
+then a real link will be made to the outgoing message, and all
+the gnus-type escapes will be available (see the Info
+manual (org) Template expansion section). If you don't, then the
+%:subject, %:to, and %:date escapes for the outgoing message will
+still be available -- nothing else will work."
+  (interactive "P")
+  (if (not (eq major-mode 'message-mode))
+      (gnorb-gnus-outgoing-make-todo-1)
+    (when (mail-fetch-field gnorb-mail-header)
+      ;; If we're already composing a response to a message that is
+      ;; "trackable" (ie, the In-Reply-To or References headers point
+      ;; to message-ids that are attached to active TODOs), sending
+      ;; the message should run `gnorb-gnus-message-trigger-todo'.
+
+      ;; also, people should be able to add extra TODO ids to the
+      ;; headers, to trigger multiple TODOs, if they're really nuts.
+      (user-error "This message is already being composed in response to a TODO."))
+    (add-to-list 'message-exit-actions
+		 'gnorb-gnus-outgoing-make-todo-1 t)
+    (message "A TODO will be made from this message after it's sent")))
+
+(defun gnorb-gnus-outgoing-make-todo-1 ()
+  (unless gnorb-gnus-new-todo-capture-key
+    (error "No capture template key set, customize gnorb-gnus-new-todo-capture-key"))
+  (let* ((subject (plist-get gnorb-gnus-sending-message-info :subject))
+	 (to (plist-get gnorb-gnus-sending-message-info :to))
+	 (date (plist-get gnorb-gnus-sending-message-info :date))
+	 (msg-id (plist-get gnorb-gnus-sending-message-info :msg-id))
+	 (link (plist-get gnorb-gnus-sending-message-info :link))
+	 ;; If we actually have a link, then make use of it.
+	 ;; Otherwise, fake it.
+	 (org-capture-link-is-already-stored
+	  (or link t)))
+    (setq org-store-link-plist
+	  `(:subject ,subject :to ,to :date ,date))
+    (org-capture nil gnorb-gnus-new-todo-capture-key)
+    (when msg-id
+      (org-entry-put (point) gnorb-org-msg-id-key msg-id))))
 
 ;;; If an incoming message should trigger state-change for a Org todo,
 ;;; call this function on it.

@@ -154,6 +154,13 @@ TODO, and the action will depend in part on the value of
 `gnorb-gnus-message-trigger-default', which see. Future versions of
 Gnorb will automagically suggest TODOs relevant to the incoming
 message.
+**** gnorb-gnus-outgoing-make-todo
+Call this while composing a new message (ie in message-mode), or
+immediately after sending a message, to create a new TODO from the
+outgoing message -- for instance, when you need to be sure you get a
+response. New TODOs are created using the capture process, and you'll
+need to specify a capture template to use for outgoing messages: see
+`gnorb-gnus-new-todo-capture-key'.
 *** User Options
 **** gnorb-gnus-mail-search-backend
 Specifies the search backend that you use for searching mails.
@@ -168,6 +175,16 @@ Set to either 'note or 'todo to tell `gnorb-gnus-message-trigger-todo'
 what to do by default. You can reach the non-default behavior by
 calling that function with a prefix argument. Alternately, set to
 'prompt to always prompt for the appropriate action.
+**** gnorb-gnus-new-todo-capture-key
+Set this to a single-character string pointing at an Org capture
+template to use when creating TODOs from outgoing messages. The
+template is a regular capture template, with a few exceptions. If Gnus
+helps you archive outgoing messages (ie you have
+`gnus-message-archive-group' set to something, and your outgoing
+messages have a "Fcc" header), a link to that message will be made,
+and you'll be able to use all the escapes related to gnus messages. If
+you don't archive outgoing messages, you'll still be able to use the
+%:subject, %:to, and %:date escapes in the capture template.
 *** Suggested Keybindings
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "gnorb-gnus"

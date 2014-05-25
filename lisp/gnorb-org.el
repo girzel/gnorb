@@ -38,6 +38,10 @@ relevant headings with these keywords. Set to nil to call
 org-todo regardless of TODO type."
   :group 'gnorb-org)
 
+(defcustom gnorb-org-msg-id-key "GNORB_MSG_ID"
+  "The name of the org property used to store the Message-IDs
+  from relevant messages.")
+
 (defun gnorb-org-contact-link (rec)
   "Prompt for a BBDB record and insert a link to that record at
 point.
@@ -70,7 +74,9 @@ might have been in the outgoing message's headers and call
     (set-window-configuration gnorb-org-window-conf))
   (dolist (id gnorb-message-org-ids)
     (gnorb-trigger-todo-action nil id))
+  ;; this is a little unnecessary, but it may save grief
   (setq gnorb-org-window-conf nil)
+  (setq gnorb-gnus-sending-message-info nil)
   (setq gnorb-message-org-ids nil))
 
 (defun gnorb-org-extract-mail-stuff ()
