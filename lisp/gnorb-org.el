@@ -38,6 +38,12 @@ relevant headings with these keywords. Set to nil to call
 org-todo regardless of TODO type."
   :group 'gnorb-org)
 
+(defcustom gnorb-org-after-message-setup-hook nil
+  "Hook run in a message buffer after setting up the message from
+  `gnorb-org-handle-mail' or `gnorb-org-email-subtree'."
+  :group 'gnorb-org
+  :type 'hook)
+
 (defcustom gnorb-org-msg-id-key "GNORB_MSG_ID"
   "The name of the org property used to store the Message-IDs
   from relevant messages.")
@@ -325,7 +331,8 @@ headings."
   ; put point somewhere reasonable
   (if (or mails messages)
       (message-goto-body)
-    (message-goto-to)))
+    (message-goto-to))
+  (run-hooks 'gnorb-org-after-message-setup-hook))
 
 (defun gnorb-org-attachment-list ()
   "Get a list of files (absolute filenames) attached to the
