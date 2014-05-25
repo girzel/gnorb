@@ -197,16 +197,26 @@ current heading."
 
 ;;; Email subtree
 
-(defcustom gnorb-org-email-subtree-parameters nil
+(defcustom gnorb-org-email-subtree-text-parameters nil
   "A plist of export parameters corresponding to the EXT-PLIST
-  argument to the export functions."
-  :group 'gnorb-org)
+  argument to the export functions, for use when exporting to
+  text."
+  :group 'gnorb-org
+  :type 'boolean)
+
+(defcustom gnorb-org-email-subtree-file-parameters nil
+  "A plist of export parameters corresponding to the EXT-PLIST
+  argument to the export functions, for use when exporting to a
+  file."
+  :group 'gnorb-org
+  :type 'boolean)
 
 (defcustom gnorb-org-email-subtree-text-options '(nil t nil t)
   "A list of ts and nils corresponding to Org's export options,
 to be used when exporting to text. The options, in order, are
 async, subtreep, visible-only, and body-only."
-  :group 'gnorb-org)
+  :group 'gnorb-org
+  :type 'list)
 
 (defcustom gnorb-org-email-subtree-file-options '(nil t nil nil)
   "A list of ts and nils corresponding to Org's export options,
@@ -268,15 +278,14 @@ default set of parameters."
 		     `(,backend-symbol
 		       "*Gnorb Export*"
 		       ,@opts
-		       ,gnorb-org-email-subtree-parameters))
+		       ,gnorb-org-email-subtree-text-parameters))
 	    (apply 'org-export-to-file
 		   `(,backend-symbol
 		     ,(org-export-output-file-name
 		       (second (assoc backend-symbol gnorb-org-export-extensions))
 		       t gnorb-tmp-dir)
 		     ,@opts
-		     ,gnorb-org-email-subtree-parameters))))
-	 (mail-stuff (gnorb-org-extract-mail-stuff))
+		     ,gnorb-org-email-subtree-file-parameters))))
 	 (attachments (gnorb-org-attachment-list))
 	 (org-id (org-id-get-create))
 	 text)
