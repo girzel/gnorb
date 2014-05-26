@@ -12,9 +12,7 @@ This isn't actually enforced, of course, it's just an ideal.
 
 Put "gnorb/lisp" in your load path, then either require "gnorb" to
 load everything, or pick bits and pieces: "gnorb-gnus", "gnorb-org",
-or "gnorb-bbdb". As much as possible, I've tried to keep the included
-functions discrete and modular: each can be used in isolation, and
-there's little or no package-level lock-in.
+or "gnorb-bbdb".
 
 Recommended keybindings/integration measures are shown below. Copy
 them into your init files and edit as you see fit.
@@ -23,7 +21,79 @@ Code in this package is aimed at the development (git) versions of
 Gnus, Org, and BBDB (that means BBDB 3: upgrade, already!). I'll try
 to make it work with the most recent stable releases of those
 packages, but I'm not promising anything.
+** Using Gnorb for Tracking Email TODOs
+Most of the functions listed later in this README are fairly discrete:
+they do one thing only, and (I hope) don't require anything special in
+terms of file formats or workflow. The one exception to this is using
+Gnorb to keep track of email-related TODOs. Because we try to track
+them round-trip -- incoming and outgoing under one TODO representing a
+conversation -- it works best if things match up at both ends.
+Specifically:
+*** Capture templates for emails
+Most people will be using plain capture templates to create TODOs from
+messages. You'll almost always want to save a link to the message, so
+you can get back to it later. Once the TODO is made, you can call
+`gnorb-org-handle-mail' on it, to look for message and mail links and
+automatically start a reply to the original message. The option
+`gnorb-org-mail-scan-scope' determines how much of the TODO heading
+and its subtree are scanned for links (set to a number to scan that
+number of paragraphs, or 0 for just the heading).
 
+Your capture template should therefore put the link where
+`gnorb-org-handle-mail' can find it. Say your capture template looks
+like this:
+
+#+BEGIN_SRC emacs-lisp
+  '("r" "Work-related Reply" entry (file+headline "~/org/job.org" "Emails")
+    "** REPLY %:fromname\n%?Received on %:date-timestamp-inactive, link: %a"
+    :gnus-attachments t)
+
+#+END_SRC
+
+Then you'll want to set `gnorb-org-mail-scan-scope' to 1 (at least),
+so that the link in the first paragraph is found.
+*** Tracking conversations
+It can be useful to use a single TODO heading to keep track of the
+salient points of an entire email back-and-forth conversation -- a
+business negotiation, for instance. You can do this by using TODO
+keywords that trigger state-change notes, and putting links to emails
+into those notes. That way, your logbook becomes a full record of the
+conversation.
+
+For example, you might have two keywords, "REPLY" and "WAIT", which
+both trigger state-change notes. Say you call `gnorb-org-handle-mail'
+on a heading that's set to "REPLY", then send the email. You'll be
+returned to the heading and prompted to change its state. Change it to
+"WAIT" and leave a note.
+
+When you receive a reply to your sent email, call
+`gnorb-gnus-incoming-do-todo' on that message. You'll be taken back to
+the TODO, and again prompted to change its state. Change it to
+"REPLY", and again leave a note. Gnorb stores a link to the incoming
+message automatically, so insert the link into the note.
+
+Now your TODO has a logdrawer with a link to the most
+recently-received email in the most recent state-change note. If
+`gnorb-org-mail-scan-state-changes' is set to 'first, then the next
+time you call `gnorb-org-handle-mail' on the heading, everything else
+will be disregarded in favor of replying to that most recent email.
+
+That way, you can use the paired keywords "REPLY" and "WAIT", and the
+paired functions `gnorb-org-handle-mail' and
+`gnorb-gnus-incoming-do-todo', to play a sort of email ping-pong.
+
+Of course you don't /have/ to use this sort of system, Gnorb just
+gives you the bits and pieces to put it together.
+
+PS: What if you receive an email that's relevant to a TODO, and just
+want to reply to it on the spot (ie, without going through the whole
+`gnorb-gnus-incoming-do-todo' and state-change rigmarole)? In that
+case, you can use `gnorb-gnus-outgoing-do-todo' on the reply as you're
+composing it (or right after you've sent it), and Gnorb will notice
+that it is part of an ongoing conversation. The only thing it
+(currently) won't do is automatically store a link to the message you
+just replied to, so if you want to put that into the conversation,
+you'll have to do it manually.
 ** Gnorb-BBDB
 *** Functions
 **** gnorb-bbdb-tag-agenda
@@ -125,6 +195,23 @@ you can always do it manually with the command of the same name.
 **** gnorb-org-bbdb-popup-layout
 Controls the layout of the Agenda-related BBDB popup, takes the same
 values as bbdb-pop-up-layout.
+**** gnorb-org-mail-scan-scope
+When calling `gnorb-org-handle-mail' on a TODO heading, this option
+controls how much of the heading and its text are scanned for relevant
+links. Set to 0 to only look within the heading text, or to a positive
+integer to scan that many paragraphs of body text. The symbols 'text
+and 'subtree will scan all the body text or all the body text and all
+subheadings, respectively.
+
+Note that if `gnorb-org-mail-scan-state-changes' is non-nil, the
+state-change drawer will be scanned for links first. If links are
+found there, only they will be used.
+**** gnorb-org-mail-scan-state-changes
+If this option is non-nil, `gnorb-org-handle-mail' will first look for
+links in the state-change drawer (ie the "LOGBOOK" or whatever you
+have it set to), and if any are found there they will be used instead
+of the links found elsewhere in the heading. Valid values are 'first
+(only the most recent state-change note will be examined), and 'all.
 *** Suggested Keybindings
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "gnorb-org"
@@ -147,20 +234,25 @@ and attach the files to that heading using org-attach.
 Set the new :gnus-attachments key to "t" in a capture template that
 you use on mail messages, and you'll be queried to re-attach the
 message's attachments onto the newly-captured heading.
-**** gnorb-gnus-message-trigger-todo
+**** gnorb-gnus-incoming-do-todo
 Call on an incoming message that should trigger a state change or a
 note on an existing TODO. You'll be asked to locate the appropriate
 TODO, and the action will depend in part on the value of
-`gnorb-gnus-message-trigger-default', which see. Future versions of
-Gnorb will automagically suggest TODOs relevant to the incoming
-message.
-**** gnorb-gnus-outgoing-make-todo
+`gnorb-gnus-message-trigger-default', which see. If the incoming
+message refers to messages that are already tracked in a conversation,
+Gnorb will prompt you with the relevant TODO.
+**** gnorb-gnus-outgoing-do-todo
 Call this while composing a new message (ie in message-mode), or
-immediately after sending a message, to create a new TODO from the
-outgoing message -- for instance, when you need to be sure you get a
-response. New TODOs are created using the capture process, and you'll
-need to specify a capture template to use for outgoing messages: see
-`gnorb-gnus-new-todo-capture-key'.
+immediately after sending a message. If the message is a new one (ie
+it's not part of an email conversation that's already being tracked) a
+new TODO will be made from it. This is handy when you need to make
+sure you get a response, for instance. New TODOs are created using the
+capture process, and you'll need to specify a capture template to use
+for outgoing messages: see `gnorb-gnus-new-todo-capture-key'.
+
+If you call this on a message that's part of an already-tracked
+conversation, you'll be prompted to change TODO state or leave a note
+on that conversation.
 *** User Options
 **** gnorb-gnus-mail-search-backend
 Specifies the search backend that you use for searching mails.
@@ -170,11 +262,18 @@ of those symbols.
 Treat all capture templates as if they had the :gnus-attachments key
 set to "t". This only has any effect if you're capturing from a Gnus
 summary or article buffer.
-**** gnorb-gnus-message-trigger-default
-Set to either 'note or 'todo to tell `gnorb-gnus-message-trigger-todo'
+**** gnorb-trigger-todo-default
+Set to either 'note or 'todo to tell `gnorb-gnus-incoming-do-todo'
 what to do by default. You can reach the non-default behavior by
 calling that function with a prefix argument. Alternately, set to
 'prompt to always prompt for the appropriate action.
+**** gnorb-gnus-trigger-refile-targets
+If you use `gnorb-gnus-incoming-do-todo' on an incoming message, Gnorb
+will try to locate a TODO heading that's relevant to that message. If
+it can't, it will prompt you for one, using the refile interface. This
+option will be used as the value of `org-refile-targets' during that
+process: see the docstring of `org-refile-targets' for the appropriate
+syntax.
 **** gnorb-gnus-new-todo-capture-key
 Set this to a single-character string pointing at an Org capture
 template to use when creating TODOs from outgoing messages. The
@@ -184,13 +283,14 @@ helps you archive outgoing messages (ie you have
 messages have a "Fcc" header), a link to that message will be made,
 and you'll be able to use all the escapes related to gnus messages. If
 you don't archive outgoing messages, you'll still be able to use the
-%:subject, %:to, and %:date escapes in the capture template.
+%:subject, %:to, %:toname, %:toaddress, and %:date escapes in the
+capture template.
 *** Suggested Keybindings
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "gnorb-gnus"
     '(progn
        (define-key gnus-summary-mime-map "a" 'gnorb-gnus-article-org-attach)
-       (define-key gnus-summary-mode-map (kbd "C-c t") 'gnorb-gnus-message-trigger-todo)
+       (define-key gnus-summary-mode-map (kbd "C-c t") 'gnorb-gnus-incoming-do-todo)
        (push '("attach to org heading" . gnorb-gnus-mime-org-attach)
              gnus-mime-action-alist)
        ;; The only way to add mime button command keys is by redefining
@@ -205,6 +305,10 @@ you don't archive outgoing messages, you'll still be able to use the
                (dolist (c gnus-mime-button-commands)
                  (define-key map (cadr c) (car c)))
                map))))
+
+  (eval-after-load "message"
+    '(progn
+       (define-key message-mode-map (kbd "C-c t") 'gnorb-gnus-outgoing-do-todo)))
 #+END_SRC
 ** Wishlist/TODO
 - Support adding X-Org-Id headers to Gnus messages, which point at
