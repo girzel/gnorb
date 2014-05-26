@@ -246,14 +246,16 @@ information about the outgoing message into
     (message-narrow-to-headers)
     (let* ((org-ids (mail-fetch-field gnorb-mail-header nil nil t))
 	   (msg-id (mail-fetch-field "Message-ID"))
-	   (to (mail-fetch-field "To"))
+	   (to (if (message-news-p)
+		   (mail-fetch-field "Newsgroups")
+		 (mail-fetch-field "To")))
 	   (toname (nth 1 (mail-extract-address-components to)))
 	   (toaddress (nth 2 (mail-extract-address-components to)))
 	   (subject (mail-fetch-field "Subject"))
 	   (date (mail-fetch-field "Date"))
 	   ;; if we can get a link, that's awesome
 	   (link (or (and (mail-fetch-field "Gcc")
-			  (org-store-link))
+			  (call-interactively 'org-store-link))
 		     nil)))
       ;; if we can't, then save some information so we can fake it
       (setq gnorb-gnus-sending-message-info
