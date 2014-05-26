@@ -111,6 +111,8 @@ Basically behave as if all attachments have \":gnus-attachments t\"."
 (defun gnorb-gnus-attach-part (handle &optional org-heading)
   "Attach HANDLE to an existing org heading."
   (let ((filename (gnorb-gnus-save-part handle))
+	;; we should probably do the automatic location routine here,
+	;; as well.
 	(org-heading (or org-heading
 			 (org-refile-get-location "Attach part to" nil t))))
     (require 'org-attach)
@@ -340,26 +342,46 @@ link to the message, prompt for a related Org heading, visit the
 heading, and either add a note or trigger a TODO state change.
 Set `gnorb-trigger-todo-default' to 'note or 'todo (you can
 get the non-default behavior by calling this function with a
-prefix argument), or to 'prompt to always be prompted."
-  ;; this whole function isn't going to be that awesome until we teach
-  ;; it how to guess the relevant org heading using message-ids from
-  ;; the References or In-Reply-To headers of the incoming message.
+prefix argument), or to 'prompt to always be prompted.
+
+In some cases, Gnorb can guess for you which Org heading you
+probably want to trigger, which can save some time. It does this
+by looking in the References and In-Reply-To headers, and seeing
+if any of the IDs there match the value of the
+`gnorb-org-msg-id-key' property for any headings."
   (interactive "P")
   (if (not (memq major-mode '(gnus-summary-mode gnus-article-mode)))
       (error "Only works in gnus summary or article mode")
     (call-interactively 'org-store-link)
-    (let* ((org-refile-targets gnorb-gnus-trigger-refile-args)
-	   (targ (or id
-		     (org-refile-get-location
-		      "Trigger heading" nil t))))
+    (let* ((org-refile-targets gnorb-gnus-trigger-refile-targets)
+	   (ref-msg-ids (with-current-buffer gnus-original-article-buffer
+			  (nnheader-narrow-to-headers)
+			  (gnus-extract-message-id-from-in-reply-to
+			   (or (message-fetch-field "in-reply-to")
+			       (message-fetch-field "references")))))
+	   (offer-heading
+	    (when (and (not id) ref-msg-ids)
+	      ;; for now we're basically ignoring the fact that
+	      ;; multiple candidates could exist; just do the first
+	      ;; one.
+	      (car (gnorb-org-find-visit-candidates
+		    (list ref-msg-ids)))))
+	   targ)
       (if id
 	  (gnorb-trigger-todo-action arg id)
-	(find-file (nth 1 targ))
-	(goto-char (nth 3 targ))
-	(gnorb-trigger-todo-action arg)
+	(if (and offer-heading
+		 (y-or-n-p (format "Trigger action on %s"
+			    (org-format-outline-path (cadr offer-heading)))))
+	    (gnorb-trigger-todo-action arg (car offer-heading))
+	  (setq targ (org-refile-get-location
+		      "Trigger heading" nil t))
+	  (find-file (nth 1 targ))
+	  (goto-char (nth 3 targ))
+	  (gnorb-trigger-todo-action arg))
 	(message
 	 "Insert a link to the message with org-insert-link (%s)"
-	 (mapconcat 'key-description (where-is-internal 'org-insert-link) ", "))))))
+	 (mapconcat 'key-description
+		    (where-is-internal 'org-insert-link) ", "))))))
 
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here
