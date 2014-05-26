@@ -78,10 +78,11 @@ Basically behave as if all attachments have \":gnus-attachments t\"."
   :group 'gnorb-gnus
   :type 'string)
 
-(defcustom gnorb-gnus-trigger-refile-args '((org-agenda-files :maxlevel . 4))
+(defcustom gnorb-gnus-trigger-refile-targets
+  '((org-agenda-files :maxlevel . 4))
   "A value to use as an equivalent of `org-refile-targets' (which
   see) when offering trigger targets for
-  `gnorb-gnus-message-trigger-todo'."
+  `gnorb-gnus-incoming-do-todo'."
   :group 'gnorb-gnus
   :type 'list)
 
@@ -272,18 +273,12 @@ information about the outgoing message into
 
 (add-hook 'message-header-hook 'gnorb-gnus-check-outgoing-headers)
 
-(defun gnorb-gnus-outgoing-make-todo (arg)
-  "Call this function to turn the message currently being
-composed into an email todo action. If it's a new message, or a
-reply to a message that isn't referenced by any TODOs, a new TODO
-will be created. If it is referenced, you'll be prompted to
-trigger a state-change or a note on that TODO, via
-`gnorb-gnus-message-trigger-todo' (this is a lie, I haven't
-implemented this yet -- it will only make a new TODO).
-
-You can call this either in the message buffer, while you're
-composing the message, or after the message is sent: information
-is saved for the most recently-sent email.
+(defun gnorb-gnus-outgoing-do-todo (arg)
+  "Call this function to use the message currently being composed
+as an email todo action. If it's a new message, or a reply to a
+message that isn't referenced by any TODOs, a new TODO will be
+created. If it references an existing TODO, you'll be prompted to
+trigger a state-change or a note on that TODO.
 
 If a new todo is made, it needs a capture template: set
 `gnorb-gnus-new-todo-capture-key' to the string key for the
@@ -335,7 +330,7 @@ work."
 ;;; If an incoming message should trigger state-change for a Org todo,
 ;;; call this function on it.
 
-(defun gnorb-gnus-message-trigger-todo (arg &optional id)
+(defun gnorb-gnus-incoming-do-todo (arg &optional id)
   "Call this function from a received gnus message to store a
 link to the message, prompt for a related Org heading, visit the
 heading, and either add a note or trigger a TODO state change.
