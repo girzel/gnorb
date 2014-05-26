@@ -241,20 +241,22 @@ information about the outgoing message into
 `gnorb-gnus-sending-message-info'."
   (save-restriction
     (message-narrow-to-headers)
-    (let ((org-ids (mail-fetch-field gnorb-mail-header nil nil t))
-	  (msg-id (mail-fetch-field "Message-ID"))
-	  (to (mail-fetch-field "To"))
-	  (subject (mail-fetch-field "Subject"))
-	  (date (mail-fetch-field "Date"))
-	  ;; if we can get a link, that's awesome
-	  (link (or (and (mail-fetch-field "Gcc")
-			 (org-store-link))
-		    nil)))
+    (let* ((org-ids (mail-fetch-field gnorb-mail-header nil nil t))
+	   (msg-id (mail-fetch-field "Message-ID"))
+	   (to (mail-fetch-field "To"))
+	   (toname (nth 1 (mail-extract-address-components to)))
+	   (toaddress (nth 2 (mail-extract-address-components to)))
+	   (subject (mail-fetch-field "Subject"))
+	   (date (mail-fetch-field "Date"))
+	   ;; if we can get a link, that's awesome
+	   (link (or (and (mail-fetch-field "Gcc")
+			  (org-store-link))
+		     nil)))
       ;; if we can't, then save some information so we can fake it
       (setq gnorb-gnus-sending-message-info
 	    `(:subject ,subject :msg-id ,msg-id
-		       :to ,to :link ,link
-		       :date ,date))
+		       :to ,to :toname ,toname :toaddress ,toaddress
+		       :link ,link :date ,date))
       (if org-ids
 	  (progn
 	    (require 'gnorb-org)
@@ -289,8 +291,9 @@ something, and your outgoing messages have a \"Fcc\" header),
 then a real link will be made to the outgoing message, and all
 the gnus-type escapes will be available (see the Info
 manual (org) Template expansion section). If you don't, then the
-%:subject, %:to, and %:date escapes for the outgoing message will
-still be available -- nothing else will work."
+%:subject, %:to, %:toname, %:toaddress, and %:date escapes for
+the outgoing message will still be available -- nothing else will
+work."
   (interactive "P")
   (if (not (eq major-mode 'message-mode))
       (gnorb-gnus-outgoing-make-todo-1)
@@ -312,6 +315,8 @@ still be available -- nothing else will work."
     (error "No capture template key set, customize gnorb-gnus-new-todo-capture-key"))
   (let* ((subject (plist-get gnorb-gnus-sending-message-info :subject))
 	 (to (plist-get gnorb-gnus-sending-message-info :to))
+	 (toname (plist-get gnorb-gnus-sending-message-info :toaddress))
+	 (toaddress (plist-get gnorb-gnus-sending-message-info :toaddress))
 	 (date (plist-get gnorb-gnus-sending-message-info :date))
 	 (msg-id (plist-get gnorb-gnus-sending-message-info :msg-id))
 	 (link (plist-get gnorb-gnus-sending-message-info :link))
@@ -320,7 +325,8 @@ still be available -- nothing else will work."
 	 (org-capture-link-is-already-stored
 	  (or link t)))
     (setq org-store-link-plist
-	  `(:subject ,subject :to ,to :date ,date))
+	  `(:subject ,subject :to ,to :toname ,toname
+		     :toaddress ,toaddress :date ,date))
     (org-capture nil gnorb-gnus-new-todo-capture-key)
     (when msg-id
       (org-entry-put (point) gnorb-org-msg-id-key msg-id))))
