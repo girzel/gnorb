@@ -129,16 +129,12 @@ the prefix arg."
 			(point-at-bol))
 	  ret-dest-todo (org-entry-get
 			 root-marker "TODO"))
-    (let ((ids (org-entry-get root-marker gnorb-org-msg-id-key))
+    (let ((ids (org-entry-get-multivalued-property
+		root-marker gnorb-org-msg-id-key))
 	  (sent-id (plist-get gnorb-gnus-sending-message-info :msg-id)))
-      ;; we can use `org-entry-get-multivalued-property' and
-      ;; `org-entry-put-multivalued-property' here.
       (when sent-id
-	(org-entry-put root-marker
-		       gnorb-org-msg-id-key
-		       (if (stringp ids)
-			   (concat ids "," sent-id)
-			 sent-id)))
+	(org-entry-add-to-multivalued-property
+	 root-marker gnorb-org-msg-id-key))
       (if (eq action 'note)
 	  (call-interactively note-func)
 	(when (or (and ret-dest-todo
