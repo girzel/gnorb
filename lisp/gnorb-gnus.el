@@ -264,8 +264,8 @@ information about the outgoing message into
 	    (require 'gnorb-org)
 	    (setq gnorb-message-org-ids org-ids)
 	    ;; `gnorb-org-setup-message' may have put this here, but
-	    ;; if we're working from a draft or whatever, it might not
-	    ;; be there yet
+	    ;; if we're working from a draft, or triggering this from
+	    ;; a reply, it might not be there yet
 	    (add-to-list 'message-exit-actions
 			 'gnorb-org-restore-after-send))
 	(setq gnorb-message-org-ids nil)))))
@@ -299,18 +299,17 @@ work."
   (interactive "P")
   (if (not (eq major-mode 'message-mode))
       (gnorb-gnus-outgoing-make-todo-1)
-    (when (mail-fetch-field gnorb-mail-header)
-      ;; If we're already composing a response to a message that is
-      ;; "trackable" (ie, the In-Reply-To or References headers point
-      ;; to message-ids that are attached to active TODOs), sending
-      ;; the message should run `gnorb-gnus-message-trigger-todo'.
-
-      ;; also, people should be able to add extra TODO ids to the
-      ;; headers, to trigger multiple TODOs, if they're really nuts.
-      (user-error "This message is already being composed in response to a TODO."))
-    (add-to-list 'message-exit-actions
-		 'gnorb-gnus-outgoing-make-todo-1 t)
-    (message "A TODO will be made from this message after it's sent")))
+    (let ((ids (mail-fetch-field gnorb-mail-header nil nil t)))
+      (add-to-list
+       'message-exit-actions
+       (if ids
+	   'gnorb-org-restore-after-send
+	 'gnorb-gnus-outgoing-make-todo-1)
+       t)
+      (message
+       (if ids
+	   "Message will trigger TODO state-changes after sending"
+	 "A TODO will be made from this message after it's sent")))))
 
 (defun gnorb-gnus-outgoing-make-todo-1 ()
   (unless gnorb-gnus-new-todo-capture-key
