@@ -271,7 +271,8 @@ heading text will be scanned for message and mail links."
 	  (scan-for-links end))
 	(list message mails)))))
 
-(defun gnorb-org-setup-message (&optional messages mails attachments text ids)
+(defun gnorb-org-setup-message
+    (&optional messages mails from cc bcc attachments text ids)
   "Common message setup routine for other gnorb-org commands.
 MESSAGES is a list of gnus links pointing to messages -- we
 currently only use the first of the list. MAILS is a list of
@@ -282,9 +283,9 @@ Org heading ids, associating the outgoing message with those
 headings."
   (require 'gnorb-gnus)
   (if (not messages)
-      ; either compose new message...
+      ;; either compose new message...
       (compose-mail (mapconcat 'identity mails ", "))
-    ; ...or follow link and start reply
+    ;; ...or follow link and start reply
     (condition-case nil
 	(progn
 	  (org-gnus-open (org-link-unescape (car messages)))
@@ -299,13 +300,25 @@ headings."
   ;; return us after message is sent
   (add-to-list 'message-exit-actions
 	       'gnorb-org-restore-after-send t)
-  ; attach ATTACHMENTS
+  ;; set headers from MAIL_* properties (from, cc, and bcc)
+  (cl-flet ((sh (h)
+		(when (cdr h)
+		  (funcall (intern (format "message-goto-%s" (car h))))
+		  (let ((message-beginning-of-line t)
+			(show-trailing-whitespace t))
+		    (message-beginning-of-line)
+		    (unless (bolp)
+		      (kill-line))
+		    (insert (cdr h))))))
+    (dolist (h `((from . ,from) (cc . ,cc) (bcc . ,bcc)))
+      (sh h)))
+  ;; attach ATTACHMENTS
   (map-y-or-n-p
    (lambda (a) (format "Attach %s to outgoing message? "
 		       (file-name-nondirectory a)))
    (lambda (a)
      (mml-attach-file a (mm-default-file-encoding a)
-      nil "attachment"))
+		      nil "attachment"))
    attachments
    '("file" "files" "attach"))
   ;; insert text, if any
@@ -328,7 +341,7 @@ headings."
 	  ;; this function hardly does anything
 	  (message-insert-header
 	   (intern gnorb-mail-header) i)))))
-  ; put point somewhere reasonable
+					; put point somewhere reasonable
   (if (or mails messages)
       (message-goto-body)
     (message-goto-to))
@@ -362,12 +375,17 @@ current heading."
       (goto-char pos))) 
   (unless (org-back-to-heading t)
     (error "Not in an org item"))
-  (let ((mail-stuff (funcall gnorb-org-mail-scan-function))
-	(attachments (gnorb-org-attachment-list))
-	(org-id (org-id-get-create)))
-    (gnorb-org-setup-message
-     (first mail-stuff) (second mail-stuff)
-     attachments nil org-id)))
+  (cl-flet ((mp (p) (org-entry-get (point) p t)))
+    (let* ((mail-stuff (funcall gnorb-org-mail-scan-function))
+	   (attachments (gnorb-org-attachment-list))
+	   (from (mp "MAIL_FROM"))
+	   (cc (mp "MAIL_CC"))
+	   (bcc (mp "MAIL_BCC"))
+	   (org-id (org-id-get-create)))
+      (gnorb-org-setup-message
+       (first mail-stuff) (second mail-stuff)
+       from cc bcc
+       attachments nil org-id))))
 
 (defun gnorb-org-find-visit-candidates (ids)
   "For all message-ids in IDS (which should be a list of
@@ -525,6 +543,8 @@ default set of parameters."
       (push result attachments))
     (gnorb-org-setup-message
      (first mail-stuff) (second mail-stuff)
+     nil nil nil ;; when this calls into `org-handle-mail' all this
+		 ;; will be sorted
      attachments text org-id)))
 
 (defcustom gnorb-org-capture-collect-link-p t
