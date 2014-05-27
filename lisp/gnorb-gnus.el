@@ -352,9 +352,11 @@ if any of the IDs there match the value of the
     (let* ((org-refile-targets gnorb-gnus-trigger-refile-targets)
 	   (ref-msg-ids (with-current-buffer gnus-original-article-buffer
 			  (nnheader-narrow-to-headers)
-			  (gnus-extract-message-id-from-in-reply-to
-			   (or (message-fetch-field "in-reply-to")
-			       (message-fetch-field "references")))))
+			  (let ((all-refs
+				 (concat (message-fetch-field "in-reply-to")
+					 (message-fetch-field "references"))))
+			    (when all-refs
+			      (gnus-extract-message-id-from-in-reply-to all-refs)))))
 	   (offer-heading
 	    (when (and (not id) ref-msg-ids)
 	      ;; for now we're basically ignoring the fact that
