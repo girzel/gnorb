@@ -134,7 +134,7 @@ the prefix arg."
 	  (sent-id (plist-get gnorb-gnus-sending-message-info :msg-id)))
       (when sent-id
 	(org-entry-add-to-multivalued-property
-	 root-marker gnorb-org-msg-id-key))
+	 root-marker gnorb-org-msg-id-key sent-id))
       (if (eq action 'note)
 	  (call-interactively note-func)
 	(when (or (and ret-dest-todo
