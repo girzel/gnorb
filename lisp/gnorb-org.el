@@ -182,12 +182,24 @@ message link found will be replied to."
 	  (setq state-list (org-list-context))))
        (t nil))
       (when state-list
-	(let* ((origin (if org-log-states-order-reversed
-			   (car state-list)
-			 (second state-list)))
-	       (item (org-in-item-p))
-	       (struct (org-list-struct))
+	(let* ((struct (org-list-struct))
 	       (prevs (org-list-prevs-alist struct))
+	       (origin (progn (goto-char
+			       (if org-log-states-order-reversed
+				   (car state-list)
+				 (second state-list)))
+			      (while (not (looking-at
+					   (concat
+					    (nth 2 (car (org-list-struct)))
+					    "State ")))
+				(goto-char
+				 (funcall
+				  (if org-log-states-order-reversed
+				      'org-list-get-next-item
+				    'org-list-get-prev-item)
+				  (org-in-item-p) struct prevs)))
+			      (point)))
+	       (item (org-in-item-p))
 	       (bound (if (eq gnorb-org-mail-scan-state-changes 'first)
 			  (save-excursion
 			    (goto-char
