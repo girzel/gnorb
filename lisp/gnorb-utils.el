@@ -105,23 +105,13 @@ agenda. Second: try to figure out the correct thing to do once we
 reach the todo. That depends on `gnorb-trigger-todo-default', and
 the prefix arg."
   (let* ((agenda-p (eq major-mode 'org-agenda-mode))
-	 (action (cond ((eq gnorb-trigger-todo-default 'prompt)
-			(intern (completing-read
-				 "Take note, or trigger TODO state change? "
-				 '("note" "todo") nil t)))
-		       ((null arg)
-			gnorb-trigger-todo-default)
-		       (t
-			(if (eq gnorb-trigger-todo-default 'todo)
-			    'note
-			  'todo))))
 	 (todo-func (if agenda-p
 			'org-agenda-todo
 		      'org-todo))
 	 (note-func (if agenda-p
 			'org-agenda-add-note
 		      'org-add-note))
-	 root-marker ret-dest-todo)
+	 root-marker ret-dest-todo action)
     (when (and (not agenda-p) id)
       (org-id-goto id))
     (setq root-marker (if agenda-p
@@ -135,12 +125,24 @@ the prefix arg."
       (when sent-id
 	(org-entry-add-to-multivalued-property
 	 root-marker gnorb-org-msg-id-key sent-id))
+      (setq action (cond ((not
+			   (or (and ret-dest-todo
+				    (null gnorb-org-mail-todos))
+			       (member ret-dest-todo gnorb-org-mail-todos)))
+			  'note)
+			 ((eq gnorb-trigger-todo-default 'prompt)
+			  (intern (completing-read
+				   "Take note, or trigger TODO state change? "
+				   '("note" "todo") nil t)))
+			 ((null arg)
+			  gnorb-trigger-todo-default)
+			 (t
+			  (if (eq gnorb-trigger-todo-default 'todo)
+			      'note
+			    'todo))))
       (if (eq action 'note)
 	  (call-interactively note-func)
-	(when (or (and ret-dest-todo
-		       (null gnorb-org-mail-todos))
-		  (member ret-dest-todo gnorb-org-mail-todos))
-	  (call-interactively todo-func))))))
+	(call-interactively todo-func)))))
 
 (provide 'gnorb-utils)
 ;;; gnorb-utils.el ends here
