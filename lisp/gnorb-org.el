@@ -36,7 +36,8 @@
 this library may, after completion, call org-(agenda-)todo on
 relevant headings with these keywords. Set to nil to call
 org-todo regardless of TODO type."
-  :group 'gnorb-org)
+  :group 'gnorb-org
+  :type 'list)
 
 (defcustom gnorb-org-after-message-setup-hook nil
   "Hook run in a message buffer after setting up the message from
@@ -46,7 +47,9 @@ org-todo regardless of TODO type."
 
 (defcustom gnorb-org-msg-id-key "GNORB_MSG_ID"
   "The name of the org property used to store the Message-IDs
-  from relevant messages.")
+  from relevant messages."
+  :group 'gnorb-org
+  :type 'string)
 
 (defcustom gnorb-org-mail-scan-scope 1
   "When calling `gnorb-org-handle-mail' on a heading, this option
@@ -93,7 +96,10 @@ as usual for links, subject to the value of
   messages (currently only the first link will be acted upon).
   The second list is of strings suitable to be used in the To
   header of an outgoing email, ie \"Billy Bob Thornton
-  <bbt@gmail.com>\".")
+  <bbt@gmail.com>\"."
+  :group 'gnorb-org
+  :type 'symbol)
+
 
 (defun gnorb-org-contact-link (rec)
   "Prompt for a BBDB record and insert a link to that record at
