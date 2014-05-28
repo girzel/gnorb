@@ -100,6 +100,19 @@ as usual for links, subject to the value of
   :group 'gnorb-org
   :type 'symbol)
 
+(defcustom gnorb-org-find-candidates-match nil
+  "When scanning all org files for heading related to an incoming
+message, this option will limit which headings will be offered as
+target candidates. Specifically it will be used as the second
+argument to `org-map-entries', and syntax is the same as that
+used in an agenda tags view.
+
+For instance, to limit candidates to headings with TODOs in
+`gnorb-org-mail-todos', you might use this:
+
+(mapconcat (lambda (s) (format \"+TODO=\\\"%s\\\"\" s)) gnorb-org-mail-todos \"|\")"
+  :group 'gnorb-org
+  :type 'symbol)
 
 (defun gnorb-org-contact-link (rec)
   "Prompt for a BBDB record and insert a link to that record at
@@ -450,9 +463,7 @@ values in their `gnorb-org-org-msg-id-key' property."
 				 (append
 				  (org-get-outline-path)
 				  (list (org-get-heading nil t)))))))))
-	    nil ;; allow customize here, default to
-		;; `gnorb-org-mail-todos', but maybe provide a
-		;; separate option.
+	    gnorb-org-find-candidates-match
 	    'agenda 'archive 'comment)
 	   ret-val))
     (setq ret-val (delete-dups
