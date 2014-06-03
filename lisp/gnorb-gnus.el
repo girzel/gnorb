@@ -349,15 +349,19 @@ if any of the IDs there match the value of the
   (interactive "P")
   (if (not (memq major-mode '(gnus-summary-mode gnus-article-mode)))
       (error "Only works in gnus summary or article mode")
+    ;; We should only store a link if it's not already at the head of
+    ;; `org-stored-links'. There's some duplicate storage, at
+    ;; present. Take a look at calling it non-interactively.
     (call-interactively 'org-store-link)
     (let* ((org-refile-targets gnorb-gnus-trigger-refile-targets)
-	   (ref-msg-ids (with-current-buffer gnus-original-article-buffer
-			  (nnheader-narrow-to-headers)
-			  (let ((all-refs
-				 (concat (message-fetch-field "in-reply-to")
-					 (message-fetch-field "references"))))
-			    (when all-refs
-			      (gnus-extract-message-id-from-in-reply-to all-refs)))))
+	   (ref-msg-ids
+	    (with-current-buffer gnus-original-article-buffer
+	      (nnheader-narrow-to-headers)
+	      (let ((all-refs
+		     (concat (message-fetch-field "in-reply-to")
+			     (message-fetch-field "references"))))
+		(when all-refs
+		  (gnus-extract-message-id-from-in-reply-to all-refs)))))
 	   (offer-heading
 	    (when (and (not id) ref-msg-ids)
 	      ;; for now we're basically ignoring the fact that
@@ -366,6 +370,7 @@ if any of the IDs there match the value of the
 	      (car (gnorb-org-find-visit-candidates
 		    (list ref-msg-ids)))))
 	   targ)
+      ;; offer to attach attachments!
       (if id
 	  (gnorb-trigger-todo-action arg id)
 	(if (and offer-heading

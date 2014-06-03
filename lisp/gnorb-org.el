@@ -36,6 +36,7 @@
 this library may, after completion, call org-(agenda-)todo on
 relevant headings with these keywords. Set to nil to call
 org-todo regardless of TODO type."
+  ;; allowable values should also include 'todo and 'not-done
   :group 'gnorb-org
   :type 'list)
 
