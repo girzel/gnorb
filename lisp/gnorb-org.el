@@ -454,7 +454,7 @@ values in their `gnorb-org-org-msg-id-key' property."
 			   (list (org-id-get-create)
 				 (append
 				  (org-get-outline-path)
-				  (list (org-get-heading nil t)))))))))
+				  (list (org-get-heading t nil)))))))))
 	    gnorb-org-find-candidates-match
 	    'agenda 'archive 'comment)
 	   ret-val))
