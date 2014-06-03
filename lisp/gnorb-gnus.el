@@ -387,5 +387,36 @@ if any of the IDs there match the value of the
 	 (mapconcat 'key-description
 		    (where-is-internal 'org-insert-link) ", "))))))
 
+(defun gnorb-gnus-search-messages (str &optional ret)
+  "Initiate a search for gnus message links in an org subtree.
+  The arg STR can be one of two things: an Org heading id value
+  \(IDs should be prefixed with \"id+\"\), in which case links
+  will be collected from that heading, or a string corresponding
+  to an Org tags search, in which case links will be collected
+  from all matching headings.
+
+In either case, once a collection of links have been made, they
+will all be displayed in an ephemeral group on the \"nngnorb\"
+server. There must be an active \"nngnorb\" server for this to
+work."
+  (interactive)
+  (let ((server
+	 (or (catch 'found
+	       (dolist (s gnus-server-alist)
+		 (when (eq (nth 1 s) 'nngnorb)
+		   (throw 'found (car s)))))
+	     (user-error
+	      "Please add a \"nngnorb\" backend to your gnus installation."))))
+    (gnus-group-read-ephemeral-group
+     (concat "gnorb-" str)
+     (list 'nnir "nnir") nil
+     ret ;; it's possible you can't just put an arbitrary form in here.
+     nil nil
+     (list (cons 'nnir-specs (list (cons 'nnir-query-spec `((query . ,str)))
+				   (cons 'nnir-group-spec `((,server)))))
+	   (cons 'nnir-artlist nil)))))
+
+
+
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here

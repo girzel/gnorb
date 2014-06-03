@@ -671,5 +671,24 @@ search."
 
 (add-hook 'org-agenda-finalize-hook 'gnorb-org-popup-bbdb)
 
+;;; Groups from the gnorb gnus server backend
+
+(defun gnorb-org-view ()
+  "Search the subtree at point for links to gnus messages, and
+then show them in an ephemeral group, in gnus.
+
+This won't work unless you've added a \"nngnorb\" server to
+your gnus select methods."
+  (interactive)
+  (setq gnorb-org-window-conf (current-window-configuration))
+  (let (id)
+    (save-excursion
+      (org-back-to-heading)
+      (setq id (concat "id+" (org-id-get-create t))))
+    (gnorb-gnus-search-messages
+     id
+     `(when (window-configuration-p gnorb-org-window-conf)
+	(set-window-configuration gnorb-org-window-conf)))))
+
 (provide 'gnorb-org)
 ;;; gnorb-org.el ends here
