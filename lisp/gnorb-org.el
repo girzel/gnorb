@@ -275,32 +275,23 @@ heading text will be scanned for message and mail links."
 		      ((eq gnorb-org-mail-scan-scope 'subtree)
 		       (goto-char (point-max))))
 		(point)))
-	     message mails)
-	(cl-labels
-	    ((scan-for-links
-	      (bound)
-	      (unless (eq (point) bound)
-		(while (re-search-forward org-any-link-re bound t)
-		  (let ((addr (or (match-string-no-properties 2)
-				  (match-string-no-properties 0))))
-		    (cond
-		     ((string-match "^<?gnus:" addr)
-		      (push (substring addr (match-end 0)) message))
-		     ((string-match "^<?mailto:" addr)
-		      (push (substring addr (match-end 0)) mails))
-		     ((string-match-p "^<?bbdb:" addr)
-		      (with-current-buffer bbdb-buffer-name
-			(let ((recs bbdb-records))
-			  (org-open-link-from-string (concat "[[" addr "]]"))
-			  (let ((mail (bbdb-mail-address (bbdb-current-record))))
-			    (bbdb-display-records recs)
-			    (push mail mails)))))))))))
-	  (org-back-to-heading t)
-	  (unless state-info
-	    (scan-for-links (line-end-position)))
-	  (goto-char start)
-	  (scan-for-links end))
-	(list message mails)))))
+	     strings links bbdb-mails)
+	(org-back-to-heading t)
+	(unless state-info
+	  (push (buffer-substring (point) (line-end-position)) strings))
+	(push (buffer-substring start end) strings)
+	(with-temp-buffer
+	  (dolist (s strings)
+	    (insert s)
+	    (insert "\n"))
+	  (goto-char (point-min))
+	  (setq links (gnorb-scan-links (point-max) 'gnus 'mail 'bbdb)))
+	(when (plist-get links :bbdb)
+	  (dolist (b (plist-get links :bbdb))
+	    (push (gnorb-bbdb-link-to-mail b) bbdb-mails)))
+	(list (plist-get links :gnus)
+	      (append bbdb-mails
+		      (plist-get links :mail)))))))
 
 (defun gnorb-org-setup-message
     (&optional messages mails from cc bcc attachments text ids)

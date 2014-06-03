@@ -144,5 +144,39 @@ the prefix arg."
 	  (call-interactively note-func)
 	(call-interactively todo-func)))))
 
+(defsubst gnorb-bbdb-link-to-mail (link)
+  (with-current-buffer bbdb-buffer-name
+    (let ((recs bbdb-records))
+      (org-open-link-from-string (concat "[[bbdb:" link "]]"))
+      (let ((mail (bbdb-mail-address (bbdb-current-record))))
+	(bbdb-display-records recs)
+	mail))))
+
+(defun gnorb-scan-links (bound &rest types)
+  ;; this function could be refactored somewhat -- lots of code
+  ;; repetition. It also should be a little faster for when we're
+  ;; scanning for gnus links only, that's a little slow. We should
+  ;; probably use a different regexp based on the value of TYPES.
+  ;;
+  ;; This function should also *not* be responsible for unescaping
+  ;; links -- we don't know what they're going to be used for, and
+  ;; unescaped is safer.
+  (unless (eq (point) bound)
+    (let (addr gnus mail bbdb)
+      (while (re-search-forward org-any-link-re bound t)
+	(setq addr (or (match-string-no-properties 2)
+		       (match-string-no-properties 0)))
+	(cond
+	 ((and (memq 'gnus types)
+	       (string-match "^<?gnus:" addr))
+	  (push (substring addr (match-end 0)) gnus))
+	 ((and (memq 'mail types)
+	       (string-match "^<?mailto:" addr))
+	  (push (substring addr (match-end 0)) mail))
+	 ((and (memq 'bbdb types)
+	       (string-match "^<?bbdb:" addr))
+	  (push (substring addr (match-end 0)) bbdb))))
+      `(:gnus ,gnus :mail ,mail :bbdb ,bbdb))))
+
 (provide 'gnorb-utils)
 ;;; gnorb-utils.el ends here
