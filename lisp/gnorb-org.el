@@ -654,12 +654,15 @@ search."
 	  ((eq major-mode 'org-mode)
 	   (save-excursion
 	     (org-back-to-heading)
-	     (while (re-search-forward
-		     org-bracket-link-analytic-regexp (line-end-position) t)
-	       (when (string-match-p "bbdb" (match-string 2))
-		 (let* ((desc (match-string 5))
-			(rec (bbdb-search (bbdb-records) desc desc desc)))
-		   (setq recs (append recs rec))))))))
+	     (let ((bound (org-element-property
+			   :end (org-element-at-point)))
+		   desc rec)
+	       (while (re-search-forward
+		       org-bracket-link-analytic-regexp bound t)
+		(when (string-match-p "bbdb" (match-string 2))
+		  (setq desc (match-string 5)
+			rec (bbdb-search (bbdb-records) desc desc desc)
+			recs (append recs rec))))))))
     (if recs
 	(bbdb-display-records
 	 recs gnorb-org-bbdb-popup-layout)
