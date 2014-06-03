@@ -70,7 +70,7 @@ Org agenda tags search. All headings matched by this string will
 be scanned for gnus messages, and those messages displayed."
   (save-excursion
     (let ((q-string (cdr (assq 'query query)))
-	  subtrees subtree-text vectors)
+	  subtrees links subtree-text vectors)
       (if (string-match "id\\+\\([[:alnum:]-]+\\)$" q-string)
 	  (with-demoted-errors "Error: %S"
 	    (org-id-goto (match-string 1 q-string))
