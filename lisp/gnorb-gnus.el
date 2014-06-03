@@ -111,11 +111,12 @@ Basically behave as if all attachments have \":gnus-attachments t\"."
 
 (defun gnorb-gnus-attach-part (handle &optional org-heading)
   "Attach HANDLE to an existing org heading."
-  (let ((filename (gnorb-gnus-save-part handle))
-	;; we should probably do the automatic location routine here,
-	;; as well.
-	(org-heading (or org-heading
-			 (org-refile-get-location "Attach part to" nil t))))
+  (let* ((filename (gnorb-gnus-save-part handle))
+	 ;; we should probably do the automatic location routine here,
+	 ;; as well.
+	 (org-refile-targets gnorb-gnus-trigger-refile-targets)
+	 (org-heading (or org-heading
+			  (org-refile-get-location "Attach part to" nil t))))
     (require 'org-attach)
     (save-window-excursion
       (find-file (nth 1 org-heading))
