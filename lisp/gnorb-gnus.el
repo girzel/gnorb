@@ -401,10 +401,7 @@ server. There must be an active \"nngnorb\" server for this to
 work."
   (interactive)
   (let ((server
-	 (or (catch 'found
-	       (dolist (s gnus-server-alist)
-		 (when (eq (nth 1 s) 'nngnorb)
-		   (throw 'found (car s)))))
+	 (or (gnus-method-to-server '(nngnorb))
 	     (user-error
 	      "Please add a \"nngnorb\" backend to your gnus installation."))))
     (gnus-group-read-ephemeral-group
