@@ -50,8 +50,7 @@
 (add-to-list 'nnir-method-default-engines '(nngnorb . gnorb))
 
 (add-to-list 'nnir-engines
-	     '(gnorb nnir-run-gnorb
-		     ((gnorb-nnir-string . "Org Agenda tags search string: "))))
+	     '(gnorb nnir-run-gnorb))
 
 (defun nnir-run-gnorb (query server &optional group)
   "Run the actual search for messages to display. See nnir.el for
