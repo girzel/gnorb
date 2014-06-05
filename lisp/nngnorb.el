@@ -70,6 +70,8 @@ be scanned for gnus messages, and those messages displayed."
   (save-excursion
     (let ((q (cdr (assq 'query query)))
 	  subtrees links subtree-text vectors)
+      (when (equal "5.13" gnus-version-number)
+	(setq q (car q)))
       (cond ((string-match "id\\+\\([[:alnum:]-]+\\)$" q)
 	     (with-demoted-errors "Error: %S"
 	       (org-id-goto (match-string 1 q))

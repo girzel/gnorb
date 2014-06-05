@@ -400,20 +400,32 @@ will all be displayed in an ephemeral group on the \"nngnorb\"
 server. There must be an active \"nngnorb\" server for this to
 work."
   (interactive)
-  (let ((server
+  (let ((nnir-address
 	 (or (gnus-method-to-server '(nngnorb))
 	     (user-error
-	      "Please add a \"nngnorb\" backend to your gnus installation."))))
+	      "Please add a \"nngnorb\" backend to your gnus installation.")))
+	(nnir-current-query nil)
+	(nnir-current-server nil)
+	(nnir-current-group-marked nil)
+	(nnir-artlist nil))
     (gnus-group-read-ephemeral-group
-     (concat "gnorb-" str)
-     (list 'nnir "nnir") nil
-     ret ;; it's possible you can't just put an arbitrary form in here.
+     ;; in 24.4, the group name is mostly decorative. in 24.3, the
+     ;; actual query itself is embedded there. It should look like
+     ;; (concat "nnir:" (prin1-to-string '((query str))))
+     (if (equal "5.13" gnus-version-number)
+	 (concat "nnir:" (prin1-to-string `((query ,str))))
+       (concat "gnorb-" str))
+     (if (equal "5.13" gnus-version-number)
+	 (list 'nnir nnir-address)
+       (list 'nnir "nnir"))
+     nil
+     ret ;; it's possible you can't just put an arbitrary form in
+	 ;; here, which sucks.
      nil nil
+     ;; the following seems to simply be ignored under gnus 5.13
      (list (cons 'nnir-specs (list (cons 'nnir-query-spec `((query . ,str)))
-				   (cons 'nnir-group-spec `((,server)))))
-	   (cons 'nnir-artlist nil)))))
-
-
+				   (cons 'nnir-group-spec `((,nnir-address)))))
+	   (cons 'nnir-artlist nil)))))))))
 
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here
