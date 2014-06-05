@@ -68,24 +68,30 @@ Otherwise, the query string can be a tags match string, a la the
 Org agenda tags search. All headings matched by this string will
 be scanned for gnus messages, and those messages displayed."
   (save-excursion
-    (let ((q-string (cdr (assq 'query query)))
+    (let ((q (cdr (assq 'query query)))
 	  subtrees links subtree-text vectors)
-      (if (string-match "id\\+\\([[:alnum:]-]+\\)$" q-string)
-	  (with-demoted-errors "Error: %S"
-	    (org-id-goto (match-string 1 q-string))
-	    (push (move-marker
-		   (make-marker)
-		   (org-element-property :begin (org-element-at-point)))
-		  subtrees))
-	(org-map-entries
-	 (lambda ()
-	   (push
-	    (move-marker (make-marker)
-			 (org-element-property :begin
-					       (org-element-at-point)))
-	    subtrees))
-	 q-string
-	 'agenda))
+      (cond ((string-match "id\\+\\([[:alnum:]-]+\\)$" q)
+	     (with-demoted-errors "Error: %S"
+	       (org-id-goto (match-string 1 q))
+	       (push (move-marker
+		      (make-marker)
+		      (org-element-property :begin (org-element-at-point)))
+		     subtrees)))
+	    ((listp q)
+	     ;; be a little careful: this could be a list of links, or
+	     ;; it could be the full plist
+	     (setq links (if (plist-member q :gnus)
+			     (plist-get q :gnus)
+			   q)))
+	    (t (org-map-entries
+		(lambda ()
+		  (push
+		   (move-marker (make-marker)
+				(org-element-property :begin
+						      (org-element-at-point)))
+		   subtrees))
+		q
+		'agenda)))
       (when subtrees
 	(with-current-buffer (get-buffer-create nnir-tmp-buffer)
 	  (erase-buffer)
@@ -103,21 +109,21 @@ be scanned for gnus messages, and those messages displayed."
 	    (insert subtree-text)
 	    (insert "\n"))
 	  (goto-char (point-min))
-	  (setq links (delete-dups (gnorb-scan-links
-				    (point-max) 'gnus))))
-	(dolist (m (plist-get links :gnus) (nreverse vectors))
-	  (let (server-group msg-id artno)
-	    (setq m (org-link-unescape m))
-	    (if (not (string-match "\\`\\([^#]+\\)\\(#\\(.*\\)\\)?" m))
-		(error "Error in Gnus link"))
-	    (setq server-group (match-string 1 m)
-		  msg-id (match-string 3 m))
-	    ;; I swear just finding the `gnus-request-head' function
-	    ;; was a trial in itself. But I've only tried it with
-	    ;; nnimap -- does it work for other backends?
-	    (setq artno (cdr (gnus-request-head msg-id server-group)))
-	    (when (> artno 0)
-	      (push (vector server-group artno 100) vectors))))))))
+	  (setq links (gnorb-scan-links (point-max) 'gnus))))
+      (setq links (delete-dups (plist-get links :gnus)))
+      (dolist (m links (nreverse vectors))
+	(let (server-group msg-id artno)
+	  (setq m (org-link-unescape m))
+	  (if (not (string-match "\\`\\([^#]+\\)\\(#\\(.*\\)\\)?" m))
+	      (error "Error in Gnus link"))
+	  (setq server-group (match-string 1 m)
+		msg-id (match-string 3 m))
+	  ;; I swear just finding the `gnus-request-head' function
+	  ;; was a trial in itself. But I've only tried it with
+	  ;; nnimap -- does it work for other backends?
+	  (setq artno (cdr (gnus-request-head msg-id server-group)))
+	  (when (> artno 0)
+	    (push (vector server-group artno 100) vectors)))))))
 
 (defvar nngnorb-status-string "")
 
