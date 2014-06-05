@@ -425,7 +425,7 @@ work."
      ;; the following seems to simply be ignored under gnus 5.13
      (list (cons 'nnir-specs (list (cons 'nnir-query-spec `((query . ,str)))
 				   (cons 'nnir-group-spec `((,nnir-address)))))
-	   (cons 'nnir-artlist nil)))))))))
+	   (cons 'nnir-artlist nil)))))
 
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here
