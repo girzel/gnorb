@@ -128,7 +128,7 @@ future!"
 	 (link (concat "bbdb:" (org-link-escape name))))
     (org-store-link-props :type "bbdb" :name name
 			  :link link :description name)
-    (if (called-interactively-p)
+    (if (called-interactively-p 'any)
 	(insert (format "[[%s][%s]]" link name))
       link)))
 
@@ -349,7 +349,7 @@ headings."
     (message-goto-body)
     (insert"\n")
     (if (bufferp text)
-	(insert-buffer text)
+	(insert-buffer-substring text)
       (insert text)))
   ;; insert org ids, if any
   (when ids
@@ -621,7 +621,7 @@ search."
     (cond ((and
 	    (and (eq major-mode 'org-agenda-mode)
 		 (eq org-agenda-type 'tags))
-	    (or (called-interactively-p)
+	    (or (called-interactively-p 'any)
 		gnorb-org-agenda-popup-bbdb))
 	   (let ((todo-only nil)
 		 (str (or str org-agenda-query-string))
@@ -669,7 +669,7 @@ search."
       (when (get-buffer-window bbdb-buffer-name)
 	(quit-window nil
 		     (get-buffer-window bbdb-buffer-name)))
-      (when (called-interactively-p)
+      (when (called-interactively-p 'any)
 	(message "No relevant BBDB records")))))
 
 (add-hook 'org-agenda-finalize-hook 'gnorb-org-popup-bbdb)

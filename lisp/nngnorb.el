@@ -147,10 +147,10 @@ be scanned for gnus messages, and those messages displayed."
   t)
 
 (defun nngnorb-status-message (&optional server)
-  nnnil-status-string)
+  nngnorb-status-string)
 
 (defun nngnorb-request-article (article &optional group server to-buffer)
-  (setq nnnil-status-string "No such group")
+  (setq nngnorb-status-string "No such group")
   nil)
 
 (defun nngnorb-request-group (group &optional server fast info)
@@ -158,7 +158,7 @@ be scanned for gnus messages, and those messages displayed."
     (with-current-buffer nntp-server-buffer
       (erase-buffer)
       (insert "411 no such news group\n")))
-  (setq nnnil-status-string "No such group")
+  (setq nngnorb-status-string "No such group")
   nil)
 
 (defun nngnorb-close-group (group &optional server)

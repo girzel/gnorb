@@ -301,7 +301,7 @@ a prefix arg and \"*\", the prefix arg must come first."
 (defun gnorb-bbdb-cite-contact (rec)
   (interactive (list (gnorb-prompt-for-bbdb-record)))
   (let ((mail-string (bbdb-dwim-mail rec)))
-   (if (called-interactively-p)
+   (if (called-interactively-p 'any)
        (insert mail-string)
      mail-string)))
 
