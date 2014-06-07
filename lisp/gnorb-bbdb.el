@@ -115,34 +115,37 @@ If VERBOSE is non-nil (as in interactive calls) be verbose."
 (defun gnorb-bbdb-configure-posting-styles (recs)
   ;; My most magnificent work of copy pasta!
   (dolist (r recs)
-    (let (field val label recval element filep
-		element v results name address)
+    (let (field val label rec-val element filep
+		element v value results name address)
       (dolist (style gnorb-bbdb-posting-styles)
 	(setq field (pop style)
 	      val (pop style))
-	(when (consp val)
+	(when (consp val) ;; (label value)
 	  (setq label (pop val)
 		val (pop val)))
 	(unless (fboundp field)
+	  ;; what's the record's existing value for this field?
 	  (setq rec-val (bbdb-record-field r field)))
 	(when (cond
 	       ((eq field 'address)
 		(dolist (a rec-val)
 		  (unless (and label
-			       (not (string-match label (car f))))
-		    (string-match val (bbdb-format-address-default f)))))
+			       (not (string-match label (car a))))
+		    (string-match val (bbdb-format-address-default a)))))
 	       ((eq field 'phone)
 		(dolist (p rec-val)
 		  (unless (and label
-			       (not (string-match label (car f))))
+			       (not (string-match label (car p))))
 		    (string-match val (bbdb-phone-string p)))))
 	       ((consp rec-val)
 		(dolist (f rec-val)
-		  (string-match var f)))
+		  (string-match val f)))
 	       ((fboundp field)
-		(funcall field rec))
+		(funcall field r))
 	       ((stringp rec-val)
 		(string-match val rec-val)))
+	  ;; there are matches, run through the field setters in last
+	  ;; element of the sexp
 	  (dolist (attribute style)
 	    (setq element (pop attribute)
 		  filep nil)
@@ -159,10 +162,7 @@ If VERBOSE is non-nil (as in interactive calls) be verbose."
 	    (setq v
 		  (cond
 		   ((stringp value)
-		    (if (and (gnus-string-match-p "\\\\[&[:digit:]]" value)
-			     (match-beginning 1))
-			(gnus-match-substitute-replacement value nil nil group)
-		      value))
+		    value)
 		   ((or (symbolp value)
 			(functionp value))
 		    (cond ((functionp value)
