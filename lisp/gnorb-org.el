@@ -467,7 +467,7 @@ values in their `gnorb-org-org-msg-id-key' property."
       (gnorb-org-populate-id-hash))
     (dolist (id ids)
       (when (setq sub-val (gethash id gnorb-msg-id-to-heading-table))
-	(append sub-val ret-val)))
+	(setq ret-val (append sub-val ret-val))))
     ret-val))
 
 ;;; Email subtree
