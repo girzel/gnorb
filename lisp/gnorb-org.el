@@ -433,6 +433,29 @@ current heading."
 		  (append (list new-val) old-val)
 		(list new-val))
 	      gnorb-msg-id-to-heading-table))))
+(defun gnorb-org-add-id-hash-entry (msg-id &optional marker)
+  (org-with-point-at (or marker (point))
+    (let ((old-val (gethash msg-id gnorb-msg-id-to-heading-table))
+	  (new-val (list
+		    (org-id-get-create)
+		    (append
+		     (list
+		      (file-name-nondirectory
+		       (buffer-file-name
+			(current-buffer))))
+		     (org-get-outline-path)
+		     (list
+		      (org-no-properties
+		       (replace-regexp-in-string
+			org-bracket-link-regexp
+			"\\3"
+			(nth 4 (org-heading-components)))))))))
+      (unless (member (car new-val) old-val)
+	(puthash msg-id
+		 (if old-val
+		     (append (list new-val) old-val)
+		   (list new-val))
+		 gnorb-msg-id-to-heading-table)))))
 
 (defun gnorb-org-populate-id-hash ()
   "Scan all agenda files for headings with the

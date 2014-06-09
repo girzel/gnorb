@@ -131,7 +131,7 @@ the prefix arg."
       (when sent-id
 	(org-entry-add-to-multivalued-property
 	 root-marker gnorb-org-msg-id-key sent-id)
-	(gnorb-org-add-id-hash-entry sent-id))
+	(gnorb-org-add-id-hash-entry sent-id root-marker))
       (setq action (cond ((not
 			   (or (and ret-dest-todo
 				    (null gnorb-org-mail-todos))
