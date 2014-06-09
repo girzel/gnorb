@@ -366,7 +366,9 @@ headings."
 	   (intern gnorb-mail-header) i)))))
 					; put point somewhere reasonable
   (if (or mails messages)
-      (message-goto-body)
+      (if (not messages)
+	  (message-goto-subject)
+       (message-goto-body))
     (message-goto-to))
   (run-hooks 'gnorb-org-after-message-setup-hook))
 
