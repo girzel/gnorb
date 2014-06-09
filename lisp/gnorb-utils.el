@@ -66,13 +66,19 @@
 (defvar gnorb-tmp-dir (make-temp-file "emacs-gnorb" t)
   "Temporary directory where attachments etc are saved.")
 
+(defvar gnorb-msg-id-to-heading-table nil
+  "Hash table where keys are message-ids, and values are lists of
+  org headings which have that message-id in their GNORB_MSG_ID
+  property. Values are actually two-element lists: the heading's
+  id, and its outline path.")
+
 (defvar gnorb-message-org-ids nil
   "List of Org heading IDs from the outgoing Gnus message, used
   to mark mail TODOs as done once the message is sent."
   ;; The send hook either populates this, or sets it to nil, depending
   ;; on whether the message in question has an Org id header. Then
   ;; `gnorb-org-restore-after-send' checks for it and acts
-  ;; appropriately.
+  ;; appropriately, then sets it to nil.
 )
 
 (defcustom gnorb-mail-header "X-Org-ID"
@@ -124,7 +130,8 @@ the prefix arg."
 	  (sent-id (plist-get gnorb-gnus-sending-message-info :msg-id)))
       (when sent-id
 	(org-entry-add-to-multivalued-property
-	 root-marker gnorb-org-msg-id-key sent-id))
+	 root-marker gnorb-org-msg-id-key sent-id)
+	(gnorb-org-add-id-hash-entry sent-id))
       (setq action (cond ((not
 			   (or (and ret-dest-todo
 				    (null gnorb-org-mail-todos))

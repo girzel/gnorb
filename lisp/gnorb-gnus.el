@@ -364,11 +364,14 @@ if any of the IDs there match the value of the
 		  (gnus-extract-message-id-from-in-reply-to all-refs)))))
 	   (offer-heading
 	    (when (and (not id) ref-msg-ids)
-	      ;; for now we're basically ignoring the fact that
-	      ;; multiple candidates could exist; just do the first
-	      ;; one.
-	      (car (gnorb-org-find-visit-candidates
-		    (list ref-msg-ids)))))
+	      (if org-id-track-globally
+		  ;; for now we're basically ignoring the fact that
+		  ;; multiple candidates could exist; just do the first
+		  ;; one.
+		  (car (gnorb-org-find-visit-candidates
+			ref-msg-ids))
+		(message "Gnorb can't check for relevant headings unless `org-id-track-globally' is t")
+		(sit-for 1))))
 	   targ)
       ;; offer to attach attachments!
       (if id
