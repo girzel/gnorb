@@ -368,7 +368,9 @@ In some cases, Gnorb can guess for you which Org heading you
 probably want to trigger, which can save some time. It does this
 by looking in the References and In-Reply-To headers, and seeing
 if any of the IDs there match the value of the
-`gnorb-org-msg-id-key' property for any headings."
+`gnorb-org-msg-id-key' property for any headings. In order for
+this to work, you will have to have loaded org-id, and have the
+variable `org-id-track-globally' set to t."
   (interactive "P")
   (if (not (memq major-mode '(gnus-summary-mode gnus-article-mode)))
       (error "Only works in gnus summary or article mode")
@@ -379,12 +381,11 @@ if any of the IDs there match the value of the
     (let* ((org-refile-targets gnorb-gnus-trigger-refile-targets)
 	   (ref-msg-ids
 	    (with-current-buffer gnus-original-article-buffer
-	      (nnheader-narrow-to-headers)
+	      (message-narrow-to-headers-or-head)
 	      (let ((all-refs
-		     (concat (message-fetch-field "in-reply-to")
-			     (message-fetch-field "references"))))
+		     (message-fetch-field "references")))
 		(when all-refs
-		  (gnus-extract-message-id-from-in-reply-to all-refs)))))
+		  (split-string all-refs)))))
 	   (offer-heading
 	    (when (and (not id) ref-msg-ids)
 	      (if org-id-track-globally
