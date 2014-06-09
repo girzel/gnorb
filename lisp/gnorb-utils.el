@@ -147,6 +147,13 @@ the prefix arg."
 			  (if (eq gnorb-trigger-todo-default 'todo)
 			      'note
 			    'todo))))
+      (map-y-or-n-p
+       (lambda (a)
+	 (format "Attach %s to heading? "
+		 (file-name-nondirectory a)))
+       (lambda (a) (org-attach-attach a nil 'mv))
+       gnorb-gnus-capture-attachments
+       '("file" "files" "attach"))
       (if (eq action 'note)
 	  (call-interactively note-func)
 	(call-interactively todo-func)))))

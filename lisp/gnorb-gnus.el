@@ -373,22 +373,24 @@ if any of the IDs there match the value of the
 		(message "Gnorb can't check for relevant headings unless `org-id-track-globally' is t")
 		(sit-for 1))))
 	   targ)
-      ;; offer to attach attachments!
+      (gnorb-gnus-collect-all-attachments)
       (if id
 	  (gnorb-trigger-todo-action arg id)
 	(if (and offer-heading
 		 (y-or-n-p (format "Trigger action on %s"
-			    (org-format-outline-path (cadr offer-heading)))))
+				   (org-format-outline-path (cadr offer-heading)))))
 	    (gnorb-trigger-todo-action arg (car offer-heading))
 	  (setq targ (org-refile-get-location
 		      "Trigger heading" nil t))
 	  (find-file (nth 1 targ))
 	  (goto-char (nth 3 targ))
-	  (gnorb-trigger-todo-action arg))
-	(message
-	 "Insert a link to the message with org-insert-link (%s)"
-	 (mapconcat 'key-description
-		    (where-is-internal 'org-insert-link) ", "))))))
+	  (gnorb-trigger-todo-action arg)))
+      ;; will this ever actually get called?
+      (setq gnorb-gnus-capture-attachments nil)
+      (message
+       "Insert a link to the message with org-insert-link (%s)"
+       (mapconcat 'key-description
+		  (where-is-internal 'org-insert-link) ", ")))))
 
 (defun gnorb-gnus-search-messages (str &optional ret)
   "Initiate a search for gnus message links in an org subtree.
