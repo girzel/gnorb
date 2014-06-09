@@ -201,7 +201,8 @@ save them into `gnorb-tmp-dir'."
 	       (file-name-nondirectory a)))
      (lambda (a) (org-attach-attach a nil 'mv))
      gnorb-gnus-capture-attachments
-     '("file" "files" "attach"))))
+     '("file" "files" "attach"))
+    (setq gnorb-gnus-capture-attachments nil)))
 
 (add-hook 'org-capture-mode-hook 'gnorb-gnus-capture-attach)
 
