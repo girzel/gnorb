@@ -78,6 +78,29 @@ Basically behave as if all attachments have \":gnus-attachments t\"."
   :group 'gnorb-gnus
   :type 'string)
 
+(defcustom gnorb-gnus-hint-relevant-article t
+  "When opening a gnus message, should gnorb let you know if the
+  message is relevant to an existing TODO?"
+  :group 'gnorb-gnus
+  :type 'boolean)
+
+(defcustom gnorb-gnus-summary-mark-format-letter "g"
+  "Format letter to be used as part of your
+  `gnus-summary-line-format', to indicate in the *Summary* buffer
+  which articles might be relevant to TODOs. Since this is a user
+  format code, it should be prefixed with %u, eg %ug. It will
+  result in the insertion of the value of
+  `gnorb-gnus-summary-mark', for relevant messages, or
+  else a space."
+  :group 'gnorb-gnus
+  :type 'string)
+
+(defcustom gnorb-gnus-summary-mark "¡"
+  "Default mark to insert in the summary format line of articles
+  that are likely relevant to existing TODO headings."
+  :group 'gnorb-gnus
+  :type 'string)
+
 (defcustom gnorb-gnus-trigger-refile-targets
   '((org-agenda-files :maxlevel . 4))
   "A value to use as an equivalent of `org-refile-targets' (which
@@ -432,5 +455,47 @@ work."
 				   (cons 'nnir-group-spec `((,nnir-address)))))
 	   (cons 'nnir-artlist nil)))))
 
+;;; Automatic noticing of relevant messages
+
+;; likely hooks for the summary buffer include:
+;; `gnus-parse-headers-hook'
+
+;; BBDB puts its notice stuff in the `gnus-article-prepare-hook',
+;; which seems as good a spot as any.
+
+(defun gnorb-gnus-hint-relevant-message ()
+  "When opening an article buffer, check the message to see if it
+is relevant to any existing TODO headings. If so, flash a message
+to that effect. This function is added to the
+`gnus-article-prepare-hook'. It will only do anything if the
+option `gnorb-gnus-hint-relevant-article' is non-nil."
+  (when gnorb-gnus-hint-relevant-article
+    (let ((ref-ids (gnus-fetch-original-field "references"))
+	  (key
+	   (where-is-internal 'gnorb-gnus-incoming-do-todo
+			      nil t))
+	  rel-headings)
+      (when ref-ids
+	(setq ref-ids (split-string ref-ids))
+       (when (setq rel-headings
+		   (gnorb-org-find-visit-candidates ref-ids))
+	 (message "Possible relevant TODO: %s, trigger with %s"
+		  (org-format-outline-path
+		   (cadr (car rel-headings)))
+		  (if key
+		      (key-description key)
+		    "M-x gnorb-gnus-incoming-do-todo")))))))
+
+(add-hook 'gnus-article-prepare-hook 'gnorb-gnus-hint-relevant-message)
+
+(fset (intern (concat "gnus-user-format-function-"
+		      gnorb-gnus-summary-mark-format-letter))
+            (lambda (header)
+              (let ((ref-ids (mail-header-references header)))
+		(if (and ref-ids
+			 (gnorb-org-find-visit-candidates
+			  (split-string ref-ids)))
+		    gnorb-gnus-summary-mark
+		  " "))))
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here
