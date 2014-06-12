@@ -40,6 +40,74 @@
 (unless (assoc gnorb-bbdb-org-tag-field bbdb-separator-alist)
   (push `(,gnorb-bbdb-org-tag-field ":" ":") bbdb-separator-alist))
 
+(defcustom gnorb-bbdb-messages-field 'messages
+  "The name (as a symbol) of the field where links to recent gnus
+messages from this record are stored.
+
+\\<bbdb-mode-map>Records that do not have this field defined
+will not collect links to messages: you have to call
+\"\\[gnorb-bbdb-open-link]\" on the record once -- after that,
+message links will be collected and updated automatically."
+  :group 'gnorb-bbdb
+  :type 'symbol)
+
+(defcustom gnorb-bbdb-collect-N-messages 5
+  "For records with a `gnorb-bbdb-messages-field' defined,
+collect links to a maximum of this many messages."
+  :group 'gnorb-bbdb
+  :type 'integer)
+
+(defcustom gnorb-bbdb-define-recent 'seen
+  "For records with a `gnorb-bbdb-message-tag-field' defined,
+this variable controls how gnorb defines a \"recent\" message.
+Setting it to the symbol seen will collect the messages most
+recently opened and viewed. The symbol received means gnorb will
+collect the most recent messages by Date header.
+
+In other words, if this variable is set to 'received, and a
+record's messages field is already full of recently-received
+messages, opening a five-year-old message (for instance) from
+this record will not push a link to the message into the field."
+  :group 'gnorb-bbdb
+  :type '(choice (const :tag "Most recently seen" 'seen)
+                 (const :tag "Most recently received" 'received)))
+
+(defcustom gnorb-bbdb-message-link-format-multi "%:count. %D: %:subject"
+  "How a single message is formatted in the list of recent messages.
+This format string is used in multi-line record display.
+
+Available information for each message includes the subject, the
+date, and the message's count in the list, as an integer. You can
+access subject and count using the %:subject and %:count escapes.
+The message date can be formatted using any of the escapes
+mentioned in the docstring of `format-time-string', which see."
+  :group 'gnorb-bbdb
+  :type 'string)
+
+(defcustom gnorb-bbdb-message-link-format-one "%:count"
+  "How a single message is formatted in the list of recent messages.
+This format string is used in single-line display -- note that by
+default, no user-created xfields are displayed in the 'one-line
+layout found in `bbdb-layout-alist'. If you want this field to
+appear there, put its name in the \"order\" list of the 'one-line
+layout.
+
+Available information for each message includes the subject, the
+date, and the message's count in the list, as an integer. You can
+access subject and count using the %:subject and %:count escapes.
+The message date can be formatted using any of the escapes
+mentioned in the docstring of `format-time-string', which see."
+  :group 'gnorb-bbdb
+  :type 'string)
+
+(defface gnorb-bbdb-link (org-compatible-face 'org-link nil)
+  "Custom face for displaying message links in the *BBDB* buffer.
+  Defaults to org-link."
+  :group 'gnorb-bbdb)
+
+(defstruct gnorb-bbdb-link
+  subject date group id)
+
 (defcustom gnorb-bbdb-posting-styles nil
   "An alist of styles to use when composing messages to the BBDB
   record(s) under point. This is entirely analogous to
@@ -81,17 +149,18 @@ An example value might look like:"
   :group 'gnorb-bbdb)
 
 (defun gnorb-bbdb-mail (records &optional subject n verbose)
-  "Acts just like `bbdb-mail', except runs RECORDS through
-  `gnorb-bbdb-posting-styles', allowing customization of message
-  styles for certain records. From the `bbdb-mail' docstring:
+  "\\<bbdb-mode-map>Acts just like `bbdb-mail', except runs
+RECORDS through `gnorb-bbdb-posting-styles', allowing
+customization of message styles for certain records. From the
+`bbdb-mail' docstring:
 
 Compose a mail message to RECORDS (optional: using SUBJECT).
-Interactively, use BBDB prefix \
-\\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'.
-By default, the first mail addresses of RECORDS are used.
-If prefix N is a number, use Nth mail address of RECORDS (starting from 1).
-If prefix N is C-u (t noninteractively) use all mail addresses of RECORDS.
-If VERBOSE is non-nil (as in interactive calls) be verbose."
+Interactively, use BBDB prefix \\[bbdb-do-all-records], see
+`bbdb-do-all-records'. By default, the first mail addresses of
+RECORDS are used. If prefix N is a number, use Nth mail address
+of RECORDS (starting from 1). If prefix N is C-u (t
+noninteractively) use all mail addresses of RECORDS. If VERBOSE
+is non-nil (as in interactive calls) be verbose."
   ;; see the function `gnus-configure-posting-styles' for tips on how
   ;; to actually do this.
   (interactive (list (bbdb-do-records) nil
@@ -304,6 +373,181 @@ a prefix arg and \"*\", the prefix arg must come first."
    (if (called-interactively-p 'any)
        (insert mail-string)
      mail-string)))
+
+;;; Field containing links to recent messages
+
+(add-to-list 'bbdb-xfield-label-list gnorb-bbdb-messages-field nil 'eq)
+
+(defun gnorb-bbdb-display-messages (record format)
+  "Show links to the messages collected in the
+`gnorb-bbdb-messages-field' field of a BBDB record. Each link
+will be formatted using the format string in
+`gnorb-bbdb-message-link-format-multi' or
+`gnorb-bbdb-message-link-format-one', depending on the current
+layout type."
+  (let ((full-field (assq gnorb-bbdb-messages-field
+			  (bbdb-record-xfields record)))
+	(val (bbdb-record-xfield record gnorb-bbdb-messages-field))
+	(map (make-sparse-keymap))
+	(count 1)) ; one-indexed to fit with prefix arg to `gnorb-bbdb-open-link'
+    (define-key map [mouse-1] 'gnorb-bbdb-mouse-open-link)
+    (define-key map (kbd "<RET>") 'gnorb-bbdb-RET-open-link)
+    (when val
+      ;; indent and fmt are dynamically bound
+      (when (eq format 'multi)
+	(bbdb-display-text (format fmt gnorb-bbdb-messages-field)
+			  `(xfields ,full-field field-label)
+			  'bbdb-field-name))
+      (insert (cond ((and (stringp val)
+			  (eq format 'multi))
+		     (bbdb-indent-string (concat val "\n") indent))
+		    ((listp val)
+		     (bbdb-indent-string
+		      (mapconcat
+		       (lambda (m)
+			 (prog1
+			     (org-propertize
+			      (concat
+			       (format-time-string
+				(replace-regexp-in-string
+				 "%:subject" (gnorb-bbdb-link-subject m)
+				 (replace-regexp-in-string
+				  "%:count" (number-to-string count)
+				  (if (eq format 'multi)
+				      gnorb-bbdb-message-link-format-multi
+				    gnorb-bbdb-message-link-format-one)))
+				(gnorb-bbdb-link-date m)))
+			      'face 'gnorb-bbdb-link
+			      'mouse-face 'highlight
+			      'gnorb-bbdb-link-count count
+			      'keymap map)
+			   (incf count)))
+		       val (if (eq format 'multi)
+			       "\n" ", "))
+		      indent))
+		    (t
+		     ""))))))
+
+(fset (intern (format "bbdb-display-%s-multi-line"
+		      gnorb-bbdb-messages-field))
+      (lambda (record)
+	(gnorb-bbdb-display-messages record 'multi)))
+
+(fset (intern (format "bbdb-display-%s-one-line"
+		      gnorb-bbdb-messages-field))
+      (lambda (record)
+	(gnorb-bbdb-display-messages record 'one)))
+
+;; Don't allow direct editing of this field
+
+(fset (intern (format "bbdb-read-xfield-%s"
+		      gnorb-bbdb-messages-field))
+      (lambda (&optional init)
+	(user-error "This field shouldn't be edited manually")))
+
+;; Open links from the *BBDB* buffer.
+
+(defun gnorb-bbdb-open-link (record arg)
+  "\\<bbdb-mode-map>Call this on a BBDB record to open one of the
+links in the message field. By default, the first link will be
+opened. Use a prefix arg to open different links. For instance,
+M-3 \\[gnorb-bbdb-open-link] will open the third link in the
+list. If the %:count escape is present in the message formatting
+string (see `gnorb-bbdb-message-link-format-multi' and
+`gnorb-bbdb-message-link-format-one'), that's the number to use."
+  (interactive (list
+		(or (bbdb-current-record)
+		    (user-error "No record under point"))
+		current-prefix-arg))
+  (unless (fboundp 'bbdb-record-xfield-string)
+    (user-error "This function only works with the git version of BBDB"))
+  (let* ((record (bbdb-current-record))
+	 msg-list target-msg)
+    (if (not (memq gnorb-bbdb-messages-field
+		   (mapcar 'car (bbdb-record-xfields record))))
+	(when (y-or-n-p
+	       (format "Start collecting message links for %s?"
+		       (bbdb-record-name record)))
+	  (bbdb-record-set-xfield record gnorb-bbdb-messages-field "no links yet")
+	  (message "Opening messages from %s will add links to the %s field"
+		   (bbdb-record-name record)
+		   gnorb-bbdb-messages-field)
+	  (bbdb-change-record record))
+	(setq msg-list
+	      (bbdb-record-xfield record gnorb-bbdb-messages-field))
+	(setq target-msg
+	      (or (and arg
+		       (nth (1- arg) msg-list))
+		  (car msg-list)))
+	(when target-msg
+	  (org-gnus-follow-link (gnorb-bbdb-link-group target-msg)
+				(gnorb-bbdb-link-id target-msg))))))
+
+(defun gnorb-bbdb-mouse-open-link (event)
+  (interactive "e")
+  (mouse-set-point event)
+  (let ((rec (bbdb-current-record))
+	(num (get-text-property (point) 'gnorb-bbdb-link-count)))
+    (if (not num)
+	(user-error "No link under point")
+      (gnorb-bbdb-open-link rec num))))
+
+(defun gnorb-bbdb-RET-open-link ()
+  (interactive)
+  (let ((rec (bbdb-current-record))
+	(num (get-text-property (point) 'gnorb-bbdb-link-count)))
+    (if (not num)
+	(user-error "No link under point")
+      (gnorb-bbdb-open-link rec num))))
+
+(defun gnorb-bbdb-store-message-link (record)
+  "Used in the `bbdb-notice-record-hook' to possibly save a link
+to a message into the record's `gnorb-bbdb-messages-field'."
+
+  (when (not (fboundp 'bbdb-record-xfield-string))
+    (user-error "This function only works with the git version of BBDB"))
+  (unless (or (not (and (memq gnorb-bbdb-messages-field
+			      (mapcar 'car (bbdb-record-xfields record)))
+			gnus-summary-buffer
+			gnus-article-buffer))
+	      (with-current-buffer gnus-article-buffer
+		(not ; only store messages if the record is the sender
+		 (member (nth 1 (car (bbdb-get-address-components 'sender)))
+			 (bbdb-record-mail record)))))
+    (with-current-buffer gnus-summary-buffer
+      (let* ((val (bbdb-record-xfield record gnorb-bbdb-messages-field))
+	     (art-no (gnus-summary-article-number))
+	     (heads (gnus-summary-article-header art-no))
+	     (date (apply 'encode-time
+			  (parse-time-string (mail-header-date heads))))
+	     (subject (mail-header-subject heads))
+	     (id (mail-header-id heads))
+	     (group gnus-newsgroup-name)
+	     link)
+	;; link to the real group, not the virtual one
+	(when (eq (car (gnus-find-method-for-group gnus-newsgroup-name))
+		  'nnvirtual)
+	  (setq group (car (nnvirtual-map-article art-no))))
+	(if (not (and date subject id group))
+	    (message "Could not save a link to this message")
+	  (setq link (make-gnorb-bbdb-link :subject subject :date date
+					   :group group :id id))
+	  (when (stringp val)
+	    (setq val nil))
+	  (setq val (cons link (delete link val)))
+	  (when (eq gnorb-bbdb-define-recent 'received)
+	    (setq val (sort val
+			    (lambda (a b)
+			      (time-less-p
+			       (gnorb-bbdb-link-date b)
+			       (gnorb-bbdb-link-date a))))))
+	  (setq val (subseq val 0 gnorb-bbdb-collect-N-messages))
+	  (bbdb-record-set-xfield record
+				  gnorb-bbdb-messages-field
+				  (delq nil val))
+	  (bbdb-change-record record))))))
+
+(add-hook 'bbdb-notice-record-hook 'gnorb-bbdb-store-message-link)
 
 (provide 'gnorb-bbdb)
 ;;; gnorb-bbdb.el ends here
