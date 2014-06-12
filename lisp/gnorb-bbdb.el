@@ -31,7 +31,6 @@
   :tag "Gnorb BBDB"
   :group 'gnorb)
 
-
 (defcustom gnorb-bbdb-org-tag-field 'org-tags
   "The name (as a symbol) of the field to use for org tags."
   :group 'gnorb-bbdb
@@ -110,9 +109,9 @@ mentioned in the docstring of `format-time-string', which see."
 
 (defcustom gnorb-bbdb-posting-styles nil
   "An alist of styles to use when composing messages to the BBDB
-  record(s) under point. This is entirely analogous to
-  `gnus-posting-styles', it simply works by examining record
-  fields rather than group names.
+record(s) under point. This is entirely analogous to
+`gnus-posting-styles', it simply works by examining record fields
+rather than group names.
 
 When composing a message to multiple contacts (using the \"*\"
 prefix), the records will be scanned in order, with the record
