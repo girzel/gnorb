@@ -461,10 +461,10 @@ work."
      ;; in 24.4, the group name is mostly decorative. in 24.3, the
      ;; actual query itself is embedded there. It should look like
      ;; (concat "nnir:" (prin1-to-string '((query str))))
-     (if (equal "5.13" gnus-version-number)
+     (if (version= "5.13" gnus-version-number)
 	 (concat "nnir:" (prin1-to-string `((query ,str))))
        (concat "gnorb-" str))
-     (if (equal "5.13" gnus-version-number)
+     (if (version= "5.13" gnus-version-number)
 	 (list 'nnir nnir-address)
        (list 'nnir "nnir"))
      nil
