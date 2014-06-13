@@ -821,8 +821,19 @@ then show them in an ephemeral group, in gnus.
 
 This won't work unless you've added a \"nngnorb\" server to
 your gnus select methods."
+  ;; this should also work on the active region, if there is one.
   (interactive)
   (setq gnorb-org-window-conf (current-window-configuration))
+  (when (eq major-mode 'org-agenda-mode)
+    (org-agenda-check-type t 'agenda 'timeline 'todo 'tags)
+    (org-agenda-check-no-diary)
+    (let* ((marker (or (org-get-at-bol 'org-hd-marker)
+		       (org-agenda-error)))
+	   (buffer (marker-buffer marker))
+	   (pos (marker-position marker)))
+      (switch-to-buffer buffer)
+      (goto-char pos)
+      (org-reveal)))
   (let (id)
     (save-excursion
       (org-back-to-heading)
