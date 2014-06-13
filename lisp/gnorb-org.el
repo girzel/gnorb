@@ -52,54 +52,106 @@ org-todo regardless of TODO type."
   :group 'gnorb-org
   :type 'string)
 
-(defcustom gnorb-org-mail-scan-scope 1
-  "When calling `gnorb-org-handle-mail' on a heading, this option
-specifies how much of the heading text will be scanned for
-relevant message and mail links. Set to 0 to only look within the
-heading text itself. Set to an integer to scan that many
-paragraphs of the text body. Set to the symbol 'text to scan all
-the text immediately under the heading (excluding sub-headings),
-and to the symbol 'subtree to scan all the text in the whole
-subtree.
+(defcustom gnorb-org-mail-scan-strategies
+  '(((:type state :scope first-link) 1)
+    (nil text)
+    offer)
+  "This option controls how `gnorb-org-handle-mail' scans the
+subtree under point for links, and what it does with the links it
+finds. It is a list of up to three elements, representing three
+different scanning strategies. The first is used when calling the
+function with no prefix arg; the second is used with a single
+\\[universal-argument], and the third with a double
+\\[universal-argument]. You can thus prepare different scanning
+strategies in advance, and choose whichever is appropriate.
 
-Note that if `gnorb-org-mail-scan-state-changes' is non-nil, and
-there is a gnus message link in the logbook, the above will be
-disregarded in favor of replying to that link."
-  :group 'gnorb-org
-  :type '(or integer symbol))
+Each \"strategy\" will usually be a list of two items. The first
+item determines how the heading's state-change notes are scanned,
+the second item governs how the heading's body text is scanned.
+If the scan of the state notes produces usable links, the second
+item will be disregarded -- the rest of the heading won't be
+scanned at all. This is because, if you're responding to message
+links in the state-notes, they probably represent later messages
+in an ongoing conversation. If you want a particular strategy to
+always skip the state notes, just set the first item to nil.
 
-(defcustom gnorb-org-mail-scan-state-changes 'first
-  "This options influences how `gnorb-org-handle-mail' interprets
-the current heading. If it is non-nil, the heading's state-change
-notes will be given priority when looking for links to respond
-to. If the state-change notes contain a gnus message link, that's
-probably because `gnorb-gnus-message-trigger-todo' put it there,
-and you're using the logbook drawer to keep track of an email
-conversation. In that case, all other links will be disregared,
-and a reply to the linked message will be started. Valid non-nil
-values are 'first (only the most recent state-change note will be
-scanned) and 'all (all notes will be scanned).
+The state specification is an alist with two possible keys: :type
+and :scope. The :type key can be set to either 'state or 'note,
+which means the scanning process will only consider logdrawer
+items of one sort or the other. Setting the key to anything
+lese (or leaving it out) means both state-change notes and
+regular notes will be scanned. The :scope key controls how many
+items will be scanned. Set to a positive integer to scan that
+many items. The symbol 'first is a synonym for 1. The symbol
+'first-link means scan each state note until one containing links
+is found, and use only links from that item. The symbol 'all
+means scan all state notes.
 
-If this option is nil, the heading and its text will be scanned
-as usual for links, subject to the value of
-`gnorb-org-mail-scan-scope'."
-  :group 'gnorb-org
-  :type 'symbol)
+The second specification is used when the state-notes scan
+produces no results, or was skipped with a nil specification.
+This second item can be 0, meaning only scan the text of the
+heading itself; a positive integer, meaning scan that many
+paragraphs of body text; the symbol 'text, meaning scan the
+entire body text; or the symbol 'subtree, meaning scan the
+heading's text and all its subtrees.
 
-(defcustom gnorb-org-mail-scan-function
-  'gnorb-org-extract-mail-stuff
-  "The function used to extract message links and email addresses
-  from a heading and its text, for use in the
-  `gnorb-org-handle-mail' and `gnorb-org-email-subtree'
-  functions. It will be called at the heading of the current
-  subtree. It's return value should be a list, containing two
-  more lists: the first list is of links to gnus
-  messages (currently only the first link will be acted upon).
-  The second list is of strings suitable to be used in the To
-  header of an outgoing email, ie \"Billy Bob Thornton
-  <bbt@gmail.com>\"."
-  :group 'gnorb-org
-  :type 'symbol)
+Instead of a two-value specification, a strategy can just be a
+single symbol: 'all will scan both the state notes and the body
+text, and 'offer will collect all the links in the entire subtree
+and pop up a buffer allowing the user to choose which links to
+act on [this is a lie, 'offer hasn't been implemented yet].
+
+Lastly, any of the elements can be a symbol representing a custom
+function. When placed in the state-log or body-text
+specifications, the function will be called in a temporary buffer
+containing only the text of the state-log drawer, or the body
+text, respectively. If the entire strategy is replaced by a
+function name, that function will be called with point at the
+beginning of the heading. Custom functions can use the internal
+function `gnorb-scan-links' to return the appropriate alist of
+links.
+
+If `gnorb-org-handle-mail' is called while the region is active,
+this variable will be disregarded entirely, and only the active
+region will be scanned for links. If you call
+`gnorb-org-handle-mail' with a prefix argument while the region
+is active, it will look for links everywhere _but_ the active
+region.
+
+If all that sounds confusing, consider the default value:
+
+'(((:type state :scope first-link) 1)
+  (nil text)
+  offer)
+
+With no prefix arg, `gnorb-org-handle-mail' will look into the
+logbook, and look at each state log item (skipping regular notes)
+until it finds a state log with links in it, then operate on all
+the links in that log item. If it finds nothing in the drawer, it
+will scan the text of the heading, and the first paragraph of
+body text.
+
+With one prefix arg, it will always ignore the state-change
+notes, instead scanning the heading and the entirety of its body
+text.
+
+With two prefix args, it will simply offer all the links in the
+subtree for selection.")
+
+(make-obsolete-variable
+ 'gnorb-org-mail-scan-scope
+ "This variable has been superseded by `gnorb-org-mail-scan-strategies'"
+ "June 7, 2014" 'set)
+
+(make-obsolete-variable
+ 'gnorb-org-mail-scan-state-changes
+ "This variable has been superseded by `gnorb-org-mail-scan-strategies'"
+ "June 7, 2014" 'set)
+
+(make-obsolete-variable
+ 'gnorb-org-mail-scan-function
+ "This variable has been superseded by `gnorb-org-mail-scan-strategies'"
+ "June 7, 2014" 'set)
 
 (defcustom gnorb-org-find-candidates-match nil
   "When scanning all org files for heading related to an incoming
@@ -152,147 +204,198 @@ might have been in the outgoing message's headers and call
   (setq gnorb-gnus-sending-message-info nil)
   (setq gnorb-message-org-ids nil))
 
-(defun gnorb-org-scan-state-notes ()
-  "Look at the state-change notes of the heading and see if we
-should be using links in those notes or not. If
-`gnorb-org-mail-scan-state-changes' is set to 'first, only the
-most recent state-change note is examined. Otherwise, each note
-will be examined in reverse chronological order, and the first
-message link found will be replied to."
-  ;; gruesome
-  (interactive)
-  (let* ((org-log-into-drawer (org-log-into-drawer))
-	 (drawer (cond ((stringp org-log-into-drawer)
-			org-log-into-drawer)
-		       (org-log-into-drawer "LOGBOOK")))
-	 (search-dir (if org-log-states-order-reversed
-			 're-search-forward
-		       're-search-backward))
-	 el type state-list)
-    (save-excursion
-      (forward-line)			; get off the heading
-      (setq el (org-element-at-point)
-	    type (org-element-type el))
-      (while (memq type '(planning property-drawer))
-	(org-forward-element)
-	(setq el (org-element-at-point)
-	      type (org-element-type el)))
-      (cond
-       (drawer
-	(while (and (eq type 'drawer)
-		    (not (equal drawer
-				(org-element-property :drawer-name el))))
-	  (org-forward-element)
-	  (setq el (org-element-at-point)
-		type (org-element-type el)))
-	(when (equal drawer
-		     (org-element-property :drawer-name el))
-	  (forward-line)
-	  (setq state-list (org-list-context))))
-       (org-log-state-notes-insert-after-drawers
-	(while (and (not (eq (point) (point-max)))
-		    (eq type 'drawer))
-	  (org-forward-element)
-	  (setq el (org-element-at-point)
-		type (org-element-type el)))
-	(when (and (eq type 'plain-list)
-		   (looking-at (concat
-				(nth 2 (car (org-list-struct)))
-				"State ")))
-	  (setq state-list (org-list-context))))
-       (t nil))
-      (when state-list
-	(let* ((struct (org-list-struct))
-	       (prevs (org-list-prevs-alist struct))
-	       (origin (progn (goto-char
-			       (if org-log-states-order-reversed
-				   (car state-list)
-				 (second state-list)))
-			      (while (not (looking-at
-					   (concat
-					    (nth 2 (car (org-list-struct)))
-					    "State ")))
-				(goto-char
-				 (funcall
-				  (if org-log-states-order-reversed
-				      'org-list-get-next-item
-				    'org-list-get-prev-item)
-				  (org-in-item-p) struct prevs)))
-			      (point)))
-	       (item (org-in-item-p))
-	       (bound (if (eq gnorb-org-mail-scan-state-changes 'first)
-			  (save-excursion
-			    (goto-char
-			     (if org-log-states-order-reversed
-				 (org-list-get-first-item item struct prevs)
-			       (org-list-get-last-item item struct prevs)))
-			    (org-list-get-item-end item struct))
-			(if org-log-states-order-reversed
-			    (second state-list)
-			  (car state-list)))))
-	  (goto-char origin)
-	  (when (funcall search-dir "\\[\\[\\(gnus:\\|mailto:\\|bbdb:\\)"
-			 bound t)
-	    (cons (min origin bound) (max origin bound))))))))
-
-(defun gnorb-org-extract-mail-stuff ()
-  "Extract mail-related information from the current heading. If
-`gnorb-org-mail-scan-state-changes' is non-nil, it will be given
-the chance to override the rest of the process and reply to a
-link found in the state-change notes. Otherwise, the value of
-`gnorb-org-mail-scan-scope' will determine how much of the
-heading text will be scanned for message and mail links."
+(defun gnorb-org-extract-mail-stuff (strategy &optional region)
+  "Extract mail-related information from the current heading. How
+the heading is scanned depends on the value of
+`gnorb-org-mail-scan-strategies' -- STRATEGY represents an
+element chosen from that variable. If BOUNDS is non-nil, it
+should represent point and mark of the active region, and means
+STRATEGY will be disregarded."
   (save-restriction
-    (save-excursion
-      (org-narrow-to-subtree)
-      (let* ((state-info
-	      (and gnorb-org-mail-scan-state-changes
-		   (gnorb-org-scan-state-notes)))
-	     (start
-	      (if state-info
-		  (car state-info)
-		;; get past drawers, and any non-drawer state-change
-		;; list
-		(forward-line)
-		(while (and (not (eq (point) (point-max)))
-			    (or
-			     (memq (org-element-type (org-element-at-point))
-				   '(planning drawer property-drawer))
-			     (and org-log-state-notes-insert-after-drawers
-				  (eq (org-element-type
-				       (org-element-at-point)) 'plain-list)
-				  (looking-at
-				   (concat (nth 2 (car (org-list-struct)))
-					   "State ")))))
-		  (org-forward-element))
-		(point)))
-	     (end
-	      (if state-info
-		  (cdr state-info)
-		(cond ((integerp gnorb-org-mail-scan-scope)
-		       (forward-paragraph gnorb-org-mail-scan-scope))
-		      ((eq gnorb-org-mail-scan-scope 'text)
-		       (outline-next-heading))
-		      ((eq gnorb-org-mail-scan-scope 'subtree)
-		       (goto-char (point-max))))
-		(point)))
-	     strings links bbdb-mails)
-	(org-back-to-heading t)
-	(unless state-info
-	  (push (buffer-substring (point) (line-end-position)) strings))
-	(push (buffer-substring start end) strings)
-	(with-temp-buffer
-	  (dolist (s strings)
-	    (insert s)
-	    (insert "\n"))
-	  (goto-char (point-min))
-	  (setq links (gnorb-scan-links (point-max) 'gnus 'mail 'bbdb)))
-	(when (plist-get links :bbdb)
-	  (dolist (b (plist-get links :bbdb))
-	    (push (gnorb-bbdb-link-to-mail b) bbdb-mails)))
-	(list (plist-get links :gnus)
-	      (append bbdb-mails
-		      (plist-get links :mail)))))))
+    (org-narrow-to-subtree)
+    ;; first collect all the relevant bits of the subtree
+    (let* ((parsed (org-element-parse-buffer))
+	   (headline
+	    (org-element-map parsed 'headline 'identity nil t))
+	   (head-text (org-element-property :raw-value headline))
+	   (state-log
+	    (org-element-map parsed 'plain-list
+	      (lambda (l)
+		(when (org-element-map l 'paragraph
+			;; kludge to tell a state-log drawer list from
+			;; a regular old list.
+			(lambda (p)
+			  (string-match-p
+			   "\\(State \"\\|Note taken on\\)"
+			   (car (org-element-contents p)))) nil t)
+		  l)) nil t))
+	   (pars
+	    (org-element-map parsed 'paragraph
+	      (lambda (p)
+		(buffer-substring
+		 (org-element-property :contents-begin p)
+		 (org-element-property :contents-end p)))
+	      nil nil 'drawer))
+	   state-strategy text-strategy search-func
+	   strings state-success all-links bbdb-mails)
+      (when (listp strategy)
+	(setq state-strategy (car strategy)
+	      text-strategy (nth 1 strategy)))
+      ;; Order of precedence is: active region beats custom function
+      ;; beats all-or-offer beats state-logs beats general text
+      ;; scan. First we check everything up to all-or-offer.
+      (unless
+	  (cond
+	   ((and region (eq 'reverse-region strategy))
+	    (setq strings
+		  ;; sure hope the region is contained within the
+		  ;; headline!
+		  (list
+		   (buffer-substring
+		    (point-min)
+		    (car region))
+		   (buffer-substring
+		    (cdr region)
+		    (point-max)))))
+	   (region
+	    (push (buffer-substring (car region) (cdr region))
+		  strings))
+	   ((and (symbolp strategy)
+		 (fboundp strategy))
+	    ;; user is responsible for finding links
+	    (setq strings
+		  (list
+		   (buffer-substring
+		    (point-min)
+		    (point-max))))
+	    (setq search-func strategy))
+	   ((eq strategy 'all)
+	    (setq strings
+		  (list
+		   (buffer-substring
+		    (point-min)
+		    (point-max)))))
+	   ((eq strategy 'offer)
+	    (user-error "Don't use 'offer, it's not done yet")))
+	;; The above produced nothing, so try first the
+	;; state-logs, then the body text
+	(when (and state-log state-strategy)
+	  (cond
+	   ((and (symbolp state-strategy)
+		 (fboundp state-strategy)
+		 (setq all-links
+		       (gnorb-org-find-links
+			(buffer-substring
+			 (org-element-property :begin state-log)
+			 (org-element-property :end state-log))
+			state-strategy))
+		 (setq state-success t)))
+	   ((listp state-strategy)
+	    (when (setq all-links
+			(gnorb-org-scan-log-notes
+			 state-log state-strategy))
+	      (setq state-success t)))
+	   (t
+	    (and (setq
+		  all-links
+		  (gnorb-org-find-links
+		   (buffer-substring
+		    (org-element-property :begin state-log)
+		    (org-element-property :end state-log))))
+		 (setq state-success t)))))
+	;; at last, we get to check the plain old text
+	(when (and (not state-success) text-strategy)
+	  (cond
+	   ((and (symbolp text-strategy)
+		 (fboundp text-strategy))
+	    (setq strings
+		  (cons
+		   head-text
+		   pars))
+	    (setq search-func text-strategy))
+	   ((eq 'text text-strategy)
+	    (setq strings
+		  (cons
+		   head-text
+		   pars)))
+	   ((eq 'subtree text-strategy)
+	    (setq strings
+		  (list
+		   head-text
+		   (buffer-substring-no-properties
+		    (org-element-map headline 'paragraph
+		      (lambda (p)
+			(org-element-property :begin p))
+		      nil t 'drawer)
+		    (point-max)))))
+	   ((integerp text-strategy)
+	    (setq strings
+		  (cons
+		   head-text
+		   (subseq pars 0 text-strategy)))))))
+      ;; return the links if we've got them, or find them in strings
+      (setq strings (delq nil strings))
+      (when (and strings (not all-links))
+	(setq all-links (gnorb-org-find-links strings search-func)))
+      (when (plist-get all-links :bbdb)
+	(dolist (b (plist-get all-links :bbdb))
+	  (push (gnorb-bbdb-link-to-mail b) bbdb-mails)))
+      (list (plist-get all-links :gnus)
+	    (append bbdb-mails
+		    (plist-get all-links :mail))))))
+
+(defun gnorb-org-scan-log-notes (state-log strategy)
+  ;; `gnorb-org-extract-mail-stuff' was way too long already
+
+  ;; I've had a hell of a time just figuring out how to get the
+  ;; complete paragraph text out of a parsed paragraph.
+  (let ((type (plist-get strategy :type))
+	(scope (plist-get strategy :scope))
+	(rev (not org-log-states-order-reversed))
+	(par-texts (org-element-map state-log 'paragraph
+		     (lambda (p)
+		       (buffer-substring
+			(org-element-property :contents-begin p)
+			(org-element-property :contents-end p)))))
+	(note-match "Note taken on ")
+	(state-match "State \"")	; good enough?
+	(link-match "\\[\\[\\(gnus:\\|mailto:\\|bbdb:\\)")
+	(count 0)
+	candidates)
+    (when rev
+      (setq par-texts (nreverse par-texts)))
+    (when (eq scope 'first)
+      (setq scope 1))
+    (catch 'bail
+      (dolist (p par-texts)
+	(when (or (and (not (eq type 'state))
+		       (string-match-p note-match p))
+		  (and (not (eq type 'note))
+		       (string-match-p state-match p)))
+	  (incf count)
+	  (when (and (integerp scope)
+		     (>= count scope)))
+	  (when (string-match-p link-match p)
+	    (push p candidates)
+	    (when (eq scope 'first-link)
+	      (throw 'bail t))))))
+    (when candidates
+      (gnorb-org-find-links candidates))))
+
+(defun gnorb-org-find-links (strings &optional func)
+  "Do the actual check to see if there are viable links in the
+places we've decided to look."
+  (when strings
+    (when (not (listp strings))
+      (setq strings (list strings)))
+    (with-temp-buffer
+      (dolist (s strings)
+	(insert s)
+	(insert "\n"))
+      (goto-char (point-min))
+      (if func
+	  (funcall func (point-max))
+	(gnorb-scan-links (point-max) 'gnus 'mail 'bbdb)))))
 
 (defun gnorb-org-setup-message
     (&optional messages mails from cc bcc attachments text ids)
@@ -384,9 +487,9 @@ current heading."
 	     (org-attach-file-list attach-dir))))
       files)))
 
-(defun gnorb-org-handle-mail ()
+(defun gnorb-org-handle-mail (arg)
   "Handle current headline as a mail TODO."
-  (interactive)
+  (interactive "P")
   (setq gnorb-org-window-conf (current-window-configuration))
   (when (eq major-mode 'org-agenda-mode)
     (org-agenda-check-type t 'agenda 'timeline 'todo 'tags)
@@ -397,42 +500,39 @@ current heading."
 	   (pos (marker-position marker)))
       (switch-to-buffer buffer)
       (widen)
-      (goto-char pos))) 
-  (unless (org-back-to-heading t)
-    (error "Not in an org item"))
-  (cl-flet ((mp (p) (org-entry-get (point) p t)))
-    (let* ((mail-stuff (funcall gnorb-org-mail-scan-function))
-	   (attachments (gnorb-org-attachment-list))
-	   (from (mp "MAIL_FROM"))
-	   (cc (mp "MAIL_CC"))
-	   (bcc (mp "MAIL_BCC"))
-	   (org-id (org-id-get-create)))
-      (gnorb-org-setup-message
-       (first mail-stuff) (second mail-stuff)
-       from cc bcc
-       attachments nil org-id))))
-(defun gnorb-org-add-id-hash-entry (msg-id)
-  (let ((old-val (gethash msg-id gnorb-msg-id-to-heading-table))
-	(new-val (list
-		  (org-id-get-create)
-		  (append
-		   (list
-		    (file-name-nondirectory
-		     (buffer-file-name
-		      (current-buffer))))
-		   (org-get-outline-path)
-		   (list
-		    (org-no-properties
-		     (replace-regexp-in-string
-		      org-bracket-link-regexp
-		      "\\3"
-		      (nth 4 (org-heading-components)))))))))
-    (unless (member (car new-val) old-val)
-      (puthash msg-id
-	      (if old-val
-		  (append (list new-val) old-val)
-		(list new-val))
-	      gnorb-msg-id-to-heading-table))))
+      (goto-char pos)))
+  (let* ((region
+	  (when (use-region-p)
+	    (cons (region-beginning) (region-end))))
+	 ;; handle malformed values of `gnorb-org-mail-scan-strategies'
+	 (strategy (cond
+		    ((and region
+			  arg)
+		     'reverse-region)
+		    (region
+		     nil)
+		    ((null arg)
+		     (car gnorb-org-mail-scan-strategies))
+		    ((equal '(4) arg)
+		     (nth 1 gnorb-org-mail-scan-strategies))
+		    ((equal '(16) arg)
+		     (nth 2 gnorb-org-mail-scan-strategies)))))
+    (deactivate-mark)
+    (save-excursion
+      (unless (org-back-to-heading t)
+	(error "Not in an org item"))
+      (cl-flet ((mp (p) (org-entry-get (point) p t)))
+	(let* ((mail-stuff (gnorb-org-extract-mail-stuff strategy region))
+	       (attachments (gnorb-org-attachment-list))
+	       (from (mp "MAIL_FROM"))
+	       (cc (mp "MAIL_CC"))
+	       (bcc (mp "MAIL_BCC"))
+	       (org-id (org-id-get-create)))
+	  (gnorb-org-setup-message
+	   (first mail-stuff) (second mail-stuff)
+	   from cc bcc
+	   attachments nil org-id))))))
+
 (defun gnorb-org-add-id-hash-entry (msg-id &optional marker)
   (org-with-point-at (or marker (point))
     (let ((old-val (gethash msg-id gnorb-msg-id-to-heading-table))
@@ -539,7 +639,7 @@ respective (usual) file extensions. Ugly way to do it, but what
 the hey..."
   :group 'gnorb-org)
 
-(defun gnorb-org-email-subtree ()
+(defun gnorb-org-email-subtree (arg)
   "Call on a subtree to export it either to a text string or a file,
 then compose a mail message either with the exported text
 inserted into the message body, or the exported file attached to
@@ -555,7 +655,7 @@ Customize `gnorb-org-email-subtree-parameters' to your preferred
 default set of parameters."
   ;; I sure would have liked to use the built-in dispatch ui, but it's
   ;; got too much hard-coded stuff.
-  (interactive)
+  (interactive "P")
   (org-back-to-heading t)
   (let* ((backend-string
 	  (org-completing-read
@@ -584,7 +684,14 @@ default set of parameters."
 		       t gnorb-tmp-dir)
 		     ,@opts
 		     ,gnorb-org-email-subtree-file-parameters))))
-	 (mail-stuff (funcall gnorb-org-mail-scan-function))
+	 (strategy (cond
+		    ((null arg)
+		     (car gnorb-org-mail-scan-strategies))
+		    ((equal '(4) arg)
+		     (nth 1 gnorb-org-mail-scan-strategies))
+		    ((equal '(16) arg)
+		     (nth 2 gnorb-org-mail-scan-strategies))))
+	 (mail-stuff (gnorb-org-extract-mail-stuff strategy))
 	 (attachments (gnorb-org-attachment-list))
 	 (org-id (org-id-get-create))
 	 text)
