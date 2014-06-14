@@ -438,11 +438,11 @@ variable `org-id-track-globally' set to t."
 
 (defun gnorb-gnus-search-messages (str &optional ret)
   "Initiate a search for gnus message links in an org subtree.
-  The arg STR can be one of two things: an Org heading id value
-  \(IDs should be prefixed with \"id+\"\), in which case links
-  will be collected from that heading, or a string corresponding
-  to an Org tags search, in which case links will be collected
-  from all matching headings.
+The arg STR can be one of two things: an Org heading id value
+\(IDs should be prefixed with \"id+\"\), in which case links will
+be collected from that heading, or a string corresponding to an
+Org tags search, in which case links will be collected from all
+matching headings.
 
 In either case, once a collection of links have been made, they
 will all be displayed in an ephemeral group on the \"nngnorb\"
@@ -452,15 +452,16 @@ work."
   (let ((nnir-address
 	 (or (gnus-method-to-server '(nngnorb))
 	     (user-error
-	      "Please add a \"nngnorb\" backend to your gnus installation.")))
-	(nnir-current-query nil)
-	(nnir-current-server nil)
-	(nnir-current-group-marked nil)
-	(nnir-artlist nil))
+	      "Please add a \"nngnorb\" backend to your gnus installation."))))
+    (when (version= "5.13" gnus-version-number)
+      (setq nnir-current-query nil
+	    nnir-current-server nil
+	    nnir-current-group-marked nil
+	    nnir-artlist nil))
     (gnus-group-read-ephemeral-group
      ;; in 24.4, the group name is mostly decorative. in 24.3, the
-     ;; actual query itself is embedded there. It should look like
-     ;; (concat "nnir:" (prin1-to-string '((query str))))
+     ;; query itself is read from there. It should look like (concat
+     ;; "nnir:" (prin1-to-string '((query str))))
      (if (version= "5.13" gnus-version-number)
 	 (concat "nnir:" (prin1-to-string `((query ,str))))
        (concat "gnorb-" str))

@@ -113,19 +113,23 @@ be scanned for gnus messages, and those messages displayed."
 	  (goto-char (point-min))
 	  (setq links (gnorb-scan-links (point-max) 'gnus))))
       (setq links (delete-dups (plist-get links :gnus)))
-      (dolist (m links (nreverse vectors))
+      (unless (gnus-alive-p)
+	(gnus))
+      (dolist (m links (when vectors
+			 (nreverse vectors)))
 	(let (server-group msg-id artno)
 	  (setq m (org-link-unescape m))
-	  (if (not (string-match "\\`\\([^#]+\\)\\(#\\(.*\\)\\)?" m))
-	      (error "Error in Gnus link"))
-	  (setq server-group (match-string 1 m)
-		msg-id (match-string 3 m))
-	  ;; I swear just finding the `gnus-request-head' function
-	  ;; was a trial in itself. But I've only tried it with
-	  ;; nnimap -- does it work for other backends?
-	  (setq artno (cdr (gnus-request-head msg-id server-group)))
-	  (when (> artno 0)
-	    (push (vector server-group artno 100) vectors)))))))
+	  (when (string-match "\\`\\([^#]+\\)\\(#\\(.*\\)\\)?" m)
+	    (setq server-group (match-string 1 m)
+		  msg-id (match-string 3 m))
+	    ;; I swear just finding the `gnus-request-head' function
+	    ;; was a trial in itself. But I've only tried it with
+	    ;; nnimap -- does it work for other backends?
+	    (when (gnus-activate-group server-group)
+	     (setq artno
+		   (cdr (gnus-request-head msg-id server-group)))
+	     (when (and (integerp artno) (> artno 0))
+	       (push (vector server-group artno 100) vectors)))))))))
 
 (defvar nngnorb-status-string "")
 
