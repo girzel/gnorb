@@ -425,15 +425,8 @@ line. Defaults to "¡".
 - Provide a command that, when in the Org Agenda, does an email search
   for messages received in the visible date span, or day under point,
   etc. Make it work in the calendar, as well?
-- Some way to create a TODO for an outgoing mail, saying "this mail
-  needs a response, check in N days to see if we've got one."
 - Look into message tagging in Gnus -- what are the options? Is it
   possible to search for tagged messages when we do an Org agenda tag
   search?
-- Create a BBDB field holding Org links to the N most recently
-  received (or recently viewed) mails from the contact.
 - Consider merging `gnorb-org-handle-mail' and
   `gnorb-org-email-subtree' altogether.
-- Come up with some sort of way to have gnus posting styles attached
-  to BBDB records. Should have the full complement of regexp
-  predicates based on name, organization, xfields, etc.
