@@ -175,7 +175,8 @@ save them into `gnorb-tmp-dir'."
 	(gnus-summary-display-article article))
       (gnus-eval-in-buffer-window gnus-article-buffer
 	(setq mime-handles (cl-remove-if-not
-			    (lambda (h) (equal "attachment" (car (nth 5 h))))
+			    (lambda (h) (and (member (car (nth 5 h)) '("inline" "attachment") )
+					     (eq (caadr (nth 5 h)) 'filename)))
 			    gnus-article-mime-handle-alist) ))
       (when mime-handles
 	(dolist (h mime-handles)
