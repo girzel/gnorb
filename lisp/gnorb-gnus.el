@@ -163,7 +163,7 @@ Basically behave as if all attachments have \":gnus-attachments t\"."
     (mm-save-part-to-file handle filename)
     filename))
 
-(defun gnorb-gnus-collect-all-attachments (&optional capture-p)
+(defun gnorb-gnus-collect-all-attachments (&optional capture-p store)
   "Collect all the attachments from the message under point, and
 save them into `gnorb-tmp-dir'."
   (save-window-excursion
@@ -187,7 +187,7 @@ save them into `gnorb-tmp-dir'."
 	(dolist (h mime-handles)
 	  (let ((filename
 		 (gnorb-gnus-save-part (cdr h))))
-	    (when capture-p
+	    (when (or capture-p store)
 	      (push filename gnorb-gnus-capture-attachments))))))))
 
 ;;; Make the above work in the capture process
