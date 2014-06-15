@@ -388,7 +388,10 @@ work."
 		     :toaddress ,toaddress :date ,date))
     (org-capture nil gnorb-gnus-new-todo-capture-key)
     (when msg-id
-      (org-entry-put (point) gnorb-org-msg-id-key msg-id))))
+      (org-entry-put (point) gnorb-org-msg-id-key msg-id))
+    ;; it would be better to only do this if we knew the capture went
+    ;; through, ie wasn't aborted
+    (setq gnorb-gnus-sending-message-info nil)))
 
 ;;; If an incoming message should trigger state-change for a Org todo,
 ;;; call this function on it.
