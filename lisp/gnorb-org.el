@@ -779,17 +779,18 @@ search."
 	       (push (mapconcat 'identity (nreverse acc) "") out-or))
 	     (setq str (mapconcat 'identity (nreverse out-or) "|"))
 	     (setq tag-clause (cdr (org-make-tags-matcher str)))
-	     (setq recs
-		   (remove-if-not
-		    (lambda (r)
-		      (let ((rec-tags (bbdb-record-xfield
-				       r gnorb-bbdb-org-tag-field)))
-			(and rec-tags
-			     (let ((tags-list (org-split-string rec-tags ":"))
-				   (case-fold-search t)
-				   (org-trust-scanner-tags t))
-			       (eval tag-clause)))))
-		    (bbdb-records)))))
+	     (unless (equal str "")
+	       (setq recs
+		     (remove-if-not
+		      (lambda (r)
+			(let ((rec-tags (bbdb-record-xfield
+					 r gnorb-bbdb-org-tag-field)))
+			  (and rec-tags
+			       (let ((tags-list (org-split-string rec-tags ":"))
+				     (case-fold-search t)
+				     (org-trust-scanner-tags t))
+				 (eval tag-clause)))))
+		      (bbdb-records))))))
 	  ((eq major-mode 'org-mode)
 	   (save-excursion
 	     (org-back-to-heading)
@@ -798,10 +799,10 @@ search."
 		   desc rec)
 	       (while (re-search-forward
 		       org-bracket-link-analytic-regexp bound t)
-		(when (string-match-p "bbdb" (match-string 2))
-		  (setq desc (match-string 5)
-			rec (bbdb-search (bbdb-records) desc desc desc)
-			recs (append recs rec))))))))
+		 (when (string-match-p "bbdb" (match-string 2))
+		   (setq desc (match-string 5)
+			 rec (bbdb-search (bbdb-records) desc desc desc)
+			 recs (append recs rec))))))))
     (if recs
 	(bbdb-display-records
 	 recs gnorb-org-bbdb-popup-layout)
