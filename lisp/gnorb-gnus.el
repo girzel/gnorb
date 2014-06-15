@@ -406,55 +406,55 @@ prefix argument), or to 'prompt to always be prompted.
 
 In some cases, Gnorb can guess for you which Org heading you
 probably want to trigger, which can save some time. It does this
-by looking in the References and In-Reply-To headers, and seeing
-if any of the IDs there match the value of the
-`gnorb-org-msg-id-key' property for any headings. In order for
-this to work, you will have to have loaded org-id, and have the
-variable `org-id-track-globally' set to t."
+by looking in the References header, and seeing if any of the IDs
+there match the value of the `gnorb-org-msg-id-key' property for
+any headings. In order for this to work, you will have to have
+loaded org-id, and have the variable `org-id-track-globally' set
+to t (it is, by default)."
   (interactive "P")
-  (if (not (memq major-mode '(gnus-summary-mode gnus-article-mode)))
-      (error "Only works in gnus summary or article mode")
-    ;; We should only store a link if it's not already at the head of
-    ;; `org-stored-links'. There's some duplicate storage, at
-    ;; present. Take a look at calling it non-interactively.
-    (call-interactively 'org-store-link)
-    (let* ((org-refile-targets gnorb-gnus-trigger-refile-targets)
-	   (ref-msg-ids
-	    (with-current-buffer gnus-original-article-buffer
-	      (message-narrow-to-headers-or-head)
-	      (let ((all-refs
-		     (message-fetch-field "references")))
-		(when all-refs
-		  (split-string all-refs)))))
-	   (offer-heading
-	    (when (and (not id) ref-msg-ids)
-	      (if org-id-track-globally
-		  ;; for now we're basically ignoring the fact that
-		  ;; multiple candidates could exist; just do the first
-		  ;; one.
-		  (car (gnorb-org-find-visit-candidates
-			ref-msg-ids))
-		(message "Gnorb can't check for relevant headings unless `org-id-track-globally' is t")
-		(sit-for 1))))
-	   targ)
-      (gnorb-gnus-collect-all-attachments)
-      (if id
-	  (gnorb-trigger-todo-action arg id)
-	(if (and offer-heading
-		 (y-or-n-p (format "Trigger action on %s"
-				   (org-format-outline-path (cadr offer-heading)))))
-	    (gnorb-trigger-todo-action arg (car offer-heading))
-	  (setq targ (org-refile-get-location
-		      "Trigger heading" nil t))
-	  (find-file (nth 1 targ))
-	  (goto-char (nth 3 targ))
-	  (gnorb-trigger-todo-action arg)))
-      ;; will this ever actually get called?
-      (setq gnorb-gnus-capture-attachments nil)
-      (message
-       "Insert a link to the message with org-insert-link (%s)"
-       (mapconcat 'key-description
-		  (where-is-internal 'org-insert-link) ", ")))))
+  (when (not (memq major-mode '(gnus-summary-mode gnus-article-mode)))
+    (user-error "Only works in gnus summary or article mode"))
+  ;; We should only store a link if it's not already at the head of
+  ;; `org-stored-links'. There's some duplicate storage, at
+  ;; present. Take a look at calling it non-interactively.
+  (call-interactively 'org-store-link)
+  (setq gnorb-org-window-conf (current-window-configuration))
+  (let* ((org-refile-targets gnorb-gnus-trigger-refile-targets)
+	 (ref-msg-ids
+	  (with-current-buffer gnus-original-article-buffer
+	    (message-narrow-to-headers-or-head)
+	    (let ((all-refs
+		   (message-fetch-field "references")))
+	      (when all-refs
+		(split-string all-refs)))))
+	 (offer-heading
+	  (when (and (not id) ref-msg-ids)
+	    (if org-id-track-globally
+		;; for now we're basically ignoring the fact that
+		;; multiple candidates could exist; just do the first
+		;; one.
+		(car (gnorb-org-find-visit-candidates
+		      ref-msg-ids))
+	      (message "Gnorb can't check for relevant headings unless `org-id-track-globally' is t")
+	      (sit-for 1))))
+	 targ)
+    (gnorb-gnus-collect-all-attachments nil t)
+    (if id
+	(gnorb-trigger-todo-action arg id)
+      (if (and offer-heading
+	       (y-or-n-p (format "Trigger action on %s"
+				 (org-format-outline-path (cadr offer-heading)))))
+	  (gnorb-trigger-todo-action arg (car offer-heading))
+	(setq targ (org-refile-get-location
+		    "Trigger heading" nil t))
+	(find-file (nth 1 targ))
+	(goto-char (nth 3 targ))
+	(gnorb-trigger-todo-action arg)))
+    (setq gnorb-gnus-capture-attachments nil)
+    (message
+     "Insert a link to the message with org-insert-link (%s)"
+     (mapconcat 'key-description
+		(where-is-internal 'org-insert-link nil t) ", "))))
 
 (defun gnorb-gnus-search-messages (str &optional ret)
   "Initiate a search for gnus message links in an org subtree.
