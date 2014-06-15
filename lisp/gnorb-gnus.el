@@ -480,7 +480,7 @@ work."
      nil nil
      ;; the following seems to simply be ignored under gnus 5.13
      (list (cons 'nnir-specs (list (cons 'nnir-query-spec `((query . ,str)))
-				   (cons 'nnir-group-spec `((,nnir-address)))))
+				   (cons 'nnir-group-spec `((,nnir-address nil)))))
 	   (cons 'nnir-artlist nil)))))
 
 ;;; Automatic noticing of relevant messages
