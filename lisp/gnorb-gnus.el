@@ -26,6 +26,11 @@
 
 (require 'gnorb-utils)
 
+(declare-function org-gnus-article-link "org-gnus"
+		  (group newsgroups message-id x-no-archive))
+(declare-function org-gnus-follow-link "org-gnus"
+		  (group article))
+
 (defgroup gnorb-gnus nil
   "The Gnus bits of Gnorb."
   :tag "Gnorb Gnus"
