@@ -275,7 +275,7 @@ information about the outgoing message into
 
 (add-hook 'message-header-hook 'gnorb-gnus-check-outgoing-headers)
 
-(defun gnorb-gnus-outgoing-do-todo (arg)
+(defun gnorb-gnus-outgoing-do-todo (&optional arg)
   "Call this function to use the message currently being composed
 as an email todo action. If it's a new message, or a reply to a
 message that isn't referenced by any TODOs, a new TODO will be
@@ -293,36 +293,49 @@ manual (org) Template expansion section). If you don't, then the
 %:subject, %:to, %:toname, %:toaddress, and %:date escapes for
 the outgoing message will still be available -- nothing else will
 work."
-  ;; The last piece of idiocy I should be perpetrating on this
-  ;; function is to allow people to manually add the ids of more
-  ;; relevant TODO headings, via refile selection. Why I'm going to so
-  ;; much work to handle multiple relevant headings I don't know, you
-  ;; be mad to actually work that way.
   (interactive "P")
-  (let (header-ids ref-ids rel-headings gnorb-org-window-conf)
-      (if (not (eq major-mode 'message-mode))
-       ;; The message is already sent, so we're relying on whatever was
-       ;; stored into `gnorb-gnus-sending-message-info'.
-	  (progn
-	    (setq ref-ids (plist-get gnorb-gnus-sending-message-info :refs))
-	    (if ref-ids  ;; the message might be relevant to some TODO
-			 ;; heading(s). But if there had been org-id
-			 ;; headers, they would already have been
-			 ;; handled when the message was sent.
-		(progn (when (stringp ref-ids)
-			 (setq ref-ids (split-string ref-ids)))
-		       (setq ref-headers (gnorb-org-find-visit-candidates ref-ids))
-		       (if (not ref-headers)
-			   (gnorb-gnus-outgoing-make-todo-1)
-			 (dolist (h ref-headers)
-			   (push (car h) gnorb-message-org-ids))
-			 (gnorb-org-restore-after-send)))
-	     ;; not relevant, just make a new TODO
-	     (gnorb-gnus-outgoing-make-todo-1)))
-     ;; We are still in the message composition buffer, so let's see
-     ;; what we've got
+  (let (header-ids ref-ids rel-headings gnorb-org-window-conf
+		   reply-id reply-group)
+    (if (not (eq major-mode 'message-mode))
+	;; The message is already sent, so we're relying on whatever was
+	;; stored into `gnorb-gnus-sending-message-info'.
+	(progn
+	  (setq ref-ids (plist-get gnorb-gnus-sending-message-info :refs))
+	  (if ref-ids ;; the message might be relevant to some TODO
+	      ;; heading(s). But if there had been org-id
+	      ;; headers, they would already have been
+	      ;; handled when the message was sent.
+	      (progn (when (stringp ref-ids)
+		       (setq ref-ids (split-string ref-ids)))
+		     (setq rel-headings (gnorb-org-find-visit-candidates ref-ids))
+		     (if (not rel-headings)
+			 (gnorb-gnus-outgoing-make-todo-1)
+		       (dolist (h rel-headings)
+			 (push (car h) gnorb-message-org-ids))
+		       (gnorb-org-restore-after-send)))
+	    ;; not relevant, just make a new TODO
+	    (gnorb-gnus-outgoing-make-todo-1)))
+      ;; We are still in the message composition buffer, so let's see
+      ;; what we've got.
+
+      ;; What we want is a link to the original message we're replying
+      ;; to, if this is actually a reply.
+      (when message-reply-headers
+	(setq reply-id (aref message-reply-headers 4)))
+      (save-restriction
+	(widen)
+	(message-narrow-to-headers-or-head)
 	(setq header-ids (mail-fetch-field gnorb-mail-header nil nil t))
 	(setq ref-ids (mail-fetch-field "References" t))
+	(setq reply-group (car-safe (read (mail-fetch-field "X-Draft-From" t))))
+	;; when it's a reply, store a link to the reply just in case.
+	;; This is pretty embarrassing -- we follow a link just to
+	;; create a link. But I'm not going to recreate all of
+	;; `org-store-link' by hand.
+	(when (and reply-group reply-id)
+	  (save-window-excursion
+	    (org-gnus-follow-link reply-group reply-id)
+	    (call-interactively 'org-store-link)))
 	(when ref-ids
 	  (when (stringp ref-ids)
 	    (setq ref-ids (split-string ref-ids)))
@@ -330,33 +343,31 @@ work."
 	  ;; tracked by TODO headings...
 	  (setq rel-headings (gnorb-org-find-visit-candidates ref-ids)))
 	(when rel-headings
-	  (save-restriction
-	    (save-excursion
-	      (message-narrow-to-headers-or-head)
-	      (goto-char (point-min))
-	      (dolist (h rel-headings)
-		;; then get the org-ids of those headings, and insert
-		;; them into this message as headers. If the id was
-		;; already present in a header, don't add it again.
-		(when (not (member h header-ids))
-		  (goto-char (point-at-bol))
-		  (open-line 1)
-		  (message-insert-header
-		   (intern gnorb-mail-header)
-		   (car h))))))
-	  ;; tell the rest of the function that this is a relevant
-	  ;; message
-	  (setq header-ids t))
-	(add-to-list
-	 'message-exit-actions
-	 (if header-ids
-	     'gnorb-org-restore-after-send
-	   'gnorb-gnus-outgoing-make-todo-1)
-	 t)
-	(message
-	 (if header-ids
-	     "Message will trigger TODO state-changes after sending"
-	   "A TODO will be made from this message after it's sent")))))
+	  (goto-char (point-min))
+	  (dolist (h rel-headings)
+	    ;; then get the org-ids of those headings, and insert
+	    ;; them into this message as headers. If the id was
+	    ;; already present in a header, don't add it again.
+	    (unless (member (car h) header-ids)
+	      (goto-char (point-at-bol))
+	      (open-line 1)
+	      (message-insert-header
+	       (intern gnorb-mail-header)
+	       (car h))
+	      ;; tell the rest of the function that this is a relevant
+	      ;; message
+	      (push (car h) header-ids)))))
+      (message-goto-body)
+      (add-to-list
+       'message-exit-actions
+       (if header-ids
+	   'gnorb-org-restore-after-send
+	 'gnorb-gnus-outgoing-make-todo-1)
+       t)
+      (message
+       (if header-ids
+	   "Message will trigger TODO state-changes after sending"
+	 "A TODO will be made from this message after it's sent")))))
 
 (defun gnorb-gnus-outgoing-make-todo-1 ()
   (unless gnorb-gnus-new-todo-capture-key
