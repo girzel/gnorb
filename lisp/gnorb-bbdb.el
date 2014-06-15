@@ -453,7 +453,10 @@ opened. Use a prefix arg to open different links. For instance,
 M-3 \\[gnorb-bbdb-open-link] will open the third link in the
 list. If the %:count escape is present in the message formatting
 string (see `gnorb-bbdb-message-link-format-multi' and
-`gnorb-bbdb-message-link-format-one'), that's the number to use."
+`gnorb-bbdb-message-link-format-one'), that's the number to use.
+
+This function also needs to be called on a contact once before
+that contact will start collecting links to messages."
   (interactive (list
 		(or (bbdb-current-record)
 		    (user-error "No record under point"))
