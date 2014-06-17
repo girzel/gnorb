@@ -487,7 +487,7 @@ current heading."
 	     (org-attach-file-list attach-dir))))
       files)))
 
-(defun gnorb-org-handle-mail (arg)
+(defun gnorb-org-handle-mail (&optional arg)
   "Handle current headline as a mail TODO."
   (interactive "P")
   (setq gnorb-org-window-conf (current-window-configuration))
@@ -639,7 +639,7 @@ respective (usual) file extensions. Ugly way to do it, but what
 the hey..."
   :group 'gnorb-org)
 
-(defun gnorb-org-email-subtree (arg)
+(defun gnorb-org-email-subtree (&optional arg)
   "Call on a subtree to export it either to a text string or a file,
 then compose a mail message either with the exported text
 inserted into the message body, or the exported file attached to
