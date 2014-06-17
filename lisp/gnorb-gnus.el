@@ -456,8 +456,8 @@ to t (it is, by default)."
     (setq gnorb-gnus-capture-attachments nil)
     (message
      "Insert a link to the message with org-insert-link (%s)"
-     (mapconcat 'key-description
-		(where-is-internal 'org-insert-link nil t) ", "))))
+     (key-description
+		(where-is-internal 'org-insert-link nil t)))))
 
 (defun gnorb-gnus-search-messages (str &optional ret)
   "Initiate a search for gnus message links in an org subtree.
