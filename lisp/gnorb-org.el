@@ -523,10 +523,17 @@ current heading."
 	       (cc (mp "MAIL_CC"))
 	       (bcc (mp "MAIL_BCC"))
 	       (org-id (org-id-get-create))
+	       (recs (plist-get links :bbdb))
 	       mails)
-	  (when (plist-get links :bbdb)
-	    (dolist (b (plist-get links :bbdb))
-	      (push (gnorb-bbdb-link-to-mail b) mails)))
+	  (when recs
+	    (dolist (r recs)
+	      (push (gnorb-bbdb-link-to-mail r) mails)))
+	  (when (and gnorb-bbdb-posting-styles
+		     recs)
+	    (add-hook 'message-mode-hook
+		      (lambda ()
+			(gnorb-bbdb-configure-posting-styles (cdr recs))
+			(gnorb-bbdb-configure-posting-styles (list (car recs))))))
 	  (gnorb-org-setup-message
 	   (plist-get links :gnus) ; gnus links
 	   (append mails (plist-get links :mail))
@@ -694,21 +701,28 @@ default set of parameters."
 	 (links (gnorb-org-extract-mail-stuff strategy))
 	 (attachments (gnorb-org-attachment-list))
 	 (org-id (org-id-get-create))
-	 text mails)
+	 (recs (plist-get links :bbdb))
+	 text mails )
     ;; this should just go into a call to `org-handle-mail', passing
     ;; the results of the export as an argument
     (setq gnorb-org-window-conf (current-window-configuration))
     (if (bufferp result)
 	(setq text result)
       (push result attachments))
-    (when (plist-get links :bbdb)
-	    (dolist (b (plist-get links :bbdb))
-	      (push (gnorb-bbdb-link-to-mail b) mails)))
+    (when recs
+      (dolist (r recs)
+	(push (gnorb-bbdb-link-to-mail r) mails)))
+    (when (and gnorb-bbdb-posting-styles
+	       recs)
+      (add-hook 'message-mode-hook
+		(lambda ()
+		  (gnorb-bbdb-configure-posting-styles (cdr recs))
+		  (gnorb-bbdb-configure-posting-styles (list (car recs))))))
     (gnorb-org-setup-message
      (plist-get links :gnus)
      (append mails (plist-get links :mails))
      nil nil nil ;; when this calls into `org-handle-mail' all this
-		 ;; will be sorted
+     ;; will be sorted
      attachments text org-id)))
 
 (defcustom gnorb-org-capture-collect-link-p t
