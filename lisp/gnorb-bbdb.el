@@ -510,8 +510,7 @@ to a message into the record's `gnorb-bbdb-messages-field'."
     (user-error "This function only works with the git version of BBDB"))
   (unless (or (not (and (memq gnorb-bbdb-messages-field
 			      (mapcar 'car (bbdb-record-xfields record)))
-			gnus-summary-buffer
-			gnus-article-buffer))
+			(memq major-mode '(gnus-summary-mode gnus-article-mode))))
 	      (with-current-buffer gnus-article-buffer
 		(not ; only store messages if the record is the sender
 		 (member (nth 1 (car (bbdb-get-address-components 'sender)))
