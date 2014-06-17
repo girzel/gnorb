@@ -420,6 +420,9 @@ to t (it is, by default)."
   (call-interactively 'org-store-link)
   (setq gnorb-org-window-conf (current-window-configuration))
   (let* ((org-refile-targets gnorb-gnus-trigger-refile-targets)
+	 ;; otherwise `gnorb-trigger-todo-action' will think we
+	 ;; started from an outgoing message
+	 (gnorb-gnus-sending-message-info nil)
 	 (ref-msg-ids
 	  (with-current-buffer gnus-original-article-buffer
 	    (message-narrow-to-headers-or-head)
