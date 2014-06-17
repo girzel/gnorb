@@ -237,7 +237,7 @@ STRATEGY will be disregarded."
 		 (org-element-property :contents-end p)))
 	      nil nil 'drawer))
 	   state-strategy text-strategy search-func
-	   strings state-success all-links bbdb-mails)
+	   strings state-success all-links)
       (when (listp strategy)
 	(setq state-strategy (car strategy)
 	      text-strategy (nth 1 strategy)))
@@ -337,12 +337,7 @@ STRATEGY will be disregarded."
       (setq strings (delq nil strings))
       (when (and strings (not all-links))
 	(setq all-links (gnorb-org-find-links strings search-func)))
-      (when (plist-get all-links :bbdb)
-	(dolist (b (plist-get all-links :bbdb))
-	  (push (gnorb-bbdb-link-to-mail b) bbdb-mails)))
-      (list (plist-get all-links :gnus)
-	    (append bbdb-mails
-		    (plist-get all-links :mail))))))
+      all-links)))
 
 (defun gnorb-org-scan-log-notes (state-log strategy)
   ;; `gnorb-org-extract-mail-stuff' was way too long already
@@ -522,14 +517,19 @@ current heading."
       (unless (org-back-to-heading t)
 	(error "Not in an org item"))
       (cl-flet ((mp (p) (org-entry-get (point) p t)))
-	(let* ((mail-stuff (gnorb-org-extract-mail-stuff strategy region))
+	(let* ((links (gnorb-org-extract-mail-stuff strategy region))
 	       (attachments (gnorb-org-attachment-list))
 	       (from (mp "MAIL_FROM"))
 	       (cc (mp "MAIL_CC"))
 	       (bcc (mp "MAIL_BCC"))
-	       (org-id (org-id-get-create)))
+	       (org-id (org-id-get-create))
+	       mails)
+	  (when (plist-get links :bbdb)
+	    (dolist (b (plist-get links :bbdb))
+	      (push (gnorb-bbdb-link-to-mail b) mails)))
 	  (gnorb-org-setup-message
-	   (first mail-stuff) (second mail-stuff)
+	   (plist-get links :gnus) ; gnus links
+	   (append mails (plist-get links :mail))
 	   from cc bcc
 	   attachments nil org-id))))))
 
@@ -691,18 +691,22 @@ default set of parameters."
 		     (nth 1 gnorb-org-mail-scan-strategies))
 		    ((equal '(16) arg)
 		     (nth 2 gnorb-org-mail-scan-strategies))))
-	 (mail-stuff (gnorb-org-extract-mail-stuff strategy))
+	 (links (gnorb-org-extract-mail-stuff strategy))
 	 (attachments (gnorb-org-attachment-list))
 	 (org-id (org-id-get-create))
-	 text)
+	 text mails)
     ;; this should just go into a call to `org-handle-mail', passing
     ;; the results of the export as an argument
     (setq gnorb-org-window-conf (current-window-configuration))
     (if (bufferp result)
 	(setq text result)
       (push result attachments))
+    (when (plist-get links :bbdb)
+	    (dolist (b (plist-get links :bbdb))
+	      (push (gnorb-bbdb-link-to-mail b) mails)))
     (gnorb-org-setup-message
-     (first mail-stuff) (second mail-stuff)
+     (plist-get links :gnus)
+     (append mails (plist-get links :mails))
      nil nil nil ;; when this calls into `org-handle-mail' all this
 		 ;; will be sorted
      attachments text org-id)))
