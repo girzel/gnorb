@@ -542,5 +542,22 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 			  (split-string ref-ids)))
 		    gnorb-gnus-summary-mark
 		  " "))))
+
+(defun gnorb-gnus-view ()
+  "Display the first relevant TODO heading for the message under point"
+  ;; this is pretty barebones, need to make sure we have a valid
+  ;; article buffer to access, and think about what to do for
+  ;; window-configuration!
+
+  ;; boy is this broken now.
+  (interactive)
+  (let ((refs (gnus-fetch-original-field "references"))
+	rel-headings)
+    (when refs
+      (setq refs (split-string refs))
+      (setq rel-headings (gnorb-org-find-visit-candidates refs))
+      (delete-other-windows)
+      (org-id-goto (caar rel-headings)))))
+
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here
