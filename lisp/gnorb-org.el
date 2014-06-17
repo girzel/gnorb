@@ -407,7 +407,7 @@ headings."
       ;; either compose new message...
       (compose-mail (mapconcat 'identity mails ", "))
     ;; ...or follow link and start reply
-    (condition-case nil
+    (condition-case err
 	(progn
 	  (org-gnus-open (org-link-unescape (car messages)))
 	  (call-interactively
@@ -417,7 +417,9 @@ headings."
 	    (message-goto-to)
 	    (insert ", ")
 	    (insert (mapconcat 'identity mails ", "))))
-      (error (message "Couldn't open linked message"))))
+      (error (when (window-configuration-p gnorb-org-window-conf)
+	       (set-window-configuration gnorb-org-window-conf))
+	     (signal (car err) (cdr err)))))
   ;; return us after message is sent
   (add-to-list 'message-exit-actions
 	       'gnorb-org-restore-after-send t)
