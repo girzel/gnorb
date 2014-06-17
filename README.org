@@ -123,18 +123,18 @@ Add an entry like this to your `gnus-secondary-select-methods':
 (nngnorb "Purely Decorative Server Name")
 
 And restart Gnus. Now, on any given Org subtree, you can call
-`gnorb-org-view', and you'll be presented with an nnir *Summary*
+`gnorb-org-view', and you'll be presented with an nnir Summary
 buffer containing all the messages linked to within the subtree.
 
-As a bonus, it's possible to go into Gnus' *Server* buffer, find the
+As a bonus, it's possible to go into Gnus' Server buffer, find the
 line specifying your nngnorb server, and hit "G" (aka
 `gnus-group-make-nnir-group'). At the query prompt, enter an Org-style
 tags-todo Agenda query string (eg "+work-computer", or what have you).
 Gnorb will find all headings matching this query, scan their subtrees
-for gnus links, and then give you a *Summary* buffer containing all
+for gnus links, and then give you a Summary buffer containing all
 the linked messages.
 ** Recent mails from BBDB contacts
-If you're using a recent git version of BBDB (circa mid-may 2014 or
+If you're using a recent git version of BBDB (circa mid-May 2014 or
 later), you can give your BBDB contacts a special field which will
 collect links to recent emails from that contact. The default name of
 the field is "messages", but you can customize that name using the
