@@ -395,35 +395,37 @@ layout type."
       ;; indent and fmt are dynamically bound
       (when (eq format 'multi)
 	(bbdb-display-text (format fmt gnorb-bbdb-messages-field)
-			  `(xfields ,full-field field-label)
-			  'bbdb-field-name))
+			   `(xfields ,full-field field-label)
+			   'bbdb-field-name))
       (insert (cond ((and (stringp val)
 			  (eq format 'multi))
 		     (bbdb-indent-string (concat val "\n") indent))
 		    ((listp val)
-		     (bbdb-indent-string
-		      (mapconcat
-		       (lambda (m)
-			 (prog1
-			     (org-propertize
-			      (concat
-			       (format-time-string
-				(replace-regexp-in-string
-				 "%:subject" (gnorb-bbdb-link-subject m)
+		     (concat
+		      (bbdb-indent-string
+		       (mapconcat
+			(lambda (m)
+			  (prog1
+			      (org-propertize
+			       (concat
+				(format-time-string
 				 (replace-regexp-in-string
-				  "%:count" (number-to-string count)
-				  (if (eq format 'multi)
-				      gnorb-bbdb-message-link-format-multi
-				    gnorb-bbdb-message-link-format-one)))
-				(gnorb-bbdb-link-date m)))
-			      'face 'gnorb-bbdb-link
-			      'mouse-face 'highlight
-			      'gnorb-bbdb-link-count count
-			      'keymap map)
-			   (incf count)))
-		       val (if (eq format 'multi)
-			       "\n" ", "))
-		      indent))
+				  "%:subject" (gnorb-bbdb-link-subject m)
+				  (replace-regexp-in-string
+				   "%:count" (number-to-string count)
+				   (if (eq format 'multi)
+				       gnorb-bbdb-message-link-format-multi
+				     gnorb-bbdb-message-link-format-one)))
+				 (gnorb-bbdb-link-date m)))
+			       'face 'gnorb-bbdb-link
+			       'mouse-face 'highlight
+			       'gnorb-bbdb-link-count count
+			       'keymap map)
+			    (incf count)))
+			val (if (eq format 'multi)
+				"\n" ", "))
+		       indent)
+		      (if (eq format 'multi) "\n" "")))
 		    (t
 		     ""))))))
 
