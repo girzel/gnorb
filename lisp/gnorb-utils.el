@@ -158,14 +158,6 @@ the prefix arg."
 	  (call-interactively note-func)
 	(call-interactively todo-func)))))
 
-(defsubst gnorb-bbdb-link-to-mail (link)
-  (with-current-buffer bbdb-buffer-name
-    (let ((recs bbdb-records))
-      (org-open-link-from-string (concat "[[bbdb:" link "]]"))
-      (let ((mail (bbdb-mail-address (bbdb-current-record))))
-	(bbdb-display-records recs)
-	mail))))
-
 (defun gnorb-scan-links (bound &rest types)
   ;; this function could be refactored somewhat -- lots of code
   ;; repetition. It also should be a little faster for when we're

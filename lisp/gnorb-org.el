@@ -464,7 +464,7 @@ headings."
 	  ;; this function hardly does anything
 	  (message-insert-header
 	   (intern gnorb-mail-header) i)))))
-					; put point somewhere reasonable
+  ;; put point somewhere reasonable
   (if (or mails messages)
       (if (not messages)
 	  (message-goto-subject)
@@ -484,7 +484,7 @@ current heading."
 	     (org-attach-file-list attach-dir))))
       files)))
 
-(defun gnorb-org-handle-mail (&optional arg)
+(defun gnorb-org-handle-mail (&optional arg text file)
   "Handle current headline as a mail TODO."
   (interactive "P")
   (setq gnorb-org-window-conf (current-window-configuration))
@@ -527,9 +527,20 @@ current heading."
 	       (org-id (org-id-get-create))
 	       (recs (plist-get links :bbdb))
 	       mails)
+	  (when file
+	    (cons g file attachments))
+	  (when recs
+	    (setq recs
+		  (delete nil
+			  (mapcar
+			   (lambda (r)
+			     (car (bbdb-message-search
+				   (org-link-unescape r)
+				   nil)))
+			   recs))))
 	  (when recs
 	    (dolist (r recs)
-	      (push (gnorb-bbdb-link-to-mail r) mails)))
+	      (push (bbdb-mail-address r) mails)))
 	  (when (and gnorb-bbdb-posting-styles
 		     recs)
 	    (add-hook 'message-mode-hook
@@ -537,10 +548,10 @@ current heading."
 			(gnorb-bbdb-configure-posting-styles (cdr recs))
 			(gnorb-bbdb-configure-posting-styles (list (car recs))))))
 	  (gnorb-org-setup-message
-	   (plist-get links :gnus) ; gnus links
+	   (plist-get links :gnus)
 	   (append mails (plist-get links :mail))
 	   from cc bcc
-	   attachments nil org-id))))))
+	   attachments text org-id))))))
 
 (defun gnorb-org-add-id-hash-entry (msg-id &optional marker)
   (org-with-point-at (or marker (point))
@@ -693,39 +704,12 @@ default set of parameters."
 		       t gnorb-tmp-dir)
 		     ,@opts
 		     ,gnorb-org-email-subtree-file-parameters))))
-	 (strategy (cond
-		    ((null arg)
-		     (car gnorb-org-mail-scan-strategies))
-		    ((equal '(4) arg)
-		     (nth 1 gnorb-org-mail-scan-strategies))
-		    ((equal '(16) arg)
-		     (nth 2 gnorb-org-mail-scan-strategies))))
-	 (links (gnorb-org-extract-mail-stuff strategy))
-	 (attachments (gnorb-org-attachment-list))
-	 (org-id (org-id-get-create))
-	 (recs (plist-get links :bbdb))
-	 text mails )
-    ;; this should just go into a call to `org-handle-mail', passing
-    ;; the results of the export as an argument
+	 text file)
     (setq gnorb-org-window-conf (current-window-configuration))
     (if (bufferp result)
 	(setq text result)
-      (push result attachments))
-    (when recs
-      (dolist (r recs)
-	(push (gnorb-bbdb-link-to-mail r) mails)))
-    (when (and gnorb-bbdb-posting-styles
-	       recs)
-      (add-hook 'message-mode-hook
-		(lambda ()
-		  (gnorb-bbdb-configure-posting-styles (cdr recs))
-		  (gnorb-bbdb-configure-posting-styles (list (car recs))))))
-    (gnorb-org-setup-message
-     (plist-get links :gnus)
-     (append mails (plist-get links :mails))
-     nil nil nil ;; when this calls into `org-handle-mail' all this
-     ;; will be sorted
-     attachments text org-id)))
+      (setq file result))
+    (gnorb-org-handle-mail arg text file)))
 
 (defcustom gnorb-org-capture-collect-link-p t
   "Should the capture process store a link to the gnus message or
