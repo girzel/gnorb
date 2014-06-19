@@ -117,17 +117,14 @@ be scanned for gnus messages, and those messages displayed."
 	(gnus))
       (dolist (m links (when vectors
 			 (nreverse vectors)))
-	(let (server-group msg-id artno)
+	(let (server-group msg-id result artno)
 	  (setq m (org-link-unescape m))
 	  (when (string-match "\\`\\([^#]+\\)\\(#\\(.*\\)\\)?" m)
 	    (setq server-group (match-string 1 m)
-		  msg-id (match-string 3 m))
-	    ;; I swear just finding the `gnus-request-head' function
-	    ;; was a trial in itself. But I've only tried it with
-	    ;; nnimap -- does it work for other backends?
-	    (when (gnus-activate-group server-group)
-	     (setq artno
-		   (cdr (gnus-request-head msg-id server-group)))
+		  msg-id (match-string 3 m)
+		  result (ignore-errors (gnus-request-head msg-id server-group)))
+	    (when result
+	     (setq artno (cdr result))
 	     (when (and (integerp artno) (> artno 0))
 	       (push (vector server-group artno 100) vectors)))))))))
 
