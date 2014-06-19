@@ -69,16 +69,20 @@ Org agenda tags search. All headings matched by this string will
 be scanned for gnus messages, and those messages displayed."
   (save-excursion
     (let ((q (cdr (assq 'query query)))
-	  subtrees links subtree-text vectors)
+	  (buf (get-buffer-create nnir-tmp-buffer))
+	  links vectors)
+      (with-current-buffer buf
+	(erase-buffer))
       (when (equal "5.13" gnus-version-number)
 	(setq q (car q)))
       (cond ((string-match "id\\+\\([[:alnum:]-]+\\)$" q)
 	     (with-demoted-errors "Error: %S"
 	       (org-id-goto (match-string 1 q))
-	       (push (move-marker
-		      (make-marker)
-		      (org-element-property :begin (org-element-at-point)))
-		     subtrees)))
+	       (append-to-buffer
+		buf
+		(point)
+		(org-element-property
+		 :end (org-element-at-point)))))
 	    ((listp q)
 	     ;; be a little careful: this could be a list of links, or
 	     ;; it could be the full plist
@@ -87,32 +91,19 @@ be scanned for gnus messages, and those messages displayed."
 			   q)))
 	    (t (org-map-entries
 		(lambda ()
-		  (push
-		   (move-marker (make-marker)
-				(org-element-property :begin
-						      (org-element-at-point)))
-		   subtrees))
+		  (append-to-buffer
+		   buf
+		   (point)
+		   (save-excursion
+		     (outline-next-heading)
+		     (point))))
 		q
 		'agenda)))
-      (when subtrees
-	(with-current-buffer (get-buffer-create nnir-tmp-buffer)
-	  (erase-buffer)
-	  (dolist (m subtrees)
-	    (save-excursion
-	      (org-pop-to-buffer-same-window (marker-buffer m))
-	      (goto-char m)
-	      (move-marker m nil)
-	      (setq subtree-text
-		    (buffer-substring-no-properties
-		     (point)
-		     (org-element-property
-		      :end
-		      (org-element-at-point)))))
-	    (insert subtree-text)
-	    (insert "\n"))
-	  (goto-char (point-min))
-	  (setq links (gnorb-scan-links (point-max) 'gnus))))
-      (setq links (delete-dups (plist-get links :gnus)))
+      (with-current-buffer buf
+	(goto-char (point-min))
+	(setq links (plist-get (gnorb-scan-links (point-max) 'gnus)
+			       :gnus)))
+      (setq links (delete-dups links))
       (unless (gnus-alive-p)
 	(gnus))
       (dolist (m links (when vectors
