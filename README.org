@@ -419,7 +419,7 @@ line. Defaults to "¡".
     '(progn
        (define-key message-mode-map (kbd "C-c t") 'gnorb-gnus-outgoing-do-todo)))
 #+END_SRC
-** Wishlist/TODO
+** Wishlist TODO
 - Support adding X-Org-Id headers to Gnus messages, which point at
   relevant Org headings (possibly not really useful).
 - Provide a command that, when in the Org Agenda, does an email search
@@ -428,5 +428,6 @@ line. Defaults to "¡".
 - Look into message tagging in Gnus -- what are the options? Is it
   possible to search for tagged messages when we do an Org agenda tag
   search?
-- Consider merging `gnorb-org-handle-mail' and
-  `gnorb-org-email-subtree' altogether.
+- Allow automatic org-tagging of BBDB contacts: when messages from a
+  contact are associated with an Org heading, make it possible for the
+  contact to inherit that heading's tags.
