@@ -282,6 +282,10 @@ message that isn't referenced by any TODOs, a new TODO will be
 created. If it references an existing TODO, you'll be prompted to
 trigger a state-change or a note on that TODO.
 
+Otherwise, you can call it with a prefix arg to associate the
+sending/sent message with an existing Org subtree, and trigger an
+action on that subtree.
+
 If a new todo is made, it needs a capture template: set
 `gnorb-gnus-new-todo-capture-key' to the string key for the
 appropriate capture template. If you're using a gnus-based
@@ -294,14 +298,27 @@ manual (org) Template expansion section). If you don't, then the
 the outgoing message will still be available -- nothing else will
 work."
   (interactive "P")
-  (let (header-ids ref-ids rel-headings gnorb-org-window-conf
-		   reply-id reply-group)
+  (let ((org-refile-targets gnorb-gnus-trigger-refile-targets)
+	header-ids ref-ids rel-headings gnorb-org-window-conf
+	reply-id reply-group)
+    (when arg
+      (setq rel-headings
+	    (org-refile-get-location "Trigger action on" nil t))
+      (setq rel-headings
+	    (list (list (save-window-excursion
+			  (find-file (nth 1 rel-headings))
+			  (goto-char (nth 3 rel-headings))
+			  (org-id-get-create))))))
     (if (not (eq major-mode 'message-mode))
 	;; The message is already sent, so we're relying on whatever was
 	;; stored into `gnorb-gnus-sending-message-info'.
-	(progn
+	(if arg
+	    (progn
+	      (push (caar rel-headings) gnorb-message-org-ids)
+	      (gnorb-org-restore-after-send))
 	  (setq ref-ids (plist-get gnorb-gnus-sending-message-info :refs))
-	  (if ref-ids ;; the message might be relevant to some TODO
+	  (if ref-ids
+	      ;; the message might be relevant to some TODO
 	      ;; heading(s). But if there had been org-id
 	      ;; headers, they would already have been
 	      ;; handled when the message was sent.
@@ -326,7 +343,11 @@ work."
 	(widen)
 	(message-narrow-to-headers-or-head)
 	(setq header-ids (mail-fetch-field gnorb-mail-header nil nil t))
-	(setq ref-ids (mail-fetch-field "References" t))
+	;; With a prefix arg we do not check references, because the
+	;; whole point is to add new references. We still want to know
+	;; what org id headers are present, though, so we don't add
+	;; duplicates.
+	(setq ref-ids (unless arg (mail-fetch-field "References" t)))
 	(setq reply-group (car-safe (read (mail-fetch-field "X-Draft-From" t))))
 	;; when it's a reply, store a link to the reply just in case.
 	;; This is pretty embarrassing -- we follow a link just to
