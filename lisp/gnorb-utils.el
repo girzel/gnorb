@@ -168,7 +168,7 @@ the prefix arg."
   ;; This function should also *not* be responsible for unescaping
   ;; links -- we don't know what they're going to be used for, and
   ;; unescaped is safer.
-  (unless (eq (point) bound)
+  (unless (= (point) bound)
     (let (addr gnus mail bbdb)
       (while (re-search-forward org-any-link-re bound t)
 	(setq addr (or (match-string-no-properties 2)
