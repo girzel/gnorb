@@ -154,6 +154,7 @@ the prefix arg."
        (lambda (a) (org-attach-attach a nil 'mv))
        gnorb-gnus-capture-attachments
        '("file" "files" "attach"))
+      (setq gnorb-gnus-capture-attachments nil)
       (if (eq action 'note)
 	  (call-interactively note-func)
 	(call-interactively todo-func)))))

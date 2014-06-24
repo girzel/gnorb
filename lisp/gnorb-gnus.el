@@ -474,7 +474,6 @@ to t (it is, by default)."
 	(find-file (nth 1 targ))
 	(goto-char (nth 3 targ))
 	(gnorb-trigger-todo-action arg)))
-    (setq gnorb-gnus-capture-attachments nil)
     (message
      "Insert a link to the message with org-insert-link (%s)"
      (key-description
