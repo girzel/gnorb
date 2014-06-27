@@ -348,7 +348,8 @@ work."
 	;; what org id headers are present, though, so we don't add
 	;; duplicates.
 	(setq ref-ids (unless arg (mail-fetch-field "References" t)))
-	(setq reply-group (car-safe (read (mail-fetch-field "X-Draft-From" t))))
+	(setq reply-group (when (mail-fetch-field "X-Draft-From" t)
+			    (car-safe (read (mail-fetch-field "X-Draft-From" t)))))
 	;; when it's a reply, store a link to the reply just in case.
 	;; This is pretty embarrassing -- we follow a link just to
 	;; create a link. But I'm not going to recreate all of
