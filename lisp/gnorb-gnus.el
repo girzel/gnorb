@@ -245,22 +245,19 @@ information about the outgoing message into
 	   (to (if (message-news-p)
 		   (mail-fetch-field "Newsgroups")
 		 (mail-fetch-field "To")))
-	   ;; if there are multiple To addresses, only the first will
-	   ;; be extracted.
-	   (toname (nth 1 (mail-extract-address-components to)))
-	   (toaddress (nth 2 (mail-extract-address-components to)))
+	   (from (mail-fetch-field "From"))
 	   (subject (mail-fetch-field "Subject"))
 	   (date (mail-fetch-field "Date"))
-	   ;; if we can get a link, that's awesome
+	   ;; If we can get a link, that's awesome.
 	   (link (or (and (mail-fetch-field "Gcc")
-			  (call-interactively 'org-store-link))
+			  (org-store-link nil))
 		     nil)))
-      ;; if we can't, then save some information so we can fake it
+      ;; If we can't, then save some information so we can fake it.
       (when refs
-	  (setq refs (split-string refs)))
+	(setq refs (split-string refs)))
       (setq gnorb-gnus-sending-message-info
 	    `(:subject ,subject :msg-id ,msg-id
-		       :to ,to :toname ,toname :toaddress ,toaddress
+		       :to ,to :from ,from
 		       :link ,link :date ,date :refs ,refs))
       (if org-ids
 	  (progn
@@ -268,7 +265,7 @@ information about the outgoing message into
 	    (setq gnorb-message-org-ids org-ids)
 	    ;; `gnorb-org-setup-message' may have put this here, but
 	    ;; if we're working from a draft, or triggering this from
-	    ;; a reply, it might not be there yet
+	    ;; a reply, it might not be there yet.
 	    (add-to-list 'message-exit-actions
 			 'gnorb-org-restore-after-send))
 	(setq gnorb-message-org-ids nil)))))
@@ -394,25 +391,43 @@ work."
 (defun gnorb-gnus-outgoing-make-todo-1 ()
   (unless gnorb-gnus-new-todo-capture-key
     (error "No capture template key set, customize gnorb-gnus-new-todo-capture-key"))
-  (let* ((subject (plist-get gnorb-gnus-sending-message-info :subject))
-	 (to (plist-get gnorb-gnus-sending-message-info :to))
-	 (toname (plist-get gnorb-gnus-sending-message-info :toaddress))
-	 (toaddress (plist-get gnorb-gnus-sending-message-info :toaddress))
+  (let* ((link (plist-get gnorb-gnus-sending-message-info :link))
 	 (date (plist-get gnorb-gnus-sending-message-info :date))
-	 (msg-id (plist-get gnorb-gnus-sending-message-info :msg-id))
-	 (link (plist-get gnorb-gnus-sending-message-info :link))
-	 ;; If we actually have a link, then make use of it.
-	 ;; Otherwise, fake it.
-	 (org-capture-link-is-already-stored
-	  (or link t)))
-    (setq org-store-link-plist
-	  `(:subject ,subject :to ,to :toname ,toname
-		     :toaddress ,toaddress :date ,date))
+	 (date-ts (and date
+		       (ignore-errors
+			 (format-time-string
+			  (org-time-stamp-format t)
+			  (date-to-time date)))))
+	 (date-ts-ia (and date
+			  (ignore-errors
+			    (format-time-string
+			     (org-time-stamp-format t t)
+			     (date-to-time date)))))
+	 ;; Convince Org we already have a link stored, even if we
+	 ;; don't.
+	 (org-capture-link-is-already-stored t))
+    (if link
+	;; Even if you make a link to not-yet-sent messages, even if
+	;; you've saved the draft and it has a Date header, that
+	;; header isn't saved into the link plist. So fake that, too.
+	(org-add-link-props
+	 :date date
+	 :date-timestamp date-ts
+	 :date-timestamp-inactive date-ts-ia
+	 :annotation link)
+      (org-store-link-props
+	    :subject (plist-get gnorb-gnus-sending-message-info :subject)
+	    :to (plist-get gnorb-gnus-sending-message-info :to)
+	    :date date
+	    :date-timestamp date-ts
+	    :date-timestamp-inactive date-ts-ia
+	    :message-id (plist-get gnorb-gnus-sending-message-info :msg-id)
+	    :annotation link))
     (org-capture nil gnorb-gnus-new-todo-capture-key)
     (when msg-id
       (org-entry-put (point) gnorb-org-msg-id-key msg-id))
-    ;; it would be better to only do this if we knew the capture went
-    ;; through, ie wasn't aborted
+    ;; It would be better to only do this if we knew the capture went
+    ;; through, ie wasn't aborted.
     (setq gnorb-gnus-sending-message-info nil)))
 
 ;;; If an incoming message should trigger state-change for a Org todo,
