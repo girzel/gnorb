@@ -403,6 +403,7 @@ work."
 			    (format-time-string
 			     (org-time-stamp-format t t)
 			     (date-to-time date)))))
+	 (msg-id (plist-get gnorb-gnus-sending-message-info :msg-id))
 	 ;; Convince Org we already have a link stored, even if we
 	 ;; don't.
 	 (org-capture-link-is-already-stored t))
@@ -421,7 +422,7 @@ work."
 	    :date date
 	    :date-timestamp date-ts
 	    :date-timestamp-inactive date-ts-ia
-	    :message-id (plist-get gnorb-gnus-sending-message-info :msg-id)
+	    :message-id msg-id
 	    :annotation link))
     (org-capture nil gnorb-gnus-new-todo-capture-key)
     (when msg-id
