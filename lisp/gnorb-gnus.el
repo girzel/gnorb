@@ -121,6 +121,7 @@ Basically behave as if all attachments have \":gnus-attachments t\"."
   "Holding place for attachment names during the capture
   process.")
 
+;;;###autoload
 (defun gnorb-gnus-article-org-attach (n)
   "Save MIME part N, which is the numerical prefix, of the
   article under point as an attachment to the specified org
@@ -128,6 +129,7 @@ Basically behave as if all attachments have \":gnus-attachments t\"."
   (interactive "P")
   (gnus-article-part-wrapper n 'gnorb-gnus-attach-part))
 
+;;;###autoload
 (defun gnorb-gnus-mime-org-attach ()
   "Save the MIME part under point as an attachment to the
   specified org heading."
@@ -272,6 +274,7 @@ information about the outgoing message into
 
 (add-hook 'message-header-hook 'gnorb-gnus-check-outgoing-headers)
 
+;;;###autoload
 (defun gnorb-gnus-outgoing-do-todo (&optional arg)
   "Call this function to use the message currently being composed
 as an email todo action. If it's a new message, or a reply to a
@@ -434,6 +437,7 @@ work."
 ;;; If an incoming message should trigger state-change for a Org todo,
 ;;; call this function on it.
 
+;;;###autoload
 (defun gnorb-gnus-incoming-do-todo (arg &optional id)
   "Call this function from a received gnus message to store a
 link to the message, prompt for a related Org heading, visit the
@@ -496,6 +500,7 @@ to t (it is, by default)."
      (key-description
 		(where-is-internal 'org-insert-link nil t)))))
 
+;;;###autoload
 (defun gnorb-gnus-search-messages (str &optional ret)
   "Initiate a search for gnus message links in an org subtree.
 The arg STR can be one of two things: an Org heading id value
@@ -580,6 +585,7 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 		    gnorb-gnus-summary-mark
 		  " "))))
 
+;;;###autoload
 (defun gnorb-gnus-view ()
   "Display the first relevant TODO heading for the message under point"
   ;; this is pretty barebones, need to make sure we have a valid

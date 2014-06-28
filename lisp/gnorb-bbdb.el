@@ -147,6 +147,7 @@ be composed, just as in `gnus-posting-styles'.
 An example value might look like:"
   :group 'gnorb-bbdb)
 
+;;;###autoload
 (defun gnorb-bbdb-mail (records &optional subject n verbose)
   "\\<bbdb-mode-map>Acts just like `bbdb-mail', except runs
 RECORDS through `gnorb-bbdb-posting-styles', allowing
@@ -314,6 +315,7 @@ is non-nil (as in interactive calls) be verbose."
 			 (insert "From: " (message-make-from) "\n"))))
 		  t 'local)))))
 
+;;;###autoload
 (defun gnorb-bbdb-tag-agenda (records)
   "Open an Org agenda tags view from the BBDB buffer, using the
 value of the record's org-tags field. This shows only TODOs by
@@ -341,6 +343,7 @@ both, use \"C-u\" before the \"*\"."
 	  (org-tags-view t tag-string))
       (error "No org-tags field present"))))
 
+;;;###autoload
 (defun gnorb-bbdb-mail-search (records)
   "Initiate a mail search from the BBDB buffer.
 
@@ -366,6 +369,7 @@ a prefix arg and \"*\", the prefix arg must come first."
     (funcall (third backend) search-string)
     (delete-other-windows)))  
 
+;;;###autoload
 (defun gnorb-bbdb-cite-contact (rec)
   (interactive (list (gnorb-prompt-for-bbdb-record)))
   (let ((mail-string (bbdb-dwim-mail rec)))
@@ -448,6 +452,7 @@ layout type."
 
 ;; Open links from the *BBDB* buffer.
 
+;;;###autoload
 (defun gnorb-bbdb-open-link (record arg)
   "\\<bbdb-mode-map>Call this on a BBDB record to open one of the
 links in the message field. By default, the first link will be

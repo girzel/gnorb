@@ -167,6 +167,7 @@ For instance, to limit candidates to headings with TODOs in
   :group 'gnorb-org
   :type 'symbol)
 
+;;;###autoload
 (defun gnorb-org-contact-link (rec)
   "Prompt for a BBDB record and insert a link to that record at
 point.
@@ -484,6 +485,7 @@ current heading."
 	     (org-attach-file-list attach-dir))))
       files)))
 
+;;;###autoload
 (defun gnorb-org-handle-mail (&optional arg text file)
   "Handle current headline as a mail TODO."
   (interactive "P")
@@ -659,6 +661,7 @@ respective (usual) file extensions. Ugly way to do it, but what
 the hey..."
   :group 'gnorb-org)
 
+;;;###autoload
 (defun gnorb-org-email-subtree (&optional arg)
   "Call on a subtree to export it either to a text string or a file,
 then compose a mail message either with the exported text
@@ -748,6 +751,7 @@ customized with `gnorb-bbdb-org-tag-field'."
 		 (const full-multi-line)
 		 (symbol)))
 
+;;;###autoload
 (defun gnorb-org-popup-bbdb (&optional str)
   "In an `org-tags-view' Agenda buffer, pop up a BBDB buffer
 showing records whose `org-tags' field matches the current tags
@@ -820,6 +824,7 @@ search."
 
 ;;; Groups from the gnorb gnus server backend
 
+;;;###autoload
 (defun gnorb-org-view ()
   "Search the subtree at point for links to gnus messages, and
 then show them in an ephemeral group, in gnus.
