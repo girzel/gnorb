@@ -528,6 +528,7 @@ current heading."
 	       (bcc (mp "MAIL_BCC"))
 	       (org-id (org-id-get-create))
 	       (recs (plist-get links :bbdb))
+	       (message-mode-hook (copy-sequence message-mode-hook))
 	       mails)
 	  (when file
 	    (cons g file attachments))
