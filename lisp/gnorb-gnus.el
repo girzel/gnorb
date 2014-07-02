@@ -172,7 +172,7 @@ save them into `gnorb-tmp-dir'."
     (when capture-p
       (set-buffer (org-capture-get :original-buffer)))
     (unless (memq major-mode '(gnus-summary-mode gnus-article-mode))
-	(error "Only works in Gnus summary or article buffers"))
+      (error "Only works in Gnus summary or article buffers"))
     (let ((article (gnus-summary-article-number)) 
 	  mime-handles)
       (when (or (null gnus-current-article)
@@ -182,9 +182,12 @@ save them into `gnorb-tmp-dir'."
 	(gnus-summary-display-article article))
       (gnus-eval-in-buffer-window gnus-article-buffer
 	(setq mime-handles (cl-remove-if-not
-			    (lambda (h) (and (member (car (nth 5 h)) '("inline" "attachment") )
-					     (eq (caadr (nth 5 h)) 'filename)))
-			    gnus-article-mime-handle-alist) ))
+			    (lambda (h)
+			      (let ((disp (mm-handle-disposition (cdr h))))
+				(and (member (car disp)
+					     '("inline" "attachment"))
+				     (mail-content-type-get disp 'filename))))
+			    gnus-article-mime-handle-alist)))
       (when mime-handles
 	(dolist (h mime-handles)
 	  (let ((filename
