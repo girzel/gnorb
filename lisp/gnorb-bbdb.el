@@ -177,7 +177,7 @@ is non-nil (as in interactive calls) be verbose."
       (when gnorb-bbdb-posting-styles
 	(add-hook 'message-mode-hook
 		  `(lambda ()
-		     (gnorb-bbdb-configure-posting-styles ,records)
+		     (gnorb-bbdb-configure-posting-styles (quote ,records))
 		     (gnorb-bbdb-configure-posting-styles (list ,head)))))
       (bbdb-compose-mail to subject))))
 
