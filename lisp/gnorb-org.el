@@ -31,7 +31,7 @@
   :tag "Gnorb Org"
   :group 'gnorb)
 
-(defcustom gnorb-org-mail-todos '("EMAIL" "REPLY")
+(defcustom gnorb-org-mail-todos nil
   "TODO keywords that are considered mail related -- functions in
 this library may, after completion, call org-(agenda-)todo on
 relevant headings with these keywords. Set to nil to call
