@@ -544,8 +544,8 @@ current heading."
 	  (when recs
 	    (dolist (r recs)
 	      (push (bbdb-mail-address r) mails)))
-	  (when (and gnorb-bbdb-posting-styles
-		     recs)
+	  (when (and recs
+		     gnorb-bbdb-posting-styles)
 	    (add-hook 'message-mode-hook
 		      (lambda ()
 			(gnorb-bbdb-configure-posting-styles (cdr recs))
@@ -764,7 +764,6 @@ search."
   ;; remove non-tag contents from the query string, and then make a
   ;; new call to `org-make-tags-matcher'.
   (interactive)
-  (require 'gnorb-bbdb)
   (let (recs)
     (cond ((and
 	    (and (eq major-mode 'org-agenda-mode)
@@ -821,7 +820,8 @@ search."
       (when (called-interactively-p 'any)
 	(message "No relevant BBDB records")))))
 
-(add-hook 'org-agenda-finalize-hook 'gnorb-org-popup-bbdb)
+(if (featurep 'gnorb-bbdb)
+    (add-hook 'org-agenda-finalize-hook 'gnorb-org-popup-bbdb))
 
 ;;; Groups from the gnorb gnus server backend
 
