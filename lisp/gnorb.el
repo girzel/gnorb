@@ -27,8 +27,8 @@
 (require 'gnorb-utils)
 (require 'nngnorb)
 (require 'gnorb-gnus)
-(require 'gnorb-org)
 (require 'gnorb-bbdb)
+(require 'gnorb-org)
 
 (provide 'gnorb)
 ;;; gnorb.el ends here
