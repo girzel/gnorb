@@ -31,6 +31,12 @@
 (declare-function org-gnus-follow-link "org-gnus"
 		  (group article))
 
+;; This prevents gnorb-related registry entries from being pruned.
+;; Probably we should provide for some backup pruning routine, so we
+;; don't stuff up the whole registry.
+(when gnus-registry-enabled
+  (add-to-list 'gnus-registry-extra-entries-precious 'gnorb-ids))
+
 (defgroup gnorb-gnus nil
   "The Gnus bits of Gnorb."
   :tag "Gnorb Gnus"
@@ -254,10 +260,20 @@ information about the outgoing message into
 	   (subject (mail-fetch-field "Subject"))
 	   (date (mail-fetch-field "Date"))
 	   ;; If we can get a link, that's awesome.
-	   (link (or (and (mail-fetch-field "Gcc")
+	   (gcc (mail-fetch-field "Gcc"))
+	   (link (or (and gcc
 			  (org-store-link nil))
 		     nil)))
-      ;; If we can't, then save some information so we can fake it.
+      ;; We want this message in the registry, if possible.
+      (when (and gnus-registry-enabled gcc)
+	(gnus-registry-insert gnus-registry-db msg-id
+			      (list (list 'creation-time (current-time))
+				    (list 'group gcc)
+				    (list 'sender from)
+				    (list 'subject subject)))
+	(gnus-registry-set-id-key msg-id 'gnorb-ids org-ids))
+      ;; If we can't make a real link, then save some information so
+      ;; we can fake it.
       (when refs
 	(setq refs (split-string refs)))
       (setq gnorb-gnus-sending-message-info

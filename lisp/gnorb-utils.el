@@ -185,5 +185,34 @@ the prefix arg."
 	  (push (substring addr (match-end 0)) bbdb))))
       `(:gnus ,gnus :mail ,mail :bbdb ,bbdb))))
 
+(defun gnorb-msg-id-to-link (msg-id)
+  "Given only a message id, try a few different things to
+reconstruct a complete org link, including server and group. So
+far we're only checking the registry, and also notmuch if notmuch
+is in use. Other search engines? Other clever methods?"
+  ;; The real problem here is how to get stuff into the registry? If
+  ;; we're using a local archive method, we can force the addition
+  ;; when the message is sent. But if we're not (ie nnimap), then it's
+  ;; pretty rare that the the user is going to go to the sent message
+  ;; folder and open the messages so that they're entered into the
+  ;; registry. Any other options?
+  (let (server-group)
+    (catch 'found
+      (when gnus-registry-enabled
+	(setq server-group
+	      (gnus-registry-get-id-key msg-id 'group))
+	;; If the id is registered at all, group will be a list. If it
+	;; isn't, group stays nil.
+	(when (consp server-group)
+	  (dolist (g server-group)
+	    ;; Get past the UNKNOWN group values.
+	    (unless (string-match-p "UNKNOWN" g)
+	      (setq server-group g)
+	      (throw 'found server-group)))))
+      (when (featurep 'notmuch)
+	t)) ;; Is this even feasible? I suspect not.
+    (when server-group
+      (org-link-escape (concat server-group "#" msg-id)))))
+
 (provide 'gnorb-utils)
 ;;; gnorb-utils.el ends here

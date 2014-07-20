@@ -100,9 +100,20 @@ be scanned for gnus messages, and those messages displayed."
 		q
 		'agenda)))
       (with-current-buffer buf
-	(goto-char (point-min))
-	(setq links (plist-get (gnorb-scan-links (point-max) 'gnus)
-			       :gnus)))
+	(let (ids)
+	  (goto-char (point-min))
+	  (setq links (plist-get (gnorb-scan-links (point-max) 'gnus)
+				 :gnus))
+	  (goto-char (point-min))
+	  (while (re-search-forward
+		  (concat ":" gnorb-org-msg-id-key ": \\([^\n]+\\)")
+		  (point-max) t)
+	    (setq ids (append (split-string (match-string 1)) ids)))
+	  (when ids
+	    (dolist (id ids)
+	      (let ((link (gnorb-msg-id-to-link id)))
+		(when link
+		  (push link links)))))))
       (setq links (delete-dups links))
       (unless (gnus-alive-p)
 	(gnus))
