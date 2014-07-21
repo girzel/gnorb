@@ -34,8 +34,9 @@
 ;; This prevents gnorb-related registry entries from being pruned.
 ;; Probably we should provide for some backup pruning routine, so we
 ;; don't stuff up the whole registry.
-(when gnus-registry-enabled
-  (add-to-list 'gnus-registry-extra-entries-precious 'gnorb-ids))
+(eval-after-load "gnus-registry"
+  '(when gnus-registry-enabled
+     (add-to-list 'gnus-registry-extra-entries-precious 'gnorb-ids)))
 
 (defgroup gnorb-gnus nil
   "The Gnus bits of Gnorb."
