@@ -186,6 +186,11 @@ the prefix arg."
       `(:gnus ,gnus :mail ,mail :bbdb ,bbdb))))
 
 (defun gnorb-msg-id-to-link (msg-id)
+  (let ((server-group (gnorb-msg-id-to-group msg-id)))
+    (when server-group
+      (org-link-escape (concat server-group "#" msg-id)))))
+
+(defun gnorb-msg-id-to-group (msg-id)
   "Given only a message id, try a few different things to
 reconstruct a complete org link, including server and group. So
 far we're only checking the registry, and also notmuch if notmuch
@@ -195,10 +200,20 @@ is in use. Other search engines? Other clever methods?"
   ;; when the message is sent. But if we're not (ie nnimap), then it's
   ;; pretty rare that the the user is going to go to the sent message
   ;; folder and open the messages so that they're entered into the
-  ;; registry. Any other options?
+  ;; registry. That probably means hooking into some fairly low-level
+  ;; processing: allowing users to specify which mailboxes hold their
+  ;; sent mail, and then watching to see any time messages are put
+  ;; into those boxes, and adding them to the registry. One bonus
+  ;; should be, if incoming sent messages are then split, the registry
+  ;; will notice them and add their group key.
   (let (server-group)
     (catch 'found
       (when gnus-registry-enabled
+	;; The following is a cheap knock-off of
+	;; `gnus-try-warping-via-registry'. I can't use that, though,
+	;; because it isn't low-level enough -- it starts with a
+	;; message under point and ends by opening the message in the
+	;; group.
 	(setq server-group
 	      (gnus-registry-get-id-key msg-id 'group))
 	;; If the id is registered at all, group will be a list. If it
@@ -211,8 +226,7 @@ is in use. Other search engines? Other clever methods?"
 	      (throw 'found server-group)))))
       (when (featurep 'notmuch)
 	t)) ;; Is this even feasible? I suspect not.
-    (when server-group
-      (org-link-escape (concat server-group "#" msg-id)))))
+    server-group))
 
 (provide 'gnorb-utils)
 ;;; gnorb-utils.el ends here
