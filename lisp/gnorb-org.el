@@ -405,15 +405,18 @@ Org heading ids, associating the outgoing message with those
 headings."
   (require 'gnorb-gnus)
   (if (not messages)
-      ;; either compose new message...
+      ;; Either compose new message...
       (compose-mail (mapconcat 'identity mails ", "))
-    ;; ...or follow link and start reply
+    ;; ...or follow link and start reply.
     (condition-case err
-	(progn
-	  (org-gnus-open (org-link-unescape (car messages)))
+	(let ((ret-val (org-gnus-open (org-link-unescape (car messages)))))
+	  ;; We failed to open the link (probably), ret-val would be
+	  ;; t otherwise
+	  (when (stringp ret-val)
+	    (error ret-val))
 	  (call-interactively
 	   'gnus-summary-wide-reply-with-original)
-	  ;; add MAILS to message To header
+	  ;; Add MAILS to message To header.
 	  (when mails
 	    (message-goto-to)
 	    (insert ", ")
@@ -421,10 +424,10 @@ headings."
       (error (when (window-configuration-p gnorb-org-window-conf)
 	       (set-window-configuration gnorb-org-window-conf))
 	     (signal (car err) (cdr err)))))
-  ;; return us after message is sent
+  ;; Return us after message is sent.
   (add-to-list 'message-exit-actions
 	       'gnorb-org-restore-after-send t)
-  ;; set headers from MAIL_* properties (from, cc, and bcc)
+  ;; Set headers from MAIL_* properties (from, cc, and bcc).
   (cl-flet ((sh (h)
 		(when (cdr h)
 		  (funcall (intern (format "message-goto-%s" (car h))))
