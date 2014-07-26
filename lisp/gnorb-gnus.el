@@ -265,14 +265,6 @@ information about the outgoing message into
 	   (link (or (and gcc
 			  (org-store-link nil))
 		     nil)))
-      ;; We want this message in the registry, if possible.
-      (when (and gnus-registry-enabled gcc)
-	(gnus-registry-insert gnus-registry-db msg-id
-			      (list (list 'creation-time (current-time))
-				    (list 'group gcc)
-				    (list 'sender from)
-				    (list 'subject subject)))
-	(gnus-registry-set-id-key msg-id 'gnorb-ids org-ids))
       ;; If we can't make a real link, then save some information so
       ;; we can fake it.
       (when refs
@@ -289,7 +281,18 @@ information about the outgoing message into
 	    ;; if we're working from a draft, or triggering this from
 	    ;; a reply, it might not be there yet.
 	    (add-to-list 'message-exit-actions
-			 'gnorb-org-restore-after-send))
+			 'gnorb-org-restore-after-send)
+	    ;; Relevant sent messages should be saved in the registry.
+	    ;; If we have a full Gcc link, then we're good to go. If
+	    ;; not, then just insert a registry entry with no group
+	    ;; key, and figure it out later.
+	    (when gnus-registry-enabled
+	      (gnus-registry-insert gnus-registry-db msg-id
+				    (list (list 'creation-time (current-time))
+					  (list 'group gcc)
+					  (list 'sender from)
+					  (list 'subject subject)))
+	      (gnus-registry-set-id-key msg-id 'gnorb-ids org-ids)))
 	(setq gnorb-message-org-ids nil)))))
 
 (add-hook 'message-header-hook 'gnorb-gnus-check-outgoing-headers)
