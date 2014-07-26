@@ -289,10 +289,11 @@ information about the outgoing message into
 	    (when gnus-registry-enabled
 	      (gnus-registry-insert gnus-registry-db msg-id
 				    (list (list 'creation-time (current-time))
-					  (list 'group gcc)
 					  (list 'sender from)
 					  (list 'subject subject)))
-	      (gnus-registry-set-id-key msg-id 'gnorb-ids org-ids)))
+	      (gnus-registry-set-id-key msg-id 'gnorb-ids org-ids)
+	      (when gcc
+		(gnus-registry-set-id-key msg-id 'group gcc))))
 	(setq gnorb-message-org-ids nil)))))
 
 (add-hook 'message-header-hook 'gnorb-gnus-check-outgoing-headers)
