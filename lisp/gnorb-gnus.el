@@ -453,7 +453,8 @@ work."
 	    :annotation link))
     (org-capture nil gnorb-gnus-new-todo-capture-key)
     (when msg-id
-      (org-entry-put (point) gnorb-org-msg-id-key msg-id))
+      (org-entry-put (point) gnorb-org-msg-id-key msg-id)
+      (gnorb-org-add-id-hash-entry msg-id))
     ;; It would be better to only do this if we knew the capture went
     ;; through, ie wasn't aborted.
     (setq gnorb-gnus-sending-message-info nil)))
