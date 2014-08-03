@@ -568,7 +568,7 @@ current heading."
 		     (list
 		      (file-name-nondirectory
 		       (buffer-file-name
-			(current-buffer))))
+			(org-base-buffer (current-buffer)))))
 		     (org-get-outline-path)
 		     (list
 		      (org-no-properties
