@@ -131,6 +131,12 @@ the prefix arg."
       (when sent-id
 	(org-entry-add-to-multivalued-property
 	 root-marker gnorb-org-msg-id-key sent-id)
+	(gnorb-gnus-make-registry-entry
+	 sent-id
+	 (plist-get gnorb-gnus-sending-message-info :from)
+	 (plist-get gnorb-gnus-sending-message-info :subject)
+	 (org-id-get)
+	 (plist-get gnorb-gnus-sending-message-info :group))
 	(gnorb-org-add-id-hash-entry sent-id root-marker))
       (setq action (cond ((not
 			   (or (and ret-dest-todo
