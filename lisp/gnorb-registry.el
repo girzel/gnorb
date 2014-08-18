@@ -55,6 +55,19 @@
   :tag "Gnorb Registry"
   :group 'gnorb)
 
+(defun gnorb-registry-make-entry (msg-id sender subject org-id group)
+  "Create a Gnus registry entry for a message, either received or
+sent. Save the relevant Org ids in the 'gnorb-ids key."
+  ;; This set-id-key stuff is actually horribly
+  ;; inefficient.
+  (when gnus-registry-enabled
+    (gnus-registry-get-or-make-entry msg-id)
+    (gnus-registry-set-id-key msg-id 'sender (list sender))
+    (gnus-registry-set-id-key msg-id 'subject (list subject))
+    (gnus-registry-set-id-key msg-id 'gnorb-ids (if (stringp org-id)
+						    (list org-id)
+						  org-id))
+    (gnus-registry-set-id-key msg-id 'group (list group))))
 
 
 (provide 'gnorb-registry)

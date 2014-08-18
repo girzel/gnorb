@@ -265,20 +265,6 @@ to the message's registry entry, under the 'gnorb-ids key."
   "Place to store the To, Subject, Date, and Message-ID headers
   of the currently-sending or last-sent message.")
 
-(defun gnorb-gnus-make-registry-entry (msg-id sender subject org-id group)
-  "Create a gnus-registry entry for a message, either received or
-sent. Save the relevant Org ids in the 'gnorb-ids key."
-  (when gnus-registry-enabled
-    ;; This set-id-key stuff is actually horribly
-    ;; inefficient.
-    (gnus-registry-get-or-make-entry msg-id)
-    (gnus-registry-set-id-key msg-id 'sender (list sender))
-    (gnus-registry-set-id-key msg-id 'subject (list subject))
-    (gnus-registry-set-id-key msg-id 'gnorb-ids (if (stringp org-id)
-						    (list org-id)
-						  org-id))
-    (gnus-registry-set-id-key msg-id 'group (list group))))
-
 (defun gnorb-gnus-check-outgoing-headers ()
   "Save the value of the `gnorb-mail-header' for the current
 message; multiple header values returned as a string. Also save
@@ -484,7 +470,7 @@ work."
     (when msg-id
       (org-entry-put (point) gnorb-org-msg-id-key msg-id)
       (gnorb-org-add-id-hash-entry msg-id)
-      (gnorb-gnus-make-registry-entry msg-id sender subject (org-id-get-create) group))))
+      (gnorb-registry-make-entry msg-id sender subject (org-id-get-create) group))))
 
 ;;; If an incoming message should trigger state-change for a Org todo,
 ;;; call this function on it.
@@ -559,7 +545,7 @@ to t (it is, by default)."
      "Insert a link to the message with org-insert-link (%s)"
      (key-description
       (where-is-internal 'org-insert-link nil t)))
-    (gnorb-gnus-make-registry-entry
+    (gnorb-registry-make-entry
      msg-id sender subject (org-id-get-create) group)))
 
 ;;;###autoload

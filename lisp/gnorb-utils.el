@@ -151,7 +151,7 @@ the prefix arg."
       (when sent-id
 	(org-entry-add-to-multivalued-property
 	 root-marker gnorb-org-msg-id-key sent-id)
-	(gnorb-gnus-make-registry-entry
+	(gnorb-registry-make-entry
 	 sent-id
 	 (plist-get gnorb-gnus-sending-message-info :from)
 	 (plist-get gnorb-gnus-sending-message-info :subject)
