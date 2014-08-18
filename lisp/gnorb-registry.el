@@ -60,7 +60,7 @@
 sent. Save the relevant Org ids in the 'gnorb-ids key."
   ;; This set-id-key stuff is actually horribly
   ;; inefficient.
-  (when gnus-registry-enabled
+  (when gnorb-tracking-enabled
     (gnus-registry-get-or-make-entry msg-id)
     (gnus-registry-set-id-key msg-id 'sender (list sender))
     (gnus-registry-set-id-key msg-id 'subject (list subject))
@@ -69,5 +69,21 @@ sent. Save the relevant Org ids in the 'gnorb-ids key."
 						  org-id))
     (gnus-registry-set-id-key msg-id 'group (list group))))
 
+(defun gnorb-registry-capture ()
+  "When capturing from a Gnus message, add our new Org heading id
+to the message's registry entry, under the 'gnorb-ids key."
+  (when (and (with-current-buffer
+		 (org-capture-get :original-buffer)
+	       (memq major-mode '(gnus-summary-mode gnus-article-mode)))
+	     (not org-note-abort))
+    (let* ((msg-id
+	    (concat "<" (plist-get org-store-link-plist :message-id) ">"))
+	   (entry (gnus-registry-get-or-make-entry msg-id))
+	   (org-ids
+	    (gnus-registry-get-id-key msg-id 'gnorb-ids))
+	   (new-org-id (org-id-get-create)))
+      (setq org-ids (cons new-org-id org-ids))
+      (setq org-ids (delete-dups org-ids))
+      (gnus-registry-set-id-key msg-id 'gnorb-ids org-ids))))
 
 (provide 'gnorb-registry)

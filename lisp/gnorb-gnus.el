@@ -31,13 +31,6 @@
 (declare-function org-gnus-follow-link "org-gnus"
 		  (group article))
 
-;; This prevents gnorb-related registry entries from being pruned.
-;; Probably we should provide for some backup pruning routine, so we
-;; don't stuff up the whole registry.
-(eval-after-load "gnus-registry"
-  '(when gnus-registry-enabled
-     (add-to-list 'gnus-registry-extra-entries-precious 'gnorb-ids)))
-
 (defgroup gnorb-gnus nil
   "The Gnus bits of Gnorb."
   :tag "Gnorb Gnus"
@@ -239,27 +232,6 @@ save them into `gnorb-tmp-dir'."
 	  'gnorb-gnus-capture-abort-cleanup)
 
 ;;; Storing, removing, and acting on Org headers in messages.
-
-(defun gnorb-gnus-capture-registry ()
-  "When capturing from a gnus message, add our new org heading id
-to the message's registry entry, under the 'gnorb-ids key."
-  (when (and (with-current-buffer
-		 (org-capture-get :original-buffer)
-	       (memq major-mode '(gnus-summary-mode gnus-article-mode)))
-	     (not org-note-abort)
-	     gnus-registry-enabled)
-    (let* ((msg-id
-	    (concat "<" (plist-get org-store-link-plist :message-id) ">"))
-	   (entry (gnus-registry-get-or-make-entry msg-id))
-	   (org-ids
-	    (gnus-registry-get-id-key msg-id 'gnorb-ids))
-	   (new-org-id (org-id-get-create)))
-      (setq org-ids (cons new-org-id org-ids))
-      (setq org-ids (delete-dups org-ids))
-      (gnus-registry-set-id-key msg-id 'gnorb-ids org-ids))))
-
-(add-hook 'org-capture-prepare-finalize-hook
-	  'gnorb-gnus-capture-registry)
 
 (defvar gnorb-gnus-sending-message-info nil
   "Place to store the To, Subject, Date, and Message-ID headers

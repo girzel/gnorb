@@ -234,7 +234,7 @@ is in use. Other search engines? Other clever methods?"
   ;; will notice them and add their group key.
   (let (server-group)
     (catch 'found
-      (when gnus-registry-enabled
+      (when gnorb-tracking-enabled
 	;; The following is a cheap knock-off of
 	;; `gnus-try-warping-via-registry'. I can't use that, though,
 	;; because it isn't low-level enough -- it starts with a
@@ -255,6 +255,24 @@ is in use. Other search engines? Other clever methods?"
       (when (featurep 'notmuch)
 	t)) ;; Is this even feasible? I suspect not.
     server-group))
+
+;; Loading the registry
+
+(defvar gnorb-tracking-enabled nil
+  "Internal flag indicating whether Gnorb is successfully plugged
+  into the registry or not.")
+
+(defun gnorb-tracking-initialize ()
+  "Start using the Gnus registry to track correspondences between
+Gnus messages and Org headings. This requires that the Gnus
+registry be in use, and should be called after the call to
+`gnus-registry-initialize'."
+  (require 'gnorb-registry)
+  (unless (gnus-registry-install-p)
+    (user-error "Gnorb tracking requires that the Gnus registry be installed."))
+  (add-to-list 'gnus-registry-extra-entries-precious 'gnorb-ids)
+  (add-hook 'org-capture-prepare-finalize-hook 'gnorb-registry-capture)
+  (setq gnorb-tracking-enabled t))
 
 (provide 'gnorb-utils)
 ;;; gnorb-utils.el ends here
