@@ -277,7 +277,7 @@ sent. Save the relevant Org ids in the 'gnorb-ids key."
     (gnus-registry-set-id-key msg-id 'gnorb-ids (if (stringp org-id)
 						    (list org-id)
 						  org-id))
-    (gnus-registry-set-id-key msg-id 'group (list gcc))))
+    (gnus-registry-set-id-key msg-id 'group (list group))))
 
 (defun gnorb-gnus-check-outgoing-headers ()
   "Save the value of the `gnorb-mail-header' for the current
