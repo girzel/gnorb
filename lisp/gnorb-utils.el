@@ -226,8 +226,10 @@ is in use. Other search engines? Other clever methods?"
 	;; isn't, group stays nil.
 	(when (consp server-group)
 	  (dolist (g server-group)
-	    ;; Get past the UNKNOWN group values.
-	    (unless (string-match-p "UNKNOWN" g)
+	    ;; Get past UNKNOWN and nil group values.
+	    (unless (or (null g)
+			(and (stringp g)
+			     (string-match-p "UNKNOWN" g)))
 	      (setq server-group g)
 	      (throw 'found server-group)))))
       (when (featurep 'notmuch)
