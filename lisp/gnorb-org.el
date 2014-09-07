@@ -767,7 +767,6 @@ search."
   ;; remove non-tag contents from the query string, and then make a
   ;; new call to `org-make-tags-matcher'.
   (interactive)
-  (require 'gnorb-bbdb)
   (let (recs)
     (cond ((and
 	    (and (eq major-mode 'org-agenda-mode)
