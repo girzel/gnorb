@@ -68,12 +68,17 @@ sent. Save the relevant Org ids in the 'gnorb-ids key."
   ;; inefficient.
   (when gnorb-tracking-enabled
     (gnus-registry-get-or-make-entry msg-id)
-    (gnus-registry-set-id-key msg-id 'sender (list sender))
-    (gnus-registry-set-id-key msg-id 'subject (list subject))
-    (gnus-registry-set-id-key msg-id 'gnorb-ids (if (stringp org-id)
-						    (list org-id)
-						  org-id))
-    (gnus-registry-set-id-key msg-id 'group (list group))))
+    (when sender
+      (gnus-registry-set-id-key msg-id 'sender (list sender)))
+    (when subject
+      (gnus-registry-set-id-key msg-id 'subject (list subject)))
+    (when org-id
+      (let ((ids (gnus-registry-get-id-key msg-id 'gnorb-ids)))
+	(gnus-registry-set-id-key msg-id 'gnorb-ids (if (stringp org-id)
+							(cons org-id ids)
+						      (append org-id ids)))))
+    (when group
+      (gnus-registry-set-id-key msg-id 'group (list group)))))
 
 (defun gnorb-registry-capture ()
   "When capturing from a Gnus message, add our new Org heading id
