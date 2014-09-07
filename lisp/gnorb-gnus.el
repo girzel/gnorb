@@ -349,7 +349,7 @@ the outgoing message will still be available -- nothing else will
 work."
   (interactive "P")
   (let ((org-refile-targets gnorb-gnus-trigger-refile-targets)
-	header-ids ref-ids rel-headings gnorb-org-window-conf
+	header-ids ref-ids rel-headings gnorb-window-conf
 	reply-id reply-group)
     (when arg
       (setq rel-headings
@@ -512,7 +512,7 @@ to t (it is, by default)."
   ;; `org-stored-links'. There's some duplicate storage, at
   ;; present. Take a look at calling it non-interactively.
   (call-interactively 'org-store-link)
-  (setq gnorb-org-window-conf (current-window-configuration))
+  (setq gnorb-window-conf (current-window-configuration))
   (let* ((msg-id (mail-header-id headers))
 	 (sender (mail-header-from headers))
 	 (subject (mail-header-subject headers))

@@ -79,7 +79,11 @@
   ;; on whether the message in question has an Org id header. Then
   ;; `gnorb-org-restore-after-send' checks for it and acts
   ;; appropriately, then sets it to nil.
-)
+  )
+
+(defvar gnorb-window-conf nil
+  "Save window configurations here, for restoration after mails
+are sent, or Org headings triggered.")
 
 (defcustom gnorb-mail-header "X-Org-ID"
   "Name of the mail header used to store the ID of a related Org
