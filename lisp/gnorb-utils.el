@@ -66,12 +66,6 @@
 (defvar gnorb-tmp-dir (make-temp-file "emacs-gnorb" t)
   "Temporary directory where attachments etc are saved.")
 
-(defvar gnorb-msg-id-to-heading-table nil
-  "Hash table where keys are message-ids, and values are lists of
-  org headings which have that message-id in their GNORB_MSG_ID
-  property. Values are actually two-element lists: the heading's
-  id, and its outline path.")
-
 (defvar gnorb-message-org-ids nil
   "List of Org heading IDs from the outgoing Gnus message, used
   to mark mail TODOs as done once the message is sent."

@@ -55,6 +55,12 @@
   :tag "Gnorb Registry"
   :group 'gnorb)
 
+(defvar gnorb-msg-id-to-heading-table nil
+  "Hash table where keys are message-ids, and values are lists of
+  org headings which have that message-id in their GNORB_MSG_ID
+  property. Values are actually two-element lists: the heading's
+  id, and its outline path.")
+
 (defun gnorb-registry-make-entry (msg-id sender subject org-id group)
   "Create a Gnus registry entry for a message, either received or
 sent. Save the relevant Org ids in the 'gnorb-ids key."
@@ -98,5 +104,52 @@ values in their `gnorb-org-org-msg-id-key' property."
       (when (setq sub-val (gethash id gnorb-msg-id-to-heading-table))
 	(setq ret-val (append sub-val ret-val))))
     ret-val))
+
+(defun gnorb-org-add-id-hash-entry (msg-id &optional marker)
+  (org-with-point-at (or marker (point))
+    (let ((old-val (gethash msg-id gnorb-msg-id-to-heading-table))
+	  (new-val (list
+		    (org-id-get-create)
+		    (append
+		     (list
+		      (file-name-nondirectory
+		       (buffer-file-name
+			(org-base-buffer (current-buffer)))))
+		     (org-get-outline-path)
+		     (list
+		      (org-no-properties
+		       (replace-regexp-in-string
+			org-bracket-link-regexp
+			"\\3"
+			(nth 4 (org-heading-components)))))))))
+      (unless (member (car new-val) old-val)
+	(puthash msg-id
+		 (if old-val
+		     (append (list new-val) old-val)
+		   (list new-val))
+		 gnorb-msg-id-to-heading-table)))))
+
+(defun gnorb-org-populate-id-hash ()
+  "Scan all agenda files for headings with the
+  `gnorb-org-msg-id-key' property, and construct a hash table of
+  message-ids as keys, and org headings as values -- actually
+  two-element lists representing the heading's id and outline
+  path."
+  ;; where are all the places where we might conceivably want to
+  ;; refresh this?
+  (interactive)
+  (setq gnorb-msg-id-to-heading-table
+	(make-hash-table
+	 :test 'equal :size 100))
+  (let (props)
+    (org-map-entries
+     (lambda ()
+       (setq props
+	     (org-entry-get-multivalued-property
+	      (point) gnorb-org-msg-id-key))
+       (dolist (p props)
+	 (gnorb-org-add-id-hash-entry p)))
+     gnorb-org-find-candidates-match
+     'agenda 'archive 'comment)))
 
 (provide 'gnorb-registry)
