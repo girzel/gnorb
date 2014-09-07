@@ -624,7 +624,11 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 	(setq ref-ids (split-string ref-ids))
        (when (setq rel-headings
 		   (gnorb-org-find-visit-candidates ref-ids))
-	 (message "Possible relevant TODO: %s, trigger with %s"
+	 (message "Possible relevant todo (%s): %s, trigger with %s"
+		  (org-with-point-at (org-id-find
+				      (caar rel-headings) t)
+		    (org-element-property
+		     :todo-keyword (org-element-at-point)))
 		  (org-format-outline-path
 		   (cadr (car rel-headings)))
 		  (if key
