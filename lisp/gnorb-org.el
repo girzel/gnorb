@@ -606,19 +606,6 @@ current heading."
      gnorb-org-find-candidates-match
      'agenda 'archive 'comment)))
 
-(defun gnorb-org-find-visit-candidates (ids)
-  "For all message-ids in IDS (which should be a list of
-Message-ID strings, with angle brackets), produce a list of Org
-ids (and ol-paths) for headings that contain one of those id
-values in their `gnorb-org-org-msg-id-key' property."
-  (let (ret-val sub-val)
-    (unless gnorb-msg-id-to-heading-table
-      (gnorb-org-populate-id-hash))
-    (dolist (id ids)
-      (when (setq sub-val (gethash id gnorb-msg-id-to-heading-table))
-	(setq ret-val (append sub-val ret-val))))
-    ret-val))
-
 ;;; Email subtree
 
 (defcustom gnorb-org-email-subtree-text-parameters nil

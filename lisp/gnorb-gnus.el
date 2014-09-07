@@ -332,7 +332,7 @@ work."
 	      ;; handled when the message was sent.
 	      (progn (when (stringp ref-ids)
 		       (setq ref-ids (split-string ref-ids)))
-		     (setq rel-headings (gnorb-org-find-visit-candidates ref-ids))
+		     (setq rel-headings (gnorb-find-visit-candidates ref-ids))
 		     (if (not rel-headings)
 			 (gnorb-gnus-outgoing-make-todo-1)
 		       (dolist (h rel-headings)
@@ -371,7 +371,7 @@ work."
 	    (setq ref-ids (split-string ref-ids)))
 	  ;; if the References header points to any message ids that are
 	  ;; tracked by TODO headings...
-	  (setq rel-headings (gnorb-org-find-visit-candidates ref-ids)))
+	  (setq rel-headings (gnorb-find-visit-candidates ref-ids)))
 	(when rel-headings
 	  (goto-char (point-min))
 	  (dolist (h rel-headings)
@@ -493,7 +493,7 @@ to t (it is, by default)."
 		;; for now we're basically ignoring the fact that
 		;; multiple candidates could exist; just do the first
 		;; one.
-		(car (gnorb-org-find-visit-candidates
+		(car (gnorb-find-visit-candidates
 		      ref-msg-ids))
 	      (message "Gnorb can't check for relevant headings unless `org-id-track-globally' is t")
 	      (sit-for 1))))
@@ -587,7 +587,7 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
       (when ref-ids
 	(setq ref-ids (split-string ref-ids))
        (when (setq rel-headings
-		   (gnorb-org-find-visit-candidates ref-ids))
+		   (gnorb-find-visit-candidates ref-ids))
 	 (message "Possible relevant todo (%s): %s, trigger with %s"
 		  (org-with-point-at (org-id-find
 				      (caar rel-headings) t)
@@ -606,7 +606,7 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
             (lambda (header)
               (let ((ref-ids (mail-header-references header)))
 		(if (and ref-ids
-			 (gnorb-org-find-visit-candidates
+			 (gnorb-find-visit-candidates
 			  (split-string ref-ids)))
 		    gnorb-gnus-summary-mark
 		  " "))))
@@ -624,7 +624,7 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 	rel-headings)
     (when refs
       (setq refs (split-string refs))
-      (setq rel-headings (gnorb-org-find-visit-candidates refs))
+      (setq rel-headings (gnorb-find-visit-candidates refs))
       (delete-other-windows)
       (org-id-goto (caar rel-headings)))))
 
