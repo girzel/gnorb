@@ -488,7 +488,7 @@ to t (it is, by default)."
 	      (when all-refs
 		(split-string all-refs)))))
 	 (offer-heading
-	  (when (and (not id) ref-msg-ids)
+	  (when (and (not id) ref-msg-ids gnorb-tracking-enabled)
 	    (if org-id-track-globally
 		;; for now we're basically ignoring the fact that
 		;; multiple candidates could exist; just do the first
