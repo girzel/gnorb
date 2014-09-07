@@ -854,7 +854,7 @@ your gnus select methods."
   (let (id)
     (save-excursion
       (org-back-to-heading)
-      (setq id (concat "id+" (org-id-get-create t))))
+      (setq id (concat "id+" (org-id-get-create))))
     (gnorb-gnus-search-messages
      id
      `(when (and (window-configuration-p gnorb-window-conf)
