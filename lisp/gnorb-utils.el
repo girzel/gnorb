@@ -85,6 +85,10 @@
   "Save window configurations here, for restoration after mails
 are sent, or Org headings triggered.")
 
+(defvar gnorb-return-marker (make-marker)
+  "Return point here after various actions, to be used together
+with `gnorb-window-conf'.")
+
 (defcustom gnorb-mail-header "X-Org-ID"
   "Name of the mail header used to store the ID of a related Org
   heading. Only used locally: always stripped when the mail is

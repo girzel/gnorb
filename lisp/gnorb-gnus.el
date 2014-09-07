@@ -513,6 +513,7 @@ to t (it is, by default)."
   ;; present. Take a look at calling it non-interactively.
   (call-interactively 'org-store-link)
   (setq gnorb-window-conf (current-window-configuration))
+  (move-marker gnorb-return-marker (point))
   (let* ((msg-id (mail-header-id headers))
 	 (sender (mail-header-from headers))
 	 (subject (mail-header-subject headers))
