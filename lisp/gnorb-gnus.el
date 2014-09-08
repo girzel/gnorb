@@ -615,7 +615,9 @@ is relevant to any existing TODO headings. If so, flash a message
 to that effect. This function is added to the
 `gnus-article-prepare-hook'. It will only do anything if the
 option `gnorb-gnus-hint-relevant-article' is non-nil."
-  (when gnorb-gnus-hint-relevant-article
+  (when (and gnorb-gnus-hint-relevant-article
+	     (not (memq (car (gnus-find-method-for-group group))
+			'(nnvirtual nnir))))
     (let ((ref-ids (gnus-fetch-original-field "references"))
 	  (key
 	   (where-is-internal 'gnorb-gnus-incoming-do-todo
