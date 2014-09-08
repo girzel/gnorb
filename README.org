@@ -168,6 +168,10 @@ you use on mail messages, and you'll be queried to re-attach the
 message's attachments onto the newly-captured heading. Or set
 `gnorb-gnus-capture-always-attach' to "t" to have Gnorb do this for
 all capture templates.
+** Restoring window layout
+Many Gnorb functions alter the window layout and value of point. In
+most of these cases, you can restore the previous layout using the
+interactive function `gnorb-restore-layout'.
 ** Gnorb-BBDB
 *** Interactive Functions
 **** gnorb-bbdb-tag-agenda

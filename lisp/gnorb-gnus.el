@@ -541,6 +541,9 @@ to t (it is, by default)."
 	      (sit-for 1))))
 	 targ)
     (gnorb-gnus-collect-all-attachments nil t)
+    ;; Delete other windows, users can restore with
+    ;; `gnorb-restore-layout'.
+    (delete-other-windows)
     (if id
 	(gnorb-trigger-todo-action arg id)
       (if (and offer-heading
