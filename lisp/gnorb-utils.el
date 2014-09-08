@@ -112,6 +112,19 @@ with `gnorb-window-conf'.")
 	     (mapconcat
 	      'identity ign-headers-list "|")))))
 
+(defun gnorb-restore-layout ()
+  "Restore window layout and value of point after a Gnorb command.
+
+Some Gnorb commands change the window layout (ie `gnorb-org-view'
+or incoming email triggering). This command restores the layout
+to what it was. Bind it to a global key, or to local keys in Org
+and Gnus and BBDB maps."
+  (interactive)
+  (when (window-configuration-p gnorb-window-conf)
+    (set-window-configuration gnorb-window-conf)
+    (when (buffer-live-p (marker-buffer gnorb-return-marker))
+      (goto-char gnorb-return-marker))))
+
 (defun gnorb-trigger-todo-action (arg &optional id)
   "Do the actual restore action. Two main things here. First: if
 we were in the agenda when this was called, then keep us in the
