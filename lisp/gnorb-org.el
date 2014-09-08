@@ -48,7 +48,8 @@ org-todo regardless of TODO type."
 
 (defcustom gnorb-org-msg-id-key "GNORB_MSG_ID"
   "The name of the org property used to store the Message-IDs
-  from relevant messages."
+  from relevant messages. This is no longer used, and will be
+  removed soon."
   :group 'gnorb-org
   :type 'string)
 
