@@ -88,14 +88,30 @@ to the message's registry entry, under the 'gnorb-ids key."
 	       (memq major-mode '(gnus-summary-mode gnus-article-mode)))
 	     (not org-note-abort))
     (let* ((msg-id
-	    (concat "<" (plist-get org-store-link-plist :message-id) ">"))
+	    (format "<%s>" (plist-get org-store-link-plist :message-id)))
 	   (entry (gnus-registry-get-or-make-entry msg-id))
 	   (org-ids
 	    (gnus-registry-get-id-key msg-id 'gnorb-ids))
 	   (new-org-id (org-id-get-create)))
+      (plist-put org-capture-plist :gnorb-id new-org-id)
       (setq org-ids (cons new-org-id org-ids))
       (setq org-ids (delete-dups org-ids))
       (gnus-registry-set-id-key msg-id 'gnorb-ids org-ids))))
+
+
+(defun gnorb-registry-capture-abort-cleanup ()
+  (when (and (org-capture-get :gnorb-id)
+	     org-note-abort)
+    (condition-case error
+	(let* ((msg-id (format "<%s>" (plist-get org-store-link-plist :message-id)))
+	       (existing-org-ids (gnus-registry-get-id-key msg-id 'gnorb-ids))
+	       (org-id (org-capture-get :gnorb-id)))
+	  (when (member org-id existing-org-ids)
+	    (gnus-registry-set-id-key msg-id 'gnorb-ids
+				      (remove org-id existing-org-ids)))
+	  (setq abort-note 'clean))
+      (error
+       (setq abort-note 'dirty)))))
 
 (defun gnorb-find-visit-candidates (ids)
   "For all message-ids in IDS (which should be a list of
