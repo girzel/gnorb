@@ -336,7 +336,7 @@ work."
 	;; stored into `gnorb-gnus-sending-message-info'.
 	(if arg
 	    (progn
-	      (push (caar rel-headings) gnorb-message-org-ids)
+	      (push (car rel-headings) gnorb-message-org-ids)
 	      (gnorb-org-restore-after-send))
 	  (setq ref-ids (plist-get gnorb-gnus-sending-message-info :refs))
 	  (if ref-ids
@@ -350,7 +350,7 @@ work."
 		     (if (not rel-headings)
 			 (gnorb-gnus-outgoing-make-todo-1)
 		       (dolist (h rel-headings)
-			 (push (car h) gnorb-message-org-ids))
+			 (push h gnorb-message-org-ids))
 		       (gnorb-org-restore-after-send)))
 	    ;; not relevant, just make a new TODO
 	    (gnorb-gnus-outgoing-make-todo-1)))
@@ -392,15 +392,15 @@ work."
 	    ;; then get the org-ids of those headings, and insert
 	    ;; them into this message as headers. If the id was
 	    ;; already present in a header, don't add it again.
-	    (unless (member (car h) header-ids)
+	    (unless (member h header-ids)
 	      (goto-char (point-at-bol))
 	      (open-line 1)
 	      (message-insert-header
 	       (intern gnorb-mail-header)
-	       (car h))
+	       h)
 	      ;; tell the rest of the function that this is a relevant
 	      ;; message
-	      (push (car h) header-ids)))))
+	      (push h header-ids)))))
       (message-goto-body)
       (add-to-list
        'message-exit-actions
@@ -455,7 +455,6 @@ work."
     (org-capture nil gnorb-gnus-new-todo-capture-key)
     (when msg-id
       (org-entry-put (point) gnorb-org-msg-id-key msg-id)
-      (gnorb-org-add-id-hash-entry msg-id)
       (gnorb-registry-make-entry msg-id sender subject (org-id-get-create) group))))
 
 ;;; If an incoming message should trigger state-change for a Org todo,
@@ -520,8 +519,8 @@ to t (it is, by default)."
 	(gnorb-trigger-todo-action arg id)
       (if (and offer-heading
 	       (y-or-n-p (format "Trigger action on %s"
-				 (org-format-outline-path (cadr offer-heading)))))
-	  (gnorb-trigger-todo-action arg (car offer-heading))
+				 (gnorb-pretty-outline offer-heading))))
+	  (gnorb-trigger-todo-action arg offer-heading)
 	(setq targ (org-refile-get-location
 		    "Trigger heading" nil t))
 	(find-file (nth 1 targ))
@@ -600,18 +599,13 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 	  rel-headings)
       (when ref-ids
 	(setq ref-ids (split-string ref-ids))
-       (when (setq rel-headings
-		   (gnorb-find-visit-candidates ref-ids))
-	 (message "Possible relevant todo (%s): %s, trigger with %s"
-		  (org-with-point-at (org-id-find
-				      (caar rel-headings) t)
-		    (org-element-property
-		     :todo-keyword (org-element-at-point)))
-		  (org-format-outline-path
-		   (cadr (car rel-headings)))
-		  (if key
-		      (key-description key)
-		    "M-x gnorb-gnus-incoming-do-todo")))))))
+	(when (setq rel-headings
+		    (gnorb-find-visit-candidates ref-ids))
+	  (message "Possible relevant todo %s, trigger with %s"
+		   (gnorb-pretty-outline (car rel-headings) t)
+		   (if key
+		       (key-description key)
+		     "M-x gnorb-gnus-incoming-do-todo")))))))
 
 (add-hook 'gnus-article-prepare-hook 'gnorb-gnus-hint-relevant-message)
 
@@ -640,7 +634,7 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
       (setq refs (split-string refs))
       (setq rel-headings (gnorb-find-visit-candidates refs))
       (delete-other-windows)
-      (org-id-goto (caar rel-headings)))))
+      (org-id-goto (car rel-headings)))))
 
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here

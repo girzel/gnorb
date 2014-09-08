@@ -27,9 +27,22 @@ they do one thing only, and (I hope) don't require anything special in
 terms of file formats or workflow. A few exceptions to that are listed
 below.
 ** Using Gnorb for Tracking Email TODOs
-Because we try to track email messages and related TODOs round-trip --
-incoming and outgoing under one TODO representing a conversation -- it
-works best if things match up at both ends. Specifically:
+
+Tracking correspondences between Org TODOs and email messages is one
+of the more complicated things that Gnorb does, and thus requires a
+little setup. Tracking relies on the Gnus registry, so that must be
+installed (ie you've called `gnus-registry-initialize' somewhere). It
+also relies on Org ids, so you'll want to require 'org-id, and set
+`org-id-track-globally' to t (that's the default anyway).
+
+Once that's done, call `gnorb-tracking-initialize' after loading
+Gnorb, and you should be done.
+
+NOTE: If you were using an earlier version of Gnorb that stored
+correspondences in Org heading properties, you can transition to the
+newer system with the function `gnorb-registry-transition-from-props'.
+See the docstring for details.
+
 *** Capture templates for emails
 Most people will be using plain capture templates to create TODOs from
 messages. You'll almost always want to save a link to the message, so

@@ -139,15 +139,13 @@ the prefix arg."
 			(point-at-bol))
 	  ret-dest-todo (org-entry-get
 			 root-marker "TODO"))
-    (let ((ids (org-entry-get-multivalued-property
-		root-marker gnorb-org-msg-id-key))
-	  (sent-id (plist-get gnorb-gnus-sending-message-info :msg-id)))
+    (let ((sent-id (plist-get gnorb-gnus-sending-message-info :msg-id)))
       (when sent-id
 	(gnorb-registry-make-entry
 	 sent-id
 	 (plist-get gnorb-gnus-sending-message-info :from)
 	 (plist-get gnorb-gnus-sending-message-info :subject)
-	 (org-id-get)
+	 (org-id-get-create)
 	 (plist-get gnorb-gnus-sending-message-info :group)))
       (setq action (cond ((not
 			   (or (and ret-dest-todo
@@ -175,6 +173,29 @@ the prefix arg."
       (if (eq action 'note)
 	  (call-interactively note-func)
 	(call-interactively todo-func)))))
+
+(defun gnorb-pretty-outline (id &optional kw)
+  "Return pretty outline path of the Org heading indicated by ID.
+
+If the KW argument is true, add the TODO keyword into the path."
+  (org-with-point-at (org-id-find id t)
+    (let ((el (org-element-at-point)))
+      (concat
+       (if kw
+	   (format "(%s): "
+		   (org-element-property :todo-keyword el))
+	 "")
+       (org-format-outline-path
+	(append
+	 (list
+	  (file-name-nondirectory
+	   (buffer-file-name
+	    (org-base-buffer (current-buffer)))))
+	 (org-get-outline-path)
+	 (list
+	  (replace-regexp-in-string
+	   org-bracket-link-regexp
+	   "\\3" (org-element-property :raw-value el)))))))))
 
 (defun gnorb-scan-links (bound &rest types)
   ;; this function could be refactored somewhat -- lots of code
