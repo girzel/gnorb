@@ -208,44 +208,30 @@ the prefix arg."
       (org-link-escape (concat server-group "#" msg-id)))))
 
 (defun gnorb-msg-id-to-group (msg-id)
-  "Given only a message id, try a few different things to
-reconstruct a complete org link, including server and group. So
-far we're only checking the registry, and also notmuch if notmuch
-is in use. Other search engines? Other clever methods?"
-  ;; The real problem here is how to get stuff into the registry? If
-  ;; we're using a local archive method, we can force the addition
-  ;; when the message is sent. But if we're not (ie nnimap), then it's
-  ;; pretty rare that the the user is going to go to the sent message
-  ;; folder and open the messages so that they're entered into the
-  ;; registry. That probably means hooking into some fairly low-level
-  ;; processing: allowing users to specify which mailboxes hold their
-  ;; sent mail, and then watching to see any time messages are put
-  ;; into those boxes, and adding them to the registry. One bonus
-  ;; should be, if incoming sent messages are then split, the registry
-  ;; will notice them and add their group key.
-  (let (server-group)
+  "Given a message id, try to find the group it's in.
+
+So far we're checking the registry, then the groups in
+`gnorb-gnus-sent-groups'. Use search engines? Other clever
+methods?"
+  (let (candidates server-group)
     (catch 'found
       (when gnorb-tracking-enabled
-	;; The following is a cheap knock-off of
-	;; `gnus-try-warping-via-registry'. I can't use that, though,
-	;; because it isn't low-level enough -- it starts with a
-	;; message under point and ends by opening the message in the
-	;; group.
-	(setq server-group
-	      (gnus-registry-get-id-key msg-id 'group))
-	;; If the id is registered at all, group will be a list. If it
-	;; isn't, group stays nil.
-	(when (consp server-group)
-	  (dolist (g server-group)
-	    ;; Get past UNKNOWN and nil group values.
-	    (unless (or (null g)
-			(and (stringp g)
-			     (string-match-p "UNKNOWN" g)))
-	      (setq server-group g)
-	      (throw 'found server-group)))))
+	;; Make a big list of all the groups where this message might
+	;; conceivably be.
+	(setq candidates
+	      (append (gnus-registry-get-id-key msg-id 'group)
+		      gnorb-gnus-sent-groups))
+	(while (setq server-group (pop candidates))
+	  (when (and (stringp server-group)
+		     (not
+		      (string-match-p
+		       "\\(nnir\\|nnvirtual\\|UNKNOWN\\)"
+		       server-group))
+		     (ignore-errors
+		       (gnus-request-head msg-id server-group)))
+		(throw 'found server-group))))
       (when (featurep 'notmuch)
-	t)) ;; Is this even feasible? I suspect not.
-    server-group))
+	nil))))
 
 ;; Loading the registry
 

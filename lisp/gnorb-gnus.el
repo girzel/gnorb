@@ -114,12 +114,26 @@ Basically behave as if all attachments have \":gnus-attachments t\"."
   :group 'gnorb-gnus
   :type 'list)
 
-;;; What follows is a very careful copy-pasta of bits and pieces from
-;;; mm-decode.el and gnus-art.el. Voodoo was involved.
+(defcustom gnorb-gnus-sent-groups nil
+  "A list of strings indicating sent mail groups.
+
+In some cases, Gnorb can't detect where your sent messages are
+stored (ie if you're using IMAP sent mail folders instead of
+local archiving. If you want Gnorb to be able to find sent
+messages, this option can help it do that. It should be set to a
+list of strings, which are assumed to be fully qualified
+server+group combinations, ie \"nnimap+Server:[Gmail]/Sent
+Mail\", or something similar. This only has to be done once for
+each message."
+  :group 'gnorb-gnus
+  :type 'list)
 
 (defvar gnorb-gnus-capture-attachments nil
   "Holding place for attachment names during the capture
   process.")
+
+;;; What follows is a very careful copy-pasta of bits and pieces from
+;;; mm-decode.el and gnus-art.el. Voodoo was involved.
 
 ;;;###autoload
 (defun gnorb-gnus-article-org-attach (n)
