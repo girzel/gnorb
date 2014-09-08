@@ -200,7 +200,7 @@ might have been in the outgoing message's headers and call
   (dolist (id gnorb-message-org-ids)
     (gnorb-trigger-todo-action nil id))
   ;; this is a little unnecessary, but it may save grief
-  (setq gnorb-gnus-sending-message-info nil)
+  (setq gnorb-gnus-message-info nil)
   (setq gnorb-message-org-ids nil))
 
 (defun gnorb-org-extract-mail-stuff (strategy &optional region)

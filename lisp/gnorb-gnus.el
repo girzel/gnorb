@@ -247,7 +247,7 @@ save them into `gnorb-tmp-dir'."
 
 ;;; Storing, removing, and acting on Org headers in messages.
 
-(defvar gnorb-gnus-sending-message-info nil
+(defvar gnorb-gnus-message-info nil
   "Place to store the To, Subject, Date, and Message-ID headers
   of the currently-sending or last-sent message.")
 
@@ -255,10 +255,10 @@ save them into `gnorb-tmp-dir'."
   "Save the value of the `gnorb-mail-header' for the current
 message; multiple header values returned as a string. Also save
 information about the outgoing message into
-`gnorb-gnus-sending-message-info'."
+`gnorb-gnus-message-info'."
   (save-restriction
     (message-narrow-to-headers)
-    (setq gnorb-gnus-sending-message-info nil)
+    (setq gnorb-gnus-message-info nil)
     (let* ((org-ids (mail-fetch-field gnorb-mail-header nil nil t))
 	   (msg-id (mail-fetch-field "Message-ID"))
 	   (refs (mail-fetch-field "References"))
@@ -278,7 +278,7 @@ information about the outgoing message into
       ;; we can fake it.
       (when refs
 	(setq refs (split-string refs "[ ,]+")))
-      (setq gnorb-gnus-sending-message-info
+      (setq gnorb-gnus-message-info
 	    `(:subject ,subject :msg-id ,msg-id
 		       :to ,to :from ,from
 		       :link ,link :date ,date :refs ,refs
@@ -333,12 +333,12 @@ work."
 			  (org-id-get-create))))))
     (if (not (eq major-mode 'message-mode))
 	;; The message is already sent, so we're relying on whatever was
-	;; stored into `gnorb-gnus-sending-message-info'.
+	;; stored into `gnorb-gnus-message-info'.
 	(if arg
 	    (progn
 	      (push (car rel-headings) gnorb-message-org-ids)
 	      (gnorb-org-restore-after-send))
-	  (setq ref-ids (plist-get gnorb-gnus-sending-message-info :refs))
+	  (setq ref-ids (plist-get gnorb-gnus-message-info :refs))
 	  (if ref-ids
 	      ;; the message might be relevant to some TODO
 	      ;; heading(s). But if there had been org-id
@@ -413,9 +413,9 @@ work."
 (defun gnorb-gnus-outgoing-make-todo-1 ()
   (unless gnorb-gnus-new-todo-capture-key
     (error "No capture template key set, customize gnorb-gnus-new-todo-capture-key"))
-  (let* ((link (plist-get gnorb-gnus-sending-message-info :link))
-	 (group (plist-get gnorb-gnus-sending-message-info :group))
-	 (date (plist-get gnorb-gnus-sending-message-info :date))
+  (let* ((link (plist-get gnorb-gnus-message-info :link))
+	 (group (plist-get gnorb-gnus-message-info :group))
+	 (date (plist-get gnorb-gnus-message-info :date))
 	 (date-ts (and date
 		       (ignore-errors
 			 (format-time-string
@@ -426,9 +426,9 @@ work."
 			    (format-time-string
 			     (org-time-stamp-format t t)
 			     (date-to-time date)))))
-	 (msg-id (plist-get gnorb-gnus-sending-message-info :msg-id))
-	 (sender (plist-get gnorb-gnus-sending-message-info :from))
-	 (subject (plist-get gnorb-gnus-sending-message-info :subject))
+	 (msg-id (plist-get gnorb-gnus-message-info :msg-id))
+	 (sender (plist-get gnorb-gnus-message-info :from))
+	 (subject (plist-get gnorb-gnus-message-info :subject))
 	 ;; Convince Org we already have a link stored, even if we
 	 ;; don't.
 	 (org-capture-link-is-already-stored t))
@@ -442,8 +442,8 @@ work."
 	 :date-timestamp-inactive date-ts-ia
 	 :annotation link)
       (org-store-link-props
-       :subject (plist-get gnorb-gnus-sending-message-info :subject)
-       :to (plist-get gnorb-gnus-sending-message-info :to)
+       :subject (plist-get gnorb-gnus-message-info :subject)
+       :to (plist-get gnorb-gnus-message-info :to)
        :date date
        :date-timestamp date-ts
        :date-timestamp-inactive date-ts-ia
@@ -489,7 +489,7 @@ to t (it is, by default)."
 	 (org-refile-targets gnorb-gnus-trigger-refile-targets)
 	 ;; otherwise `gnorb-trigger-todo-action' will think we
 	 ;; started from an outgoing message
-	 (gnorb-gnus-sending-message-info nil)
+	 (gnorb-gnus-message-info nil)
 	 (ref-msg-ids
 	  (with-current-buffer gnus-original-article-buffer
 	    (message-narrow-to-headers-or-head)

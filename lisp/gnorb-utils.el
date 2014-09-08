@@ -139,14 +139,14 @@ the prefix arg."
 			(point-at-bol))
 	  ret-dest-todo (org-entry-get
 			 root-marker "TODO"))
-    (let ((sent-id (plist-get gnorb-gnus-sending-message-info :msg-id)))
+    (let ((sent-id (plist-get gnorb-gnus-message-info :msg-id)))
       (when sent-id
 	(gnorb-registry-make-entry
 	 sent-id
-	 (plist-get gnorb-gnus-sending-message-info :from)
-	 (plist-get gnorb-gnus-sending-message-info :subject)
+	 (plist-get gnorb-gnus-message-info :from)
+	 (plist-get gnorb-gnus-message-info :subject)
 	 (org-id-get-create)
-	 (plist-get gnorb-gnus-sending-message-info :group)))
+	 (plist-get gnorb-gnus-message-info :group)))
       (setq action (cond ((not
 			   (or (and ret-dest-todo
 				    (null gnorb-org-mail-todos))
