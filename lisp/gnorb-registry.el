@@ -111,9 +111,12 @@ to the message's registry entry, under the 'gnorb-ids key."
 
 (defun gnorb-find-visit-candidates (ids)
   "For all message-ids in IDS (which should be a list of
-Message-ID strings, with angle brackets), produce a list of Org
+Message-ID strings, with angle brackets, or a single string of
+Message-IDs separated by spaces or commas), produce a list of Org
 ids for headings that are relevant to that message."
   (let (ret-val sub-val)
+    (when (stringp ids)
+      (setq ids (split-string ids "[ ,]+")))
     (when gnorb-tracking-enabled
       (progn
 	(dolist (id ids)

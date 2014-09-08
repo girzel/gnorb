@@ -277,7 +277,7 @@ information about the outgoing message into
       ;; If we can't make a real link, then save some information so
       ;; we can fake it.
       (when refs
-	(setq refs (split-string refs)))
+	(setq refs (split-string refs "[ ,]+")))
       (setq gnorb-gnus-sending-message-info
 	    `(:subject ,subject :msg-id ,msg-id
 		       :to ,to :from ,from
@@ -344,14 +344,13 @@ work."
 	      ;; heading(s). But if there had been org-id
 	      ;; headers, they would already have been
 	      ;; handled when the message was sent.
-	      (progn (when (stringp ref-ids)
-		       (setq ref-ids (split-string ref-ids)))
-		     (setq rel-headings (gnorb-find-visit-candidates ref-ids))
-		     (if (not rel-headings)
-			 (gnorb-gnus-outgoing-make-todo-1)
-		       (dolist (h rel-headings)
-			 (push h gnorb-message-org-ids))
-		       (gnorb-org-restore-after-send)))
+	      (progn
+		(setq rel-headings (gnorb-find-visit-candidates ref-ids))
+		(if (not rel-headings)
+		    (gnorb-gnus-outgoing-make-todo-1)
+		  (dolist (h rel-headings)
+		    (push h gnorb-message-org-ids))
+		  (gnorb-org-restore-after-send)))
 	    ;; not relevant, just make a new TODO
 	    (gnorb-gnus-outgoing-make-todo-1)))
       ;; We are still in the message composition buffer, so let's see
@@ -381,8 +380,6 @@ work."
 	    (org-gnus-follow-link reply-group reply-id)
 	    (call-interactively 'org-store-link)))
 	(when ref-ids
-	  (when (stringp ref-ids)
-	    (setq ref-ids (split-string ref-ids)))
 	  ;; if the References header points to any message ids that are
 	  ;; tracked by TODO headings...
 	  (setq rel-headings (gnorb-find-visit-candidates ref-ids)))
@@ -496,10 +493,7 @@ to t (it is, by default)."
 	 (ref-msg-ids
 	  (with-current-buffer gnus-original-article-buffer
 	    (message-narrow-to-headers-or-head)
-	    (let ((all-refs
-		   (message-fetch-field "references")))
-	      (when all-refs
-		(split-string all-refs)))))
+	    (message-fetch-field "references")))
 	 (offer-heading
 	  (when (and (not id) ref-msg-ids gnorb-tracking-enabled)
 	    (if org-id-track-globally
@@ -598,7 +592,6 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 			      nil t))
 	  rel-headings)
       (when ref-ids
-	(setq ref-ids (split-string ref-ids))
 	(when (setq rel-headings
 		    (gnorb-find-visit-candidates ref-ids))
 	  (message "Possible relevant todo %s, trigger with %s"
@@ -614,8 +607,7 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
             (lambda (header)
               (let ((ref-ids (mail-header-references header)))
 		(if (and ref-ids
-			 (gnorb-find-visit-candidates
-			  (split-string ref-ids)))
+			 (gnorb-find-visit-candidates ref-ids))
 		    gnorb-gnus-summary-mark
 		  " "))))
 
@@ -631,7 +623,6 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
   (let ((refs (gnus-fetch-original-field "references"))
 	rel-headings)
     (when refs
-      (setq refs (split-string refs))
       (setq rel-headings (gnorb-find-visit-candidates refs))
       (delete-other-windows)
       (org-id-goto (car rel-headings)))))
