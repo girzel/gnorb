@@ -126,14 +126,63 @@ ids for headings that are relevant to that message."
 (defun gnorb-registry-org-id-search (id)
   (registry-search gnus-registry-db :member `((gnorb-ids ,id))))
 
+(defun gnorb-registry-transition-from-props (arg)
+  "Helper function for transitioning the old tracking system to the new.
+
+The old system relied on storing sent message ids on relevant Org
+headings, in the `gnorb-org-msg-id-key' property. The new system
+uses the gnus registry to track relations between messages and
+Org headings. This function will go through your agenda files,
+find headings that have the `gnorb-org-msg-id-key' property set,
+and create new registry entries that reflect that connection.
+
+Call with a prefix arg to additionally delete the
+`gnorb-org-msg-id-key' altogether from your Org headings. As this
+function will not create duplicate registry entries, it's safe to
+run it once with no prefix arg, to keep the properties in place,
+and then once you're sure everything's working okay, run it again
+with a prefix arg, to clean the Gnorb-specific properties from
+your Org files."
+  (interactive "P")
+  (let ((count 0))
+    (message "Collecting all relevant Org headings, this could take a while...")
     (org-map-entries
      (lambda ()
-       (setq props
-	     (org-entry-get-multivalued-property
-	      (point) gnorb-org-msg-id-key))
-       (dolist (p props)
-	 (gnorb-org-add-id-hash-entry p)))
+       (let ((id (org-id-get))
+	     (props (org-entry-get-multivalued-property
+	       (point) gnorb-org-msg-id-key))
+	     links group id)
+	(when props
+	  ;; If the property is set, we should probably assume that any
+	  ;; Gnus links in the subtree are relevant, and should also be
+	  ;; collected and associated.
+	  (setq links (gnorb-scan-links
+		       (org-element-property :end (org-element-at-point))
+		       'gnus))
+	  (dolist (l (plist-get links :gnus))
+	    (gnorb-registry-make-entry
+	     (second (split-string l "#")) nil nil
+	     id (first (split-string l "#"))))
+	  (dolist (p props)
+	    (setq id )
+	    (gnorb-registry-make-entry p nil nil id nil)
+	    ;; This function will try to find the group for the message
+	    ;; and set that value on the registry entry if it can find
+	    ;; it.
+	    (unless (gnus-registry-get-id-key p 'group)
+	      (gnorb-msg-id-to-group p))
+	    (incf count)))))
      gnorb-org-find-candidates-match
-     'agenda 'archive 'comment)))
+     'agenda 'archive 'comment)
+    (message "Collecting all relevant Org headings, this could take a while... done")
+    ;; Delete the properties if the user has asked us to do so.
+    (if (eq arg '(4))
+	(progn
+	  (dolist (f (org-agenda-files))
+	    (with-current-buffer (get-file-buffer f)
+	      (org-delete-property-globally gnorb-org-msg-id-key)))
+	  (message "%d entries created; all Gnorb-specific properties deleted."
+		   count))
+      (message "%d entries created." count))))
 
 (provide 'gnorb-registry)
