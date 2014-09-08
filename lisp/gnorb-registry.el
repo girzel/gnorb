@@ -74,11 +74,13 @@ sent. Save the relevant Org ids in the 'gnorb-ids key."
       (gnus-registry-set-id-key msg-id 'subject (list subject)))
     (when org-id
       (let ((ids (gnus-registry-get-id-key msg-id 'gnorb-ids)))
-	(gnus-registry-set-id-key msg-id 'gnorb-ids (if (stringp org-id)
-							(cons org-id ids)
-						      (append org-id ids)))))
+	(unless (member org-id ids)
+	 (gnus-registry-set-id-key msg-id 'gnorb-ids (if (stringp org-id)
+							 (cons org-id ids)
+						       (append org-id ids))))))
     (when group
-      (gnus-registry-set-id-key msg-id 'group (list group)))))
+      (gnus-registry-set-id-key msg-id 'group (list group)))
+    (gnus-registry-get-or-make-entry msg-id)))
 
 (defun gnorb-registry-capture ()
   "When capturing from a Gnus message, add our new Org heading id
