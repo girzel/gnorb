@@ -46,6 +46,39 @@ org-todo regardless of TODO type."
   :group 'gnorb-org
   :type 'hook)
 
+(defcustom gnorb-org-trigger-actions
+  '(("todo state" . todo)
+    ("take note" . note)
+    ("don't associate" . no-assoc)
+    ("only associate" . assoc)
+    ("capture to child" . cap-child)
+    ("capture to sibling" . cap-sib))
+  "List of potential actions that can be taken on headings.
+
+When triggering an Org heading after receiving or sending a
+message, this option lists the possible actions to take. Built-in
+actions include:
+
+todo state: Associate the message, and change TODO state.
+take note: Associate the message, and take a note.
+don't associate: Do nothing at all, don't connect the message and TODO.
+only associate: Associate the message with this heading, do nothing else.
+capture to child: Associate this message with a new child heading.
+capture to sibling: Associate this message with a new sibling heading.
+
+You can reorder this list or remove items as suits your workflow.
+The two \"capture\" options will use the value of
+`gnorb-gnus-new-todo-capture-key' to find the appropriate
+template.
+
+You can also add custom actions to the list. Actions should be a
+cons of a string tag and a symbol indicating a custom function.
+This function will be called on the heading in question, and
+passed a plist containing information about the message from
+which we're triggering."
+  :group 'gnorb-org
+  :type 'list)
+
 (defcustom gnorb-org-msg-id-key "GNORB_MSG_ID"
   "The name of the org property used to store the Message-IDs
   from relevant messages. This is no longer used, and will be
@@ -198,7 +231,7 @@ might have been in the outgoing message's headers and call
     (set-window-configuration gnorb-window-conf)
     (goto-char gnorb-return-marker))
   (dolist (id gnorb-message-org-ids)
-    (gnorb-trigger-todo-action nil id))
+    (gnorb-trigger-todo-action id))
   ;; this is a little unnecessary, but it may save grief
   (setq gnorb-gnus-message-info nil)
   (setq gnorb-message-org-ids nil))

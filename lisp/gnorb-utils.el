@@ -39,14 +39,11 @@
   "Glue code between Gnus, Org, and BBDB."
   :tag "Gnorb")
 
-(defcustom gnorb-trigger-todo-default 'prompt
-  "What default action should be taken when triggering TODO
-  state-change from a message? Valid values are the symbols note
-  and todo, or prompt to pick one of the two."
-  :group 'gnorb
-  :type '(choice (const note)
-		 (const todo)
-		 (const prompt)))
+(make-obsolete-variable
+ 'gnorb-trigger-todo-default
+ "This variable has been superseded by
+`gnorb-org-trigger-actions'"
+ "September 8, 2014" 'set)
 
 (defun gnorb-prompt-for-bbdb-record ()
   "Prompt the user for a BBDB record."
@@ -118,60 +115,104 @@ and Gnus and BBDB maps."
     (set-window-configuration gnorb-window-conf)
     (goto-char gnorb-return-marker)))
 
-(defun gnorb-trigger-todo-action (arg &optional id)
+(defun gnorb-trigger-todo-action (&optional id)
   "Do the actual restore action. Two main things here. First: if
 we were in the agenda when this was called, then keep us in the
-agenda. Second: try to figure out the correct thing to do once we
-reach the todo. That depends on `gnorb-trigger-todo-default', and
-the prefix arg."
-  (let* ((agenda-p (eq major-mode 'org-agenda-mode))
-	 (todo-func (if agenda-p
-			'org-agenda-todo
-		      'org-todo))
-	 (note-func (if agenda-p
-			'org-agenda-add-note
-		      'org-add-note))
-	 root-marker ret-dest-todo action)
-    (when (and (not agenda-p) id)
-      (org-id-goto id))
-    (setq root-marker (if agenda-p
-			  (org-get-at-bol 'org-hd-marker)
-			(point-at-bol))
-	  ret-dest-todo (org-entry-get
-			 root-marker "TODO"))
-    (gnorb-registry-make-entry
-     (plist-get gnorb-gnus-message-info :msg-id)
-     (plist-get gnorb-gnus-message-info :from)
-     (plist-get gnorb-gnus-message-info :subject)
-     (org-with-point-at root-marker
-       (org-id-get-create))
-     (plist-get gnorb-gnus-message-info :group))
-    (setq action (cond ((not
-			 (or (and ret-dest-todo
-				  (null gnorb-org-mail-todos))
-			     (member ret-dest-todo gnorb-org-mail-todos)))
-			'note)
-		       ((eq gnorb-trigger-todo-default 'prompt)
-			(intern (completing-read
-				 "Take note, or trigger TODO state change? "
-				 '("note" "todo") nil t)))
-		       ((null arg)
-			gnorb-trigger-todo-default)
-		       (t
-			(if (eq gnorb-trigger-todo-default 'todo)
-			    'note
-			  'todo))))
-    (map-y-or-n-p
-     (lambda (a)
-       (format "Attach %s to heading? "
-	       (file-name-nondirectory a)))
-     (lambda (a) (org-attach-attach a nil 'mv))
-     gnorb-gnus-capture-attachments
-     '("file" "files" "attach"))
+agenda. Then let the user choose an action from the value of
+`gnorb-org-trigger-actions'."
+  (let ((agenda-p (eq major-mode 'org-agenda-mode))
+	(action (cdr (assoc
+		      (org-completing-read
+		       "Action to take: "
+		       gnorb-org-trigger-actions nil t)
+		      gnorb-org-trigger-actions)))
+	(root-marker (make-marker)))
+    ;; Place the marker for the relevant TODO heading.
+    (cond (agenda-p
+	   (setq root-marker
+		 (copy-marker
+		  (org-get-at-bol 'org-hd-marker))))
+	  ((derived-mode-p 'org-mode)
+	   (move-marker root-marker (point-at-bol)))
+	  (id
+	   (save-excursion
+	     (org-id-goto id)
+	     (move-marker root-marker (point-at-bol)))))
+    ;; Query about attaching email attachments.
+    (org-with-point-at root-marker
+      (map-y-or-n-p
+       (lambda (a)
+	 (format "Attach %s to heading? "
+		 (file-name-nondirectory a)))
+       (lambda (a) (org-attach-attach a nil 'mv))
+       gnorb-gnus-capture-attachments
+       '("file" "files" "attach")))
     (setq gnorb-gnus-capture-attachments nil)
-    (if (eq action 'note)
-	(call-interactively note-func)
-      (call-interactively todo-func))))
+    (cl-labels
+	((make-entry
+	  (id)
+	  (gnorb-registry-make-entry
+	   (plist-get gnorb-gnus-message-info :msg-id)
+	   (plist-get gnorb-gnus-message-info :from)
+	   (plist-get gnorb-gnus-message-info :subject)
+	   (org-with-point-at root-marker
+	     id)
+	   (plist-get gnorb-gnus-message-info :group))))
+      ;; Handle our action.
+      (cond ((eq action 'note)
+	     (org-with-point-at root-marker
+	       (make-entry (org-id-get-create))
+	       (call-interactively 'org-add-note)))
+	    ((eq action 'todo)
+	     (if agenda-p
+		 (progn
+		   (org-agenda-with-point-at-orig-entry
+		    nil
+		    (make-entry (org-id-get-create)))
+		   (call-interactively 'org-agenda-todo))
+	       (org-with-point-at root-marker
+		 (make-entry (org-id-get-create))
+		 (call-interactively 'org-todo))))
+	    ((eq action 'no-associate)
+	     nil)
+	    ((eq action 'associate)
+	     (org-with-point-at root-marker
+	       (make-entry (org-id-get-create))))
+	    ;; We're going to capture a new heading
+	    ((memq action '(cap-child cap-sib))
+	     (cl-labels
+		 ;; Prepare a function for returning the template
+		 ;; location. The function is supposed to leave point
+		 ;; at the spot the new entry should be made.
+		 ((capture-location
+		   ()
+		   (org-end-of-line)
+		   (if (eq action 'cap-child)
+		       (org-insert-subheading 1)
+		     (org-insert-heading-after-current))
+		   ;; Delete heading stars, the capture template
+		   ;; will insert them.
+		   (org-toggle-heading)))
+	       (let ((entry
+		       ;; Use the capture template the user has
+		       ;; specified for new email-related TODOs.
+		       (or (copy-sequence
+			    (assoc gnorb-gnus-new-todo-capture-key
+				   org-capture-templates))
+			   (user-error
+			    "Please customize gnorb-gnus-new-todo-capture-key"))))
+		 ;; Do surgery on that template so that it finds
+		 ;; its location using our `capture-location' function.
+		 (setf (nth 3 entry) '(function capture-location))
+		 (let ((org-capture-entry entry))
+		   ;; When org-capture-entry is let-bound, the capture
+		   ;; process will use that template instead of prompting
+		   ;; the user.
+		   (call-interactively 'org-capture)))))
+	    ((fboundp action)
+	     (org-with-point-at root-marker
+	       (make-entry (org-id-get-create))
+	       (funcall action gnorb-gnus-message-info)))))))
 
 (defun gnorb-pretty-outline (id &optional kw)
   "Return pretty outline path of the Org heading indicated by ID.

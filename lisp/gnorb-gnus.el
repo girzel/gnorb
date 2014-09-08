@@ -516,16 +516,16 @@ to t (it is, by default)."
     ;; `gnorb-restore-layout'.
     (delete-other-windows)
     (if id
-	(gnorb-trigger-todo-action arg id)
+	(gnorb-trigger-todo-action id)
       (if (and offer-heading
 	       (y-or-n-p (format "Trigger action on %s"
 				 (gnorb-pretty-outline offer-heading))))
-	  (gnorb-trigger-todo-action arg offer-heading)
+	  (gnorb-trigger-todo-action offer-heading)
 	(setq targ (org-refile-get-location
 		    "Trigger heading" nil t))
 	(find-file (nth 1 targ))
 	(goto-char (nth 3 targ))
-	(gnorb-trigger-todo-action arg)))
+	(gnorb-trigger-todo-action)))
     (message
      "Insert a link to the message with org-insert-link (%s)"
      (key-description
