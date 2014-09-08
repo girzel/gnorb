@@ -61,16 +61,21 @@ different things. First is the ID string of an Org heading,
 prefixed with \"id+\". This was probably a bad choice as it could
 conceivably look like an org tags search string. Fix that later.
 If it's an ID, then the entire subtree text of that heading is
-scanned for gnus links, and all the linked messages are displayed
-in an ephemeral group.
+scanned for gnus links, and the messages relevant to the subtree
+are collected from the registry, and all the resulting messages
+are displayed in an ephemeral group.
 
 Otherwise, the query string can be a tags match string, a la the
 Org agenda tags search. All headings matched by this string will
 be scanned for gnus messages, and those messages displayed."
+  ;; During the transition period between using message-ids stored in
+  ;; a property, and the new registry-based system, we're going to use
+  ;; both methods to collect relevant messages. This could be a little
+  ;; slower, but for the time being it will be safer.
   (save-excursion
     (let ((q (cdr (assq 'query query)))
 	  (buf (get-buffer-create nnir-tmp-buffer))
-	  links vectors)
+	  msg-ids org-ids links vectors)
       (with-current-buffer buf
 	(erase-buffer))
       (when (equal "5.13" gnus-version-number)
@@ -82,7 +87,15 @@ be scanned for gnus messages, and those messages displayed."
 		buf
 		(point)
 		(org-element-property
-		 :end (org-element-at-point)))))
+		 :end (org-element-at-point)))
+	       (save-restriction
+		 (org-narrow-to-subtree)
+		 (setq org-ids
+		       (append
+			(org-element-map (org-element-parse-buffer)
+			    'headline
+			  (lambda (hl) (org-element-property :ID hl)))
+			       org-ids)))))
 	    ((listp q)
 	     ;; be a little careful: this could be a list of links, or
 	     ;; it could be the full plist
@@ -91,6 +104,7 @@ be scanned for gnus messages, and those messages displayed."
 			   q)))
 	    (t (org-map-entries
 		(lambda ()
+		  (push (org-id-get-create) org-ids)
 		  (append-to-buffer
 		   buf
 		   (point)
@@ -100,20 +114,25 @@ be scanned for gnus messages, and those messages displayed."
 		q
 		'agenda)))
       (with-current-buffer buf
-	(let (ids)
-	  (goto-char (point-min))
-	  (setq links (plist-get (gnorb-scan-links (point-max) 'gnus)
-				 :gnus))
-	  (goto-char (point-min))
-	  (while (re-search-forward
-		  (concat ":" gnorb-org-msg-id-key ": \\([^\n]+\\)")
-		  (point-max) t)
-	    (setq ids (append (split-string (match-string 1)) ids)))
-	  (when ids
-	    (dolist (id ids)
-	      (let ((link (gnorb-msg-id-to-link id)))
-		(when link
-		  (push link links)))))))
+	(goto-char (point-min))
+	(setq links (plist-get (gnorb-scan-links (point-max) 'gnus)
+			       :gnus))
+	(goto-char (point-min))
+	(while (re-search-forward
+		(concat ":" gnorb-org-msg-id-key ": \\([^\n]+\\)")
+		(point-max) t)
+	  (setq msg-ids (append (split-string (match-string 1)) msg-ids))))
+      ;; Here's where we maybe do some duplicate work using the
+      ;; registry. Take our org ids and find all relevant message ids.
+      (dolist (i (delq nil org-ids))
+	(let ((rel-msg-id (gnorb-registry-org-id-search i)))
+	  (when rel-msg-id
+	    (setq msg-ids (append rel-msg-id msg-ids)))))
+      (when msg-ids
+	  (dolist (id msg-ids)
+	    (let ((link (gnorb-msg-id-to-link id)))
+	      (when link
+		(push link links)))))
       (setq links (delete-dups links))
       (unless (gnus-alive-p)
 	(gnus))

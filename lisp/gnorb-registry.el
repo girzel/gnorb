@@ -163,6 +163,9 @@ values in their `gnorb-org-org-msg-id-key' property."
 	(make-hash-table
 	 :test 'equal :size 100))
   (let (props)
+(defun gnorb-registry-org-id-search (id)
+  (registry-search gnus-registry-db :member `((gnorb-ids ,id))))
+
     (org-map-entries
      (lambda ()
        (setq props
