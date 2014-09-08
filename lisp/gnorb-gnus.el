@@ -479,17 +479,18 @@ to t (it is, by default)."
   ;; We should only store a link if it's not already at the head of
   ;; `org-stored-links'. There's some duplicate storage, at
   ;; present. Take a look at calling it non-interactively.
-  (call-interactively 'org-store-link)
   (setq gnorb-window-conf (current-window-configuration))
   (move-marker gnorb-return-marker (point))
+  (setq gnorb-gnus-message-info nil)
   (let* ((msg-id (mail-header-id headers))
-	 (sender (mail-header-from headers))
+	 (from (mail-header-from headers))
 	 (subject (mail-header-subject headers))
+	 (date (mail-header-date headers))
+	 (to (cdr (assoc 'To (mail-header-extra headers))))
 	 (group gnus-newsgroup-name)
+	 (link (call-interactively 'org-store-link))
 	 (org-refile-targets gnorb-gnus-trigger-refile-targets)
-	 ;; otherwise `gnorb-trigger-todo-action' will think we
-	 ;; started from an outgoing message
-	 (gnorb-gnus-message-info nil)
+	 ;;
 	 (ref-msg-ids
 	  (with-current-buffer gnus-original-article-buffer
 	    (message-narrow-to-headers-or-head)
@@ -505,6 +506,11 @@ to t (it is, by default)."
 	      (message "Gnorb can't check for relevant headings unless `org-id-track-globally' is t")
 	      (sit-for 1))))
 	 targ)
+    (setq gnorb-gnus-message-info
+	    `(:subject ,subject :msg-id ,msg-id
+		       :to ,to :from ,from
+		       :link ,link :date ,date :refs ,ref-msg-ids
+		       :group ,group))
     (gnorb-gnus-collect-all-attachments nil t)
     ;; Delete other windows, users can restore with
     ;; `gnorb-restore-layout'.
@@ -523,9 +529,7 @@ to t (it is, by default)."
     (message
      "Insert a link to the message with org-insert-link (%s)"
      (key-description
-      (where-is-internal 'org-insert-link nil t)))
-    (gnorb-registry-make-entry
-     msg-id sender subject (org-id-get-create) group)))
+      (where-is-internal 'org-insert-link nil t)))))
 
 ;;;###autoload
 (defun gnorb-gnus-search-messages (str &optional ret)

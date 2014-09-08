@@ -139,40 +139,39 @@ the prefix arg."
 			(point-at-bol))
 	  ret-dest-todo (org-entry-get
 			 root-marker "TODO"))
-    (let ((sent-id (plist-get gnorb-gnus-message-info :msg-id)))
-      (when sent-id
-	(gnorb-registry-make-entry
-	 sent-id
-	 (plist-get gnorb-gnus-message-info :from)
-	 (plist-get gnorb-gnus-message-info :subject)
-	 (org-id-get-create)
-	 (plist-get gnorb-gnus-message-info :group)))
-      (setq action (cond ((not
-			   (or (and ret-dest-todo
-				    (null gnorb-org-mail-todos))
-			       (member ret-dest-todo gnorb-org-mail-todos)))
-			  'note)
-			 ((eq gnorb-trigger-todo-default 'prompt)
-			  (intern (completing-read
-				   "Take note, or trigger TODO state change? "
-				   '("note" "todo") nil t)))
-			 ((null arg)
-			  gnorb-trigger-todo-default)
-			 (t
-			  (if (eq gnorb-trigger-todo-default 'todo)
-			      'note
-			    'todo))))
-      (map-y-or-n-p
-       (lambda (a)
-	 (format "Attach %s to heading? "
-		 (file-name-nondirectory a)))
-       (lambda (a) (org-attach-attach a nil 'mv))
-       gnorb-gnus-capture-attachments
-       '("file" "files" "attach"))
-      (setq gnorb-gnus-capture-attachments nil)
-      (if (eq action 'note)
-	  (call-interactively note-func)
-	(call-interactively todo-func)))))
+    (gnorb-registry-make-entry
+     (plist-get gnorb-gnus-message-info :msg-id)
+     (plist-get gnorb-gnus-message-info :from)
+     (plist-get gnorb-gnus-message-info :subject)
+     (org-with-point-at root-marker
+       (org-id-get-create))
+     (plist-get gnorb-gnus-message-info :group))
+    (setq action (cond ((not
+			 (or (and ret-dest-todo
+				  (null gnorb-org-mail-todos))
+			     (member ret-dest-todo gnorb-org-mail-todos)))
+			'note)
+		       ((eq gnorb-trigger-todo-default 'prompt)
+			(intern (completing-read
+				 "Take note, or trigger TODO state change? "
+				 '("note" "todo") nil t)))
+		       ((null arg)
+			gnorb-trigger-todo-default)
+		       (t
+			(if (eq gnorb-trigger-todo-default 'todo)
+			    'note
+			  'todo))))
+    (map-y-or-n-p
+     (lambda (a)
+       (format "Attach %s to heading? "
+	       (file-name-nondirectory a)))
+     (lambda (a) (org-attach-attach a nil 'mv))
+     gnorb-gnus-capture-attachments
+     '("file" "files" "attach"))
+    (setq gnorb-gnus-capture-attachments nil)
+    (if (eq action 'note)
+	(call-interactively note-func)
+      (call-interactively todo-func))))
 
 (defun gnorb-pretty-outline (id &optional kw)
   "Return pretty outline path of the Org heading indicated by ID.
