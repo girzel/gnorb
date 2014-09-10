@@ -49,8 +49,8 @@ org-todo regardless of TODO type."
 (defcustom gnorb-org-trigger-actions
   '(("todo state" . todo)
     ("take note" . note)
-    ("don't associate" . no-assoc)
-    ("only associate" . assoc)
+    ("don't associate" . no-associate)
+    ("only associate" . associate)
     ("capture to child" . cap-child)
     ("capture to sibling" . cap-sib))
   "List of potential actions that can be taken on headings.
