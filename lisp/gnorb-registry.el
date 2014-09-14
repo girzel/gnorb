@@ -127,6 +127,8 @@ ids for headings that are relevant to that message."
     ret-val))
 
 (defun gnorb-registry-org-id-search (id)
+  "Find all messages that have the org ID in their 'gnorb-ids
+key."
   (registry-search gnus-registry-db :member `((gnorb-ids ,id))))
 
 (defun gnorb-registry-transition-from-props (arg)
