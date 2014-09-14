@@ -232,8 +232,8 @@ save them into `gnorb-tmp-dir'."
 	       (setq abort-note 'clean)
 	       ;; remove any gnorb-mail-header values here
 	       )
-      ((error
-	(setq abort-note 'dirty))))))
+      (error
+       (setq abort-note 'dirty)))))
 
 (add-hook 'org-capture-prepare-finalize-hook
 	  'gnorb-gnus-capture-abort-cleanup)
