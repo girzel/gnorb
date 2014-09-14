@@ -147,6 +147,144 @@ be scanned for gnus messages, and those messages displayed."
 	     (when (and (integerp artno) (> artno 0))
 	       (push (vector server-group artno 100) vectors)))))))))
 
+(defvar gnorb-summary-minor-mode-map (make-sparse-keymap)
+  "Keymap for use in Gnorb's *Summary* minor mode.")
+
+(define-minor-mode gnorb-summary-minor-mode
+  "A minor mode for use in nnir *Summary* buffers created by Gnorb.
+
+These *Summary* buffers are usually created by calling
+`gnorb-org-view', or by initiating an nnir search on a nngnorb server.
+
+While active, this mode provides some Gnorb-specific commands,
+and also advises Gnus' reply-related commands in order to
+continue to provide tracking of sent messages."
+  nil " Gnorb" gnorb-summary-minor-mode-map)
+
+(define-key gnorb-summary-minor-mode-map
+  [remap gnus-summary-exit]
+  'gnorb-summary-exit)
+
+(define-key gnorb-summary-minor-mode-map (kbd "C-c d")
+  'gnorb-summary-disassociate-message)
+
+;; All this is pretty horrible, but it's the only way to get sane
+;; behavior, there are no appropriate hooks, and I want to avoid
+;; advising functions.
+
+(define-key gnorb-summary-minor-mode-map
+  [remap gnus-summary-very-wide-reply-with-original]
+  'gnorb-summary-very-wide-reply-with-original)
+
+(define-key gnorb-summary-minor-mode-map
+  [remap gnus-summary-wide-reply-with-original]
+  'gnorb-summary-wide-reply-with-original)
+
+(define-key gnorb-summary-minor-mode-map
+  [remap gnus-summary-reply]
+  'gnorb-summary-reply)
+
+(define-key gnorb-summary-minor-mode-map
+  [remap gnus-summary-very-wide-reply]
+  'gnorb-summary-very-wide-reply)
+
+(define-key gnorb-summary-minor-mode-map
+  [remap gnus-summary-reply-with-original]
+  'gnorb-summary-reply-with-original)
+
+(define-key gnorb-summary-minor-mode-map
+  [remap gnus-summary-wide-reply]
+  'gnorb-summary-wide-reply)
+
+
+(defun gnorb-summary-wide-reply (&optional yank)
+  (interactive
+   (list (and current-prefix-arg
+	      (gnus-summary-work-articles 1))))
+  (gnorb-summary-reply yank t)
+  (gnorb-summary-reply-hook))
+
+(defun gnorb-summary-reply-with-original (n &optional wide)
+  (interactive "P")
+  (gnorb-summary-reply (gnus-summary-work-articles n) wide)
+  (gnorb-summary-reply-hook))
+
+(defun gnorb-summary-very-wide-reply (&optional yank)
+  (interactive
+   (list (and current-prefix-arg
+	      (gnus-summary-work-articles 1))))
+  (gnorb-summary-reply yank t (gnus-summary-work-articles yank))
+  (gnorb-summary-reply-hook))
+
+(defun gnorb-summary-reply (&optional yank wide very-wide)
+  (interactive)
+  (gnus-summary-reply yank wide very-wide)
+  (gnorb-summary-reply-hook))
+
+(defun gnorb-summary-wide-reply-with-original (n)
+  (interactive "P")
+  (gnorb-summary-reply-with-original n t)
+  (gnorb-summary-reply-hook))
+
+(defun gnorb-summary-very-wide-reply-with-original (n)
+  (interactive "P")
+  (gnorb-summary-reply
+   (gnus-summary-work-articles n) t (gnus-summary-work-articles n))
+  (gnorb-summary-reply-hook))
+
+(defun gnorb-summary-reply-hook (&rest args)
+  "Function that runs after any command that creates a reply."
+  ;; Not actually a "hook"
+  (let* ((msg-id (aref message-reply-headers 4))
+	 (org-id (car-safe (gnus-registry-get-id-key msg-id 'gnorb-ids))))
+    (when org-id
+      (save-restriction
+	(save-excursion
+	  (widen)
+	  (message-narrow-to-headers-or-head)
+	  (goto-char (point-at-bol))
+	  (open-line 1)
+	  (message-insert-header
+	   (intern gnorb-mail-header)
+	   org-id)
+	  (add-to-list 'message-exit-actions
+		       'gnorb-org-restore-after-send))))))
+
+(defun gnorb-summary-exit ()
+  "Like `gnus-summary-exit', but restores the gnorb window conf."
+  (interactive)
+  (call-interactively 'gnus-summary-exit)
+  (gnorb-restore-layout))
+
+(defun gnorb-summary-disassociate-message ()
+  "Disassociate a message from its Org TODO.
+
+This is used in a Gnorb-created *Summary* buffer to remove the
+connection between the message and whichever Org TODO resulted in
+the message being included in this search."
+  (interactive)
+  (let* ((msg-id (gnus-fetch-original-field "message-id"))
+	 (org-ids (gnus-registry-get-id-key msg-id 'gnorb-ids))
+	 chosen)
+    (when org-ids
+      (if (= (length org-ids) 1)
+	  ;; Only one associated Org TODO.
+	  (progn (gnus-registry-set-id-key msg-id 'gnorb-ids)
+		 (setq chosen (car org-ids)))
+	;; Multiple associated TODOs, prompt to choose one.
+	(setq chosen
+	      (cdr
+	       (org-completing-read
+		"Choose a TODO to disassociate from: "
+		(mapcar
+		 (lambda (h)
+		   (cons (gnorb-pretty-outline h) h))
+		 org-ids))))
+	(gnus-registry-set-id-key msg-id 'gnorb-ids
+				  (remove chosen org-ids)))
+      (message "Message disassociated from %s"
+	       (gnorb-pretty-outline chosen)))))
+
 (defvar nngnorb-status-string "")
 
 (defun nngnorb-retrieve-headers (articles &optional group server fetch-old)
