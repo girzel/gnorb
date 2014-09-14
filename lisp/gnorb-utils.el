@@ -238,6 +238,10 @@ If the KW argument is true, add the TODO keyword into the path."
 	   "\\3" (org-element-property :raw-value el)))))))))
 
 (defun gnorb-scan-links (bound &rest types)
+  "Scan from point to BOUND looking for links of type in TYPES.
+
+TYPES is a list of symbols, possible values include 'bbdb, 'mail,
+and 'gnus."
   ;; this function could be refactored somewhat -- lots of code
   ;; repetition. It also should be a little faster for when we're
   ;; scanning for gnus links only, that's a little slow. We should
