@@ -268,6 +268,8 @@ and 'gnus."
       `(:gnus ,gnus :mail ,mail :bbdb ,bbdb))))
 
 (defun gnorb-msg-id-to-link (msg-id)
+  "Given a message id, try to create a full org link to the
+message."
   (let ((server-group (gnorb-msg-id-to-group msg-id)))
     (when server-group
       (org-link-escape (concat server-group "#" msg-id)))))
