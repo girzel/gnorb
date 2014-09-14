@@ -300,6 +300,22 @@ methods?"
       (when (featurep 'notmuch)
 	nil))))
 
+(defun gnorb-collect-ids (&optional id)
+  "Collect all Org IDs for a subtree.
+
+Starting with the heading under point (or the heading indicated
+by the ID argument), collect its ID property, and the IDs of all
+child headings."
+  (save-excursion
+    (save-restriction
+      (when id
+	(org-id-goto id))
+      (org-narrow-to-subtree)
+      (org-element-map (org-element-parse-buffer)
+	  'headline
+	(lambda (hl)
+	  (org-element-property :ID hl))))))
+
 ;; Loading the registry
 
 (defvar gnorb-tracking-enabled nil

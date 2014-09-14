@@ -92,10 +92,8 @@ be scanned for gnus messages, and those messages displayed."
 		 (org-narrow-to-subtree)
 		 (setq org-ids
 		       (append
-			(org-element-map (org-element-parse-buffer)
-			    'headline
-			  (lambda (hl) (org-element-property :ID hl)))
-			       org-ids)))))
+			(gnorb-collect-ids)
+			org-ids)))))
 	    ((listp q)
 	     ;; be a little careful: this could be a list of links, or
 	     ;; it could be the full plist
