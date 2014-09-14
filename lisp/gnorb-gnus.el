@@ -583,33 +583,48 @@ is relevant to any existing TODO headings. If so, flash a message
 to that effect. This function is added to the
 `gnus-article-prepare-hook'. It will only do anything if the
 option `gnorb-gnus-hint-relevant-article' is non-nil."
-  (when (and gnorb-gnus-hint-relevant-article
-	     (not (memq (car (gnus-find-method-for-group group))
+  (when (and gnorb-tracking-enabled
+	     gnorb-gnus-hint-relevant-article
+	     (not (memq (car (gnus-find-method-for-group
+			      gnus-newsgroup-name))
 			'(nnvirtual nnir))))
-    (let ((ref-ids (gnus-fetch-original-field "references"))
-	  (key
-	   (where-is-internal 'gnorb-gnus-incoming-do-todo
-			      nil t))
-	  rel-headings)
-      (when ref-ids
-	(when (setq rel-headings
-		    (gnorb-find-visit-candidates ref-ids))
-	  (message "Possible relevant todo %s, trigger with %s"
-		   (gnorb-pretty-outline (car rel-headings) t)
-		   (if key
-		       (key-description key)
-		     "M-x gnorb-gnus-incoming-do-todo")))))))
+    (let* ((ref-ids (gnus-fetch-original-field "references"))
+	   (msg-id (gnus-fetch-original-field "message-id"))
+	   (assoc-heading
+	    (gnus-registry-get-id-key msg-id 'gnorb-ids))
+	   (key
+	    (where-is-internal 'gnorb-gnus-incoming-do-todo
+			       nil t))
+	   rel-headings)
+      (cond (assoc-heading
+	     (message "Message is associated with %s"
+		      (gnorb-pretty-outline (car assoc-heading) t)))
+	    (ref-ids
+	     (when (setq rel-headings
+			 (gnorb-find-visit-candidates ref-ids))
+	       (message "Possible relevant todo %s, trigger with %s"
+			(gnorb-pretty-outline (car rel-headings) t)
+			(if key
+			    (key-description key)
+			  "M-x gnorb-gnus-incoming-do-todo"))))))))
 
 (add-hook 'gnus-article-prepare-hook 'gnorb-gnus-hint-relevant-message)
 
 (fset (intern (concat "gnus-user-format-function-"
 		      gnorb-gnus-summary-mark-format-letter))
-            (lambda (header)
-              (let ((ref-ids (mail-header-references header)))
-		(if (and ref-ids
-			 (gnorb-find-visit-candidates ref-ids))
-		    gnorb-gnus-summary-mark
-		  " "))))
+      (lambda (header)
+	(if (and gnorb-tracking-enabled
+		 (not (memq (car (gnus-find-method-for-group
+				  gnus-newsgroup-name))
+			    '(nnvirtual nnir))))
+	    (let ((ref-ids (mail-header-references header))
+		  (msg-id (mail-header-message-id header)))
+	      (if (or (gnus-registry-get-id-key msg-id 'gnorb-ids)
+		      (and ref-ids
+			   (gnorb-find-visit-candidates ref-ids)))
+		  gnorb-gnus-summary-mark
+		" "))
+	  " ")))
 
 ;;;###autoload
 (defun gnorb-gnus-view ()
