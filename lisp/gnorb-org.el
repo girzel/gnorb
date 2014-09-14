@@ -534,7 +534,7 @@ current heading."
 	       (message-mode-hook (copy-sequence message-mode-hook))
 	       mails)
 	  (when file
-	    (cons g file attachments))
+	    (cons file attachments))
 	  (when recs
 	    (setq recs
 		  (delete nil
