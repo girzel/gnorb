@@ -104,7 +104,7 @@ be scanned for gnus messages, and those messages displayed."
 			   q)))
 	    (t (org-map-entries
 		(lambda ()
-		  (push (org-id-get-create) org-ids)
+		  (push (org-id-get) org-ids)
 		  (append-to-buffer
 		   buf
 		   (point)
