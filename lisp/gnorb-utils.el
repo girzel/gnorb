@@ -155,8 +155,7 @@ agenda. Then let the user choose an action from the value of
 	   (plist-get gnorb-gnus-message-info :msg-id)
 	   (plist-get gnorb-gnus-message-info :from)
 	   (plist-get gnorb-gnus-message-info :subject)
-	   (org-with-point-at root-marker
-	     id)
+	   id
 	   (plist-get gnorb-gnus-message-info :group))))
       ;; Handle our action.
       (cond ((eq action 'note)
@@ -166,8 +165,7 @@ agenda. Then let the user choose an action from the value of
 	    ((eq action 'todo)
 	     (if agenda-p
 		 (progn
-		   (org-agenda-with-point-at-orig-entry
-		    nil
+		   (org-with-point-at root-marker
 		    (make-entry (org-id-get-create)))
 		   (call-interactively 'org-agenda-todo))
 	       (org-with-point-at root-marker
