@@ -51,8 +51,9 @@ org-todo regardless of TODO type."
     ("take note" . note)
     ("don't associate" . no-associate)
     ("only associate" . associate)
-    ("capture to child" . cap-child)
-    ("capture to sibling" . cap-sib))
+;    ("capture to child" . cap-child)
+;    ("capture to sibling" . cap-sib)
+)
   "List of potential actions that can be taken on headings.
 
 When triggering an Org heading after receiving or sending a
@@ -63,8 +64,8 @@ todo state: Associate the message, and change TODO state.
 take note: Associate the message, and take a note.
 don't associate: Do nothing at all, don't connect the message and TODO.
 only associate: Associate the message with this heading, do nothing else.
-capture to child: Associate this message with a new child heading.
-capture to sibling: Associate this message with a new sibling heading.
+capture to child: [not yet implemented] Associate this message with a new child heading.
+capture to sibling: [not yet implemented] Associate this message with a new sibling heading.
 
 You can reorder this list or remove items as suits your workflow.
 The two \"capture\" options will use the value of

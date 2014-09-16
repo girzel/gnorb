@@ -176,37 +176,6 @@ agenda. Then let the user choose an action from the value of
 	    ((eq action 'associate)
 	     (org-with-point-at root-marker
 	       (make-entry (org-id-get-create))))
-	    ;; We're going to capture a new heading
-	    ((memq action '(cap-child cap-sib))
-	     (cl-labels
-		 ;; Prepare a function for returning the template
-		 ;; location. The function is supposed to leave point
-		 ;; at the spot the new entry should be made.
-		 ((capture-location
-		   ()
-		   (org-end-of-line)
-		   (if (eq action 'cap-child)
-		       (org-insert-subheading 1)
-		     (org-insert-heading-after-current))
-		   ;; Delete heading stars, the capture template
-		   ;; will insert them.
-		   (org-toggle-heading)))
-	       (let ((entry
-		       ;; Use the capture template the user has
-		       ;; specified for new email-related TODOs.
-		       (or (copy-sequence
-			    (assoc gnorb-gnus-new-todo-capture-key
-				   org-capture-templates))
-			   (user-error
-			    "Please customize gnorb-gnus-new-todo-capture-key"))))
-		 ;; Do surgery on that template so that it finds
-		 ;; its location using our `capture-location' function.
-		 (setf (nth 3 entry) '(function capture-location))
-		 (let ((org-capture-entry entry))
-		   ;; When org-capture-entry is let-bound, the capture
-		   ;; process will use that template instead of prompting
-		   ;; the user.
-		   (call-interactively 'org-capture)))))
 	    ((fboundp action)
 	     (org-with-point-at root-marker
 	       (make-entry (org-id-get-create))
