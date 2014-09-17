@@ -232,7 +232,7 @@ and 'gnus."
 	 ((and (memq 'bbdb types)
 	       (string-match "^<?bbdb:" addr))
 	  (push (substring addr (match-end 0)) bbdb))))
-      `(:gnus ,gnus :mail ,mail :bbdb ,bbdb))))
+      `(:gnus ,(reverse gnus) :mail ,(reverse mail) :bbdb ,(reverse bbdb)))))
 
 (defun gnorb-msg-id-to-link (msg-id)
   "Given a message id, try to create a full org link to the
