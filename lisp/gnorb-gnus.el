@@ -262,6 +262,7 @@ information about the outgoing message into
     (let* ((org-ids (mail-fetch-field gnorb-mail-header nil nil t))
 	   (msg-id (mail-fetch-field "Message-ID"))
 	   (refs (mail-fetch-field "References"))
+	   (in-reply-to (mail-fetch-field "In-Reply-To"))
 	   (to (if (message-news-p)
 		   (mail-fetch-field "Newsgroups")
 		 (mail-fetch-field "To")))
@@ -276,8 +277,10 @@ information about the outgoing message into
 	   (group (ignore-errors (car (split-string link "#")))))
       ;; If we can't make a real link, then save some information so
       ;; we can fake it.
+      (when in-reply-to
+	(setq refs (concat refs " " in-reply-to)))
       (when refs
-	(setq refs (split-string refs "[ ,]+")))
+	(setq refs (gnus-extract-references refs)))
       (setq gnorb-gnus-message-info
 	    `(:subject ,subject :msg-id ,msg-id
 		       :to ,to :from ,from
@@ -322,7 +325,7 @@ work."
   (interactive "P")
   (let ((org-refile-targets gnorb-gnus-trigger-refile-targets)
 	header-ids ref-ids rel-headings gnorb-window-conf
-	reply-id reply-group)
+	reply-id reply-group in-reply-to)
     (when arg
       (setq rel-headings
 	    (org-refile-get-location "Trigger action on" nil t))
@@ -369,6 +372,9 @@ work."
 	;; what org id headers are present, though, so we don't add
 	;; duplicates.
 	(setq ref-ids (unless arg (mail-fetch-field "References" t)))
+	(setq in-reply-to (unless arg (mail-fetch-field "In-Reply-to" t)))
+	(when in-reply-to
+	  (setq ref-ids (concat ref-ids " " in-reply-to)))
 	(setq reply-group (when (mail-fetch-field "X-Draft-From" t)
 			    (car-safe (read (mail-fetch-field "X-Draft-From" t)))))
 	;; when it's a reply, store a link to the reply just in case.
