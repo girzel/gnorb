@@ -234,33 +234,38 @@ See the docstring of `gnorb-org-handle-mail' for details."
       (gnorb-org-extract-mail-tracking assoc-msg-ids arg region))))
 
 (defun gnorb-org-extract-mail-tracking (assoc-msg-ids &optional arg region)
-  ;; Get the most recent message that wasn't sent by our user.
-  (let* ((latest-msg-id
-	  (car
-	   (sort
-	    (remove-if
-	     (lambda (m)
-	       (let ((from (car (gnus-registry-get-id-key m 'sender))))
-		 (or (null from)
-		     (string-match-p
-		      user-mail-address from)
-		     (string-match-p
-		      message-alternative-emails from))))
-	     assoc-msg-ids)
-	    (lambda (r l)
-	      (time-less-p
-	       (car (gnus-registry-get-id-key l 'creation-time))
-	       (car (gnus-registry-get-id-key r 'creation-time)))))))
-	 ;; Turn it into the kind of link that `gnorb-org-handle-mail'
-	 ;; is expecting. If this routine changes significantly, we
-	 ;; should change the format of the return value.
-	 (latest-link (gnorb-msg-id-to-link latest-msg-id))
-	 ;; With a prefix arg, or with no tracked messages, also
-	 ;; collect mailto: and bbdb: links from the subtree.
-	 (all-links (when (or arg (not latest-link))
-		      (gnorb-org-extract-links nil region))))
-    (plist-put all-links :gnus
-	       (when latest-link (list latest-link)))))
+
+  (let* ((all-links (gnorb-org-extract-links nil region))
+	 ;; The latest (by the creation-time registry key) of all the
+	 ;; tracked messages that were not sent by our user.
+	 (latest-msg-id
+	  (when assoc-msg-ids
+	    (car
+	     (sort
+	      (remove-if
+	       (lambda (m)
+		 (let ((from (car (gnus-registry-get-id-key m 'sender))))
+		   (or (null from)
+		       (string-match-p
+			user-mail-address from)
+		       (string-match-p
+			message-alternative-emails from))))
+	       assoc-msg-ids)
+	      (lambda (r l)
+		(time-less-p
+		 (car (gnus-registry-get-id-key l 'creation-time))
+		 (car (gnus-registry-get-id-key r 'creation-time)))))))))
+    (cond
+     ;; If there are no tracked messages, or the user has specifically
+     ;; requested we ignore them with the prefix arg, just return the
+     ;; found links in the subtree.
+     ((or arg
+	  (null latest-msg-id))
+      all-links)
+     ;; Otherwise ignore the other links in the subtree, and return
+     ;; the latest message.
+     (latest-msg-id
+      `(:gnus ,(list (gnorb-msg-id-to-link latest-msg-id)))))))
 
 (defun gnorb-org-setup-message
     (&optional messages mails from cc bcc attachments text ids)
