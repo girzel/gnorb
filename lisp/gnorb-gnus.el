@@ -385,7 +385,7 @@ work."
 	  (setq rel-headings (gnorb-find-visit-candidates ref-ids)))
 	(when rel-headings
 	  (goto-char (point-min))
-	  (dolist (h rel-headings)
+	  (dolist (h (delete-dups rel-headings))
 	    ;; then get the org-ids of those headings, and insert
 	    ;; them into this message as headers. If the id was
 	    ;; already present in a header, don't add it again.
