@@ -204,20 +204,17 @@ continue to provide tracking of sent messages."
   (interactive
    (list (and current-prefix-arg
 	      (gnus-summary-work-articles 1))))
-  (gnorb-summary-reply yank t)
-  (gnorb-summary-reply-hook))
+  (gnorb-summary-reply yank t))
 
 (defun gnorb-summary-reply-with-original (n &optional wide)
   (interactive "P")
-  (gnorb-summary-reply (gnus-summary-work-articles n) wide)
-  (gnorb-summary-reply-hook))
+  (gnorb-summary-reply (gnus-summary-work-articles n) wide))
 
 (defun gnorb-summary-very-wide-reply (&optional yank)
   (interactive
    (list (and current-prefix-arg
 	      (gnus-summary-work-articles 1))))
-  (gnorb-summary-reply yank t (gnus-summary-work-articles yank))
-  (gnorb-summary-reply-hook))
+  (gnorb-summary-reply yank t (gnus-summary-work-articles yank)))
 
 (defun gnorb-summary-reply (&optional yank wide very-wide)
   (interactive)
@@ -226,14 +223,12 @@ continue to provide tracking of sent messages."
 
 (defun gnorb-summary-wide-reply-with-original (n)
   (interactive "P")
-  (gnorb-summary-reply-with-original n t)
-  (gnorb-summary-reply-hook))
+  (gnorb-summary-reply-with-original n t))
 
 (defun gnorb-summary-very-wide-reply-with-original (n)
   (interactive "P")
   (gnorb-summary-reply
-   (gnus-summary-work-articles n) t (gnus-summary-work-articles n))
-  (gnorb-summary-reply-hook))
+   (gnus-summary-work-articles n) t (gnus-summary-work-articles n)))
 
 (defun gnorb-summary-mail-forward (n)
   (interactive "P")
