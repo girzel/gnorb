@@ -196,6 +196,9 @@ continue to provide tracking of sent messages."
   [remap gnus-summary-wide-reply]
   'gnorb-summary-wide-reply)
 
+(define-key gnorb-summary-minor-mode-map
+  [remap gnus-summary-mail-forward]
+  'gnorb-summary-mail-forward)
 
 (defun gnorb-summary-wide-reply (&optional yank)
   (interactive
@@ -230,6 +233,11 @@ continue to provide tracking of sent messages."
   (interactive "P")
   (gnorb-summary-reply
    (gnus-summary-work-articles n) t (gnus-summary-work-articles n))
+  (gnorb-summary-reply-hook))
+
+(defun gnorb-summary-mail-forward (n)
+  (interactive "P")
+  (gnus-summary-mail-forward n t)
   (gnorb-summary-reply-hook))
 
 (defun gnorb-summary-reply-hook (&rest args)
