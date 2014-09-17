@@ -409,8 +409,7 @@ work."
        'message-exit-actions
        (if header-ids
 	   'gnorb-org-restore-after-send
-	 'gnorb-gnus-outgoing-make-todo-1)
-       t)
+	 'gnorb-gnus-outgoing-make-todo-1))
       (message
        (if header-ids
 	   "Message will trigger TODO state-changes after sending"
