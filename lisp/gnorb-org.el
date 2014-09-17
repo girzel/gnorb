@@ -354,7 +354,7 @@ current heading, or the heading indicated by optional argument ID."
     (let* ((attach-dir (save-excursion
 			 (when id
 			   (org-id-goto id))
-			 (org-attach-dir)))
+			 (org-attach-dir t)))
 	   (files
 	    (mapcar
 	     (lambda (f)
