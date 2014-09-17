@@ -347,11 +347,14 @@ headings."
     (message-goto-to))
   (run-hooks 'gnorb-org-after-message-setup-hook))
 
-(defun gnorb-org-attachment-list ()
+(defun gnorb-org-attachment-list (&optional id)
   "Get a list of files (absolute filenames) attached to the
-current heading."
+current heading, or the heading indicated by optional argument ID."
   (when (featurep 'org-attach)
-    (let* ((attach-dir (org-attach-dir t))
+    (let* ((attach-dir (save-excursion
+			 (when id
+			   (org-id-goto id))
+			 (org-attach-dir)))
 	   (files
 	    (mapcar
 	     (lambda (f)
