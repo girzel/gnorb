@@ -251,7 +251,7 @@ continue to provide tracking of sent messages."
 	   (intern gnorb-mail-header)
 	   org-id)
 	  (add-to-list 'message-exit-actions
-		       'gnorb-org-restore-after-send))))))
+		       'gnorb-org-restore-after-send t))))))
 
 (defun gnorb-summary-exit ()
   "Like `gnus-summary-exit', but restores the gnorb window conf."

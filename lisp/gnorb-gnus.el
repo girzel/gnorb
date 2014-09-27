@@ -294,7 +294,7 @@ information about the outgoing message into
 	    ;; if we're working from a draft, or triggering this from
 	    ;; a reply, it might not be there yet.
 	    (add-to-list 'message-exit-actions
-			 'gnorb-org-restore-after-send))
+			 'gnorb-org-restore-after-send t))
 	(setq gnorb-message-org-ids nil)))))
 
 (add-hook 'message-header-hook 'gnorb-gnus-check-outgoing-headers)
@@ -409,7 +409,8 @@ work."
        'message-exit-actions
        (if header-ids
 	   'gnorb-org-restore-after-send
-	 'gnorb-gnus-outgoing-make-todo-1))
+	 'gnorb-gnus-outgoing-make-todo-1)
+       t)
       (message
        (if header-ids
 	   "Message will trigger TODO state-changes after sending"
