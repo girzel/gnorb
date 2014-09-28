@@ -14,6 +14,11 @@ Put "gnorb/lisp" in your load path, then either require "gnorb" to
 load everything, or pick bits and pieces: "gnorb-gnus", "gnorb-org",
 or "gnorb-bbdb".
 
+*Note for existing users*: Gnorb recently shifted to exclusively using
+the registry to track email TODOs, and this will require some
+configuration changes, please see [[id:5780bc9d-0756-4213-b805-2f9a2216fe15][Using Gnorb for Tracking Email TODOs]]
+below.
+
 Recommended keybindings/integration measures are shown below. Copy
 them into your init files and edit as you see fit.
 
@@ -27,6 +32,9 @@ they do one thing only, and (I hope) don't require anything special in
 terms of file formats or workflow. A few exceptions to that are listed
 below.
 ** Using Gnorb for Tracking Email TODOs
+:PROPERTIES:
+:ID:       5780bc9d-0756-4213-b805-2f9a2216fe15
+:END:
 
 Tracking correspondences between Org TODOs and email messages is one
 of the more complicated things that Gnorb does, and thus requires a
