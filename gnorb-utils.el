@@ -116,6 +116,57 @@ and Gnus and BBDB maps."
     (when (buffer-live-p (marker-buffer gnorb-return-marker))
       (goto-char gnorb-return-marker))))
 
+(defun gnorb-open-gnus-link (link)
+  "Be a little clever about following gnus links.
+
+The goal here is reuse frames and windows as much as possible, so
+we're not opening multiple windows on the *Group* buffer, for
+instance, and messing up people's layouts. There also seems to be
+an issue when opening a link to a message whose *Summary* buffer
+is already visible: somehow, after following the link, point ends
+up on the message _after_ the one we want, and things go haywire.
+
+So we try to be a little clever. The logical progression here is
+this:
+
+1. If the link's target group is already open in a *Summary*
+buffer, just switch to that buffer (if it's visible in any frame
+then raise it and switch focus, otherwise pull it into the
+current window) and go to the message with
+`gnus-summary-goto-article'.
+
+2. If the Gnus *Group* buffer is visible in any window or frame,
+raise that frame/window and give it focus before following the
+link.
+
+3. Otherwise just follow the link as usual, in the current
+window."
+  (let* ((link (org-link-unescape link))
+	 (group (car (org-split-string link "#")))
+	 (id (second (org-split-string link "#")))
+	 (sum-buffer (gnus-summary-buffer-name group))
+	 (target-buffer
+	  (cond
+	   ((gnus-buffer-exists-p sum-buffer)
+	    sum-buffer)
+	   ((gnus-buffer-exists-p gnus-group-buffer)
+	    gnus-group-buffer)
+	   (t nil)))
+	 (target-window (when target-buffer
+			  (get-buffer-window target-buffer t))))
+    (if target-window
+	;; Our target buffer is displayed somewhere: just go there.
+	(progn
+	  (select-frame-set-input-focus
+	   (window-frame target-window))
+	  (switch-to-buffer target-buffer))
+      ;; Our target buffer exists, but isn't displayed: pull it up.
+      (if target-buffer
+	  (switch-to-buffer target-buffer)))
+    (if (gnus-buffer-exists-p sum-buffer)
+	(gnus-summary-goto-article id nil t)
+      (org-gnus-open link))))
+
 (defun gnorb-trigger-todo-action (arg &optional id)
   "Do the actual restore action. Two main things here. First: if
 we were in the agenda when this was called, then keep us in the

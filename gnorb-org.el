@@ -256,26 +256,20 @@ headings."
   (require 'gnorb-gnus)
   (if (not messages)
       ;; Either compose new message...
-      (compose-mail (mapconcat 'identity mails ", "))
+      (compose-mail)
     ;; ...or follow link and start reply.
     (condition-case err
-	(let ((ret-val (org-gnus-open (org-link-unescape (car messages)))))
-	  ;; We failed to open the link (probably), ret-val would be
-	  ;; t otherwise
-	  (when (stringp ret-val)
-	    (error ret-val))
+	(progn
+	  (gnorb-open-gnus-link (car messages))
 	  (call-interactively
-	   'gnus-summary-wide-reply-with-original)
-	  ;; Add MAILS to message To header.
-	  (when mails
-	    (message-goto-to)
-	    (insert ", ")
-	    (insert (mapconcat 'identity mails ", "))))
-      (error (when (and (window-configuration-p gnorb-window-conf)
-			gnorb-return-marker)
-	       (set-window-configuration gnorb-window-conf)
-	       (goto-char gnorb-return-marker))
+	  'gnus-summary-wide-reply-with-original))
+      (error (gnorb-restore-layout)
 	     (signal (car err) (cdr err)))))
+  ;; Add MAILS to message To header.
+  (when mails
+    (message-goto-to)
+    (insert ", ")
+    (insert (mapconcat 'identity mails ", ")))
   ;; Return us after message is sent.
   (add-to-list 'message-exit-actions
 	       'gnorb-org-restore-after-send t)
@@ -324,7 +318,7 @@ headings."
   (if (or mails messages)
       (if (not messages)
 	  (message-goto-subject)
-       (message-goto-body))
+	(message-goto-body))
     (message-goto-to))
   (run-hooks 'gnorb-org-after-message-setup-hook))
 
