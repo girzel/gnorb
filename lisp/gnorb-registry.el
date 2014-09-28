@@ -181,7 +181,7 @@ your Org files."
      'agenda 'archive 'comment)
     (message "Collecting all relevant Org headings, this could take a while... done")
     ;; Delete the properties if the user has asked us to do so.
-    (if (eq arg '(4))
+    (if (equal arg '(4))
 	(progn
 	  (dolist (f (org-agenda-files))
 	    (with-current-buffer (get-file-buffer f)
