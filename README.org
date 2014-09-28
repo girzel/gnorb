@@ -14,6 +14,11 @@ Put "gnorb/lisp" in your load path, then either require "gnorb" to
 load everything, or pick bits and pieces: "gnorb-gnus", "gnorb-org",
 or "gnorb-bbdb".
 
+*Note for existing users*: Gnorb recently shifted to exclusively using
+the registry to track email TODOs, and this will require some
+configuration changes, please see [[id:5780bc9d-0756-4213-b805-2f9a2216fe15][Using Gnorb for Tracking Email TODOs]]
+below.
+
 Recommended keybindings/integration measures are shown below. Copy
 them into your init files and edit as you see fit.
 
@@ -27,20 +32,49 @@ they do one thing only, and (I hope) don't require anything special in
 terms of file formats or workflow. A few exceptions to that are listed
 below.
 ** Using Gnorb for Tracking Email TODOs
-Because we try to track email messages and related TODOs round-trip --
-incoming and outgoing under one TODO representing a conversation -- it
-works best if things match up at both ends. Specifically:
+:PROPERTIES:
+:ID:       5780bc9d-0756-4213-b805-2f9a2216fe15
+:END:
+
+Tracking correspondences between Org TODOs and email messages is one
+of the more complicated things that Gnorb does, and thus requires a
+little setup. Tracking relies on the Gnus registry, so that must be
+installed (ie you've called `gnus-registry-initialize' somewhere). It
+also relies on Org ids, so you'll want to require 'org-id, and set
+`org-id-track-globally' to t (that's the default anyway).
+
+Once that's done, call `gnorb-tracking-initialize' after loading
+Gnorb.
+
+In addition, Gnorb can provide the very useful service of opening nnir
+*Summary* buffers containing all the messages linked to from a given
+subtree, see [[id:89ec2ade-5686-402e-a23c-2af36325d1f3][Showing gnus messages from links in Org buffers]] below.
+
+NOTE: If you were using an earlier version of Gnorb that stored
+correspondences in Org properties, you can transition to the newer
+system with the function `gnorb-registry-transition-from-props'. See
+the docstring for details.
+
 *** Capture templates for emails
 Most people will be using plain capture templates to create TODOs from
-messages. You'll almost always want to save a link to the message, so
-you can get back to it later. Once the TODO is made, you can call
-`gnorb-org-handle-mail' on it, to look for message and mail links and
-automatically start a reply to the original message. The option
-`gnorb-org-mail-scan-strategies' determines how the TODO heading and
-its subtree are scanned for links -- see the docstring of that option.
+messages. When the TODO is made, Gnorb will record the connection
+between the message and the TODO, using the Gnus registry. Later, you
+can call `gnorb-org-handle-mail' on the TODO: Gnorb will find the
+associated message and start a reply to it.
 
-Your capture template should therefore put the link where
-`gnorb-org-handle-mail' can find it. Say your capture template looks
+If you've made a TODO that doesn't have any messages associated with
+it yet (for instance, a TODO reminding you to email someone), then
+Gnorb will look for gnus:, mailto:, or bbdb: links in the subtree, and
+act on them accordingly.
+
+The option `gnorb-org-mail-scan-scope' determines how many paragraphs
+of the subtree will be scanned for links. 0 means only the heading
+text, a positive integer means the heading plus that many paragraphs
+of body text, and any other non-nil value means the whole subtree will
+be scanned.
+
+Your capture templates should therefore put links where
+`gnorb-org-handle-mail' can find them. Say your capture template looks
 like this:
 
 #+BEGIN_SRC emacs-lisp
@@ -50,58 +84,51 @@ like this:
 
 #+END_SRC
 
-In this case, you'll want a scan strategy that looks at the first
-paragraph of body text.
+In this case, you'll want to set `gnorb-org-mail-scan-scope' to at
+least 1, to scan the first paragraph of body text.
+
+The same goes for "remind me to email so-and-so" TODOs. The mailto: or
+bbdb: link pointing at so-and-so should be located where
+`gnorb-org-handle-mail' can find it.
+
+In fact, you can use any Org TODO as a starting point for
+`gnorb-org-handle-mail'. Gnorb will do its best to find mail-related
+information from the subtree, but if it can't it will simply start
+composing a blank message. When the message is sent, it will be
+associated with the TODO.
 
 *** Tracking conversations
-It can be useful to use a single TODO heading to keep track of the
-salient points of an entire email back-and-forth conversation -- a
-business negotiation, for instance. You can do this by using TODO
-keywords that trigger state-change notes, and putting links to emails
-into those notes. That way, your logbook becomes a full record of the
-conversation.
+You can use Gnorb to remind you to reply to a message, to track
+extended email conversations, or to manage complex email-centric
+projects.
 
-For example, you might have two keywords, "REPLY" and "WAIT", which
-both trigger state-change notes. Say you call `gnorb-org-handle-mail'
-on a heading that's set to "REPLY", then send the email. You'll be
-returned to the heading and prompted to change its state. Change it to
-"WAIT" and leave a note.
+The principle is simple: Incoming and outgoing messages are all
+associated with an Org heading, or its sub-headings. Outgoing messages
+are created by calling `gnorb-org-handle-mail' on an Org TODO, which
+starts a reply or a new message, depending on the state of the TODO.
+Incoming messages are associated with TODOs by calling
+`gnorb-gnus-incoming-do-todo' on the message, and choosing the TODO.
 
-When you receive a reply to your sent email, call
-`gnorb-gnus-incoming-do-todo' on that message. You'll be taken back to
-the TODO, and again prompted to change its state. Change it to
-"REPLY", and again leave a note. Gnorb stores a link to the incoming
-message automatically, so insert the link into the note.
+In both cases, you'll be asked to "trigger an action" on the TODO in
+question. Actions including changing TODO state (and associating the
+message with the TODO), taking a note (and associating the message),
+just associating the message, and doing nothing at all. We're also
+planning trigger actions that will capture new headings as children or
+siblings of the original TODO, but that's not done yet. You can also
+provide your own actions.
 
-Now your TODO has a logdrawer with a link to the most
-recently-received email in the most recent state-change note. If
-`gnorb-org-mail-scan-state-changes' is set to 'first, then the next
-time you call `gnorb-org-handle-mail' on the heading, everything else
-will be disregarded in favor of replying to that most recent email.
-
-That way, you can use the paired keywords "REPLY" and "WAIT", and the
-paired functions `gnorb-org-handle-mail' and
-`gnorb-gnus-incoming-do-todo', to play a sort of email ping-pong.
-
-Of course you don't /have/ to use this sort of system, Gnorb just
-gives you the bits and pieces to put it together.
-
-PS: What if you receive an email that's relevant to a TODO, and just
-want to reply to it on the spot (ie, without going through the whole
-`gnorb-gnus-incoming-do-todo' and state-change rigmarole)? In that
-case, you can use `gnorb-gnus-outgoing-do-todo' on the reply as you're
-composing it (or right after you've sent it), and Gnorb will notice
-that it is part of an ongoing conversation. The only thing it
-(currently) won't do is automatically store a link to the message you
-just replied to, so if you want to put that into the conversation,
-you'll have to do it manually.
+In this way, a single TODO collects an entire conversation of emails.
+If you have subtrees as a part of the original TODO, each subtree has
+its own collection of emails, which are inherited by the parent. To
+view all these messages in a single Gnus *Summary* buffer, see [[id:89ec2ade-5686-402e-a23c-2af36325d1f3][Showing
+gnus messages from links in Org buffers]] below.
 *** Hinting in Gnus
 When you receive new mails that might be relevant to existing Org
 TODOs, Gnorb can alert you to that fact. When
 `gnorb-gnus-hint-relevant-article' is t (the default), Gnorb will
 display a message in the minibuffer when opening potentially relevant
-messages. You can then use `gnorb-gnus-incoming-to-todo' to act on
-them: usually triggering a state change on the relevant TODO.
+messages. You can then use `gnorb-gnus-incoming-to-todo' to trigger an
+action on the relevant TODO.
 
 This hinting can happen in the Gnus summary buffer as well. If you use
 the escape indicated by `gnorb-gnus-summary-mark-format-letter" as
@@ -111,28 +138,33 @@ as determined by `gnorb-gnus-summary-mark'. By default, the format
 letter is "g" (meaning it is used as "%ug" in the format line), and
 the mark is "¡".
 ** Showing gnus messages from links in Org buffers
-Sometimes you've got an Org subtree containing a bunch of Gnus links,
-and you'd like to see all those message in a single Gnus summary
-buffer. Gnorb can do this, but you'll have to add a new backend to
-your list of Gnus servers. If that makes your skin crawl a little, it
-probably should. But no fear! The server essentially does nothing but
-provide a place for nnir to hang searches.
+:PROPERTIES:
+:ID:       89ec2ade-5686-402e-a23c-2af36325d1f3
+:END:
+Sometimes you've got an Org subtree tracking many relevant Gnus
+messages, and you'd like to see all those message in a single Gnus
+summary buffer. Gnorb can do this, but you'll have to add a new
+backend to your list of Gnus servers. If that makes your skin crawl a
+little, it probably should. But no fear! The server essentially does
+nothing but provide a place for nnir to hang searches.
 
 Add an entry like this to your `gnus-secondary-select-methods':
 
 (nngnorb "Purely Decorative Server Name")
 
 And restart Gnus. Now, on any given Org subtree, you can call
-`gnorb-org-view', and you'll be presented with an nnir Summary
-buffer containing all the messages linked to within the subtree.
+`gnorb-org-view', and you'll be presented with an nnir Summary buffer
+containing all the messages connected to the subtree. If you reply to
+any messages from this buffer, your reply will also be tracked as part
+of the subtree.
 
-As a bonus, it's possible to go into Gnus' Server buffer, find the
+As a bonus, it's possible to go into Gnus' *Server* buffer, find the
 line specifying your nngnorb server, and hit "G" (aka
 `gnus-group-make-nnir-group'). At the query prompt, enter an Org-style
 tags-todo Agenda query string (eg "+work-computer", or what have you).
 Gnorb will find all headings matching this query, scan their subtrees
-for gnus links, and then give you a Summary buffer containing all
-the linked messages.
+for gnus links, and then give you a Summary buffer containing all the
+linked messages. This is dog-slow at the moment; it will get faster.
 ** Recent mails from BBDB contacts
 If you're using a recent git version of BBDB (circa mid-May 2014 or
 later), you can give your BBDB contacts a special field which will
@@ -148,7 +180,7 @@ message.
 Once some links are stored, `gnorb-bbdb-open-link' will open them: Use
 a prefix arg to the function call to select particular messages to
 open. There are several options controlling how all this works; see
-the gnorb-bbdb user-options section below for details.
+the gnorb-bbdb user options section below for details.
 ** BBDB posting styles
 Gnorb comes with a BBDB posting-style system, inspired by (copied
 from) gnus-posting-styles. You can specify how messages are composed

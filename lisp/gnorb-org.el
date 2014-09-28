@@ -46,112 +46,73 @@ org-todo regardless of TODO type."
   :group 'gnorb-org
   :type 'hook)
 
+(defcustom gnorb-org-trigger-actions
+  '(("todo state" . todo)
+    ("take note" . note)
+    ("don't associate" . no-associate)
+    ("only associate" . associate)
+;    ("capture to child" . cap-child)
+;    ("capture to sibling" . cap-sib)
+)
+  "List of potential actions that can be taken on headings.
+
+When triggering an Org heading after receiving or sending a
+message, this option lists the possible actions to take. Built-in
+actions include:
+
+todo state: Associate the message, and change TODO state.
+take note: Associate the message, and take a note.
+don't associate: Do nothing at all, don't connect the message and TODO.
+only associate: Associate the message with this heading, do nothing else.
+capture to child: [not yet implemented] Associate this message with a new child heading.
+capture to sibling: [not yet implemented] Associate this message with a new sibling heading.
+
+You can reorder this list or remove items as suits your workflow.
+The two \"capture\" options will use the value of
+`gnorb-gnus-new-todo-capture-key' to find the appropriate
+template.
+
+You can also add custom actions to the list. Actions should be a
+cons of a string tag and a symbol indicating a custom function.
+This function will be called on the heading in question, and
+passed a plist containing information about the message from
+which we're triggering."
+  :group 'gnorb-org
+  :type 'list)
+
 (defcustom gnorb-org-msg-id-key "GNORB_MSG_ID"
   "The name of the org property used to store the Message-IDs
-  from relevant messages."
+  from relevant messages. This is no longer used, and will be
+  removed soon."
   :group 'gnorb-org
   :type 'string)
 
-(defcustom gnorb-org-mail-scan-strategies
-  '(((:type state :scope first-link) 1)
-    (nil text)
-    offer)
-  "This option controls how `gnorb-org-handle-mail' scans the
-subtree under point for links, and what it does with the links it
-finds. It is a list of up to three elements, representing three
-different scanning strategies. The first is used when calling the
-function with no prefix arg; the second is used with a single
-\\[universal-argument], and the third with a double
-\\[universal-argument]. You can thus prepare different scanning
-strategies in advance, and choose whichever is appropriate.
+(defcustom gnorb-org-mail-scan-scope 2
+  "Number of paragraphs to scan for mail-related links.
 
-Each \"strategy\" will usually be a list of two items. The first
-item determines how the heading's state-change notes are scanned,
-the second item governs how the heading's body text is scanned.
-If the scan of the state notes produces usable links, the second
-item will be disregarded -- the rest of the heading won't be
-scanned at all. This is because, if you're responding to message
-links in the state-notes, they probably represent later messages
-in an ongoing conversation. If you want a particular strategy to
-always skip the state notes, just set the first item to nil.
-
-The state specification is an alist with two possible keys: :type
-and :scope. The :type key can be set to either 'state or 'note,
-which means the scanning process will only consider logdrawer
-items of one sort or the other. Setting the key to anything
-lese (or leaving it out) means both state-change notes and
-regular notes will be scanned. The :scope key controls how many
-items will be scanned. Set to a positive integer to scan that
-many items. The symbol 'first is a synonym for 1. The symbol
-'first-link means scan each state note until one containing links
-is found, and use only links from that item. The symbol 'all
-means scan all state notes.
-
-The second specification is used when the state-notes scan
-produces no results, or was skipped with a nil specification.
-This second item can be 0, meaning only scan the text of the
-heading itself; a positive integer, meaning scan that many
-paragraphs of body text; the symbol 'text, meaning scan the
-entire body text; or the symbol 'subtree, meaning scan the
-heading's text and all its subtrees.
-
-Instead of a two-value specification, a strategy can just be a
-single symbol: 'all will scan both the state notes and the body
-text, and 'offer will collect all the links in the entire subtree
-and pop up a buffer allowing the user to choose which links to
-act on [this is a lie, 'offer hasn't been implemented yet].
-
-Lastly, any of the elements can be a symbol representing a custom
-function. When placed in the state-log or body-text
-specifications, the function will be called in a temporary buffer
-containing only the text of the state-log drawer, or the body
-text, respectively. If the entire strategy is replaced by a
-function name, that function will be called with point at the
-beginning of the heading. Custom functions can use the internal
-function `gnorb-scan-links' to return the appropriate alist of
-links.
-
-If `gnorb-org-handle-mail' is called while the region is active,
-this variable will be disregarded entirely, and only the active
-region will be scanned for links. If you call
-`gnorb-org-handle-mail' with a prefix argument while the region
-is active, it will look for links everywhere _but_ the active
-region.
-
-If all that sounds confusing, consider the default value:
-
-'(((:type state :scope first-link) 1)
-  (nil text)
-  offer)
-
-With no prefix arg, `gnorb-org-handle-mail' will look into the
-logbook, and look at each state log item (skipping regular notes)
-until it finds a state log with links in it, then operate on all
-the links in that log item. If it finds nothing in the drawer, it
-will scan the text of the heading, and the first paragraph of
-body text.
-
-With one prefix arg, it will always ignore the state-change
-notes, instead scanning the heading and the entirety of its body
-text.
-
-With two prefix args, it will simply offer all the links in the
-subtree for selection.")
+When handling a TODO heading with `gnorb-org-handle-mail', Gnorb
+will typically reply to the most recent message associated with
+this heading. If there are no such messages, or message tracking
+is disabled entirely, or `gnorb-org-handle-mail' has been called
+with a prefix arg, the heading and body text of the subtree under
+point will instead be scanned for gnus:, mailto:, and bbdb:
+links. This option controls how many paragraphs of body text to
+scan. Set to 0 to only look in the heading.")
 
 (make-obsolete-variable
- 'gnorb-org-mail-scan-scope
- "This variable has been superseded by `gnorb-org-mail-scan-strategies'"
- "June 7, 2014" 'set)
+ 'gnorb-org-mail-scan-strategies
+ "This variable has been superseded by `gnorb-org-trigger-actions'"
+ "September 12, 2014" 'set)
 
 (make-obsolete-variable
  'gnorb-org-mail-scan-state-changes
- "This variable has been superseded by `gnorb-org-mail-scan-strategies'"
- "June 7, 2014" 'set)
+ "This variable has been superseded by `gnorb-org-trigger-actions'"
+ "September 12, 2014" 'set)
 
 (make-obsolete-variable
  'gnorb-org-mail-scan-function
- "This variable has been superseded by `gnorb-org-mail-scan-strategies'"
- "June 7, 2014" 'set)
+ "This variable has been superseded by `gnorb-org-trigger-actions'"
+ "September 12, 2014" 'set)
 
 (defcustom gnorb-org-find-candidates-match nil
   "When scanning all org files for heading related to an incoming
@@ -189,7 +150,7 @@ future!"
   "After an email is sent, clean up the gnus summary buffer, put
 us back where we came from, and go through all the org ids that
 might have been in the outgoing message's headers and call
-`gnorb-org-do-restore-action' on each one."
+`gnorb-trigger-todo-action' on each one."
   (when (eq major-mode 'gnus-summary-mode)
     (gnus-summary-exit nil t))
   (when (and (window-configuration-p gnorb-window-conf)
@@ -197,198 +158,114 @@ might have been in the outgoing message's headers and call
     (set-window-configuration gnorb-window-conf)
     (goto-char gnorb-return-marker))
   (dolist (id gnorb-message-org-ids)
-    (gnorb-trigger-todo-action nil id))
+    (gnorb-trigger-todo-action id))
   ;; this is a little unnecessary, but it may save grief
-  (setq gnorb-gnus-sending-message-info nil)
+  (setq gnorb-gnus-message-info nil)
   (setq gnorb-message-org-ids nil))
 
-(defun gnorb-org-extract-mail-stuff (strategy &optional region)
-  "Extract mail-related information from the current heading. How
-the heading is scanned depends on the value of
-`gnorb-org-mail-scan-strategies' -- STRATEGY represents an
-element chosen from that variable. If BOUNDS is non-nil, it
-should represent point and mark of the active region, and means
-STRATEGY will be disregarded."
-  (save-restriction
-    (org-narrow-to-subtree)
-    ;; first collect all the relevant bits of the subtree
-    (let* ((parsed (org-element-parse-buffer))
-	   (headline
-	    (org-element-map parsed 'headline 'identity nil t))
-	   (head-text (org-element-property :raw-value headline))
-	   (state-log
-	    (org-element-map parsed 'plain-list
-	      (lambda (l)
-		(when (org-element-map l 'paragraph
-			;; kludge to tell a state-log drawer list from
-			;; a regular old list.
-			(lambda (p)
-			  (string-match-p
-			   "\\(State \"\\|Note taken on\\)"
-			   (car (org-element-contents p)))) nil t)
-		  l)) nil t))
-	   (pars
-	    (org-element-map parsed 'paragraph
-	      (lambda (p)
-		(buffer-substring
-		 (org-element-property :contents-begin p)
-		 (org-element-property :contents-end p)))
-	      nil nil 'drawer))
-	   state-strategy text-strategy search-func
-	   strings state-success all-links)
-      (when (listp strategy)
-	(setq state-strategy (car strategy)
-	      text-strategy (nth 1 strategy)))
-      ;; Order of precedence is: active region beats custom function
-      ;; beats all-or-offer beats state-logs beats general text
-      ;; scan. First we check everything up to all-or-offer.
-      (unless
-	  (cond
-	   ((and region (eq 'reverse-region strategy))
-	    (setq strings
-		  ;; sure hope the region is contained within the
-		  ;; headline!
-		  (list
-		   (buffer-substring
-		    (point-min)
-		    (car region))
-		   (buffer-substring
-		    (cdr region)
-		    (point-max)))))
-	   (region
-	    (push (buffer-substring (car region) (cdr region))
-		  strings))
-	   ((and (symbolp strategy)
-		 (fboundp strategy))
-	    ;; user is responsible for finding links
-	    (setq strings
-		  (list
-		   (buffer-substring
-		    (point-min)
-		    (point-max))))
-	    (setq search-func strategy))
-	   ((eq strategy 'all)
-	    (setq strings
-		  (list
-		   (buffer-substring
-		    (point-min)
-		    (point-max)))))
-	   ((eq strategy 'offer)
-	    (user-error "Don't use 'offer, it's not done yet")))
-	;; The above produced nothing, so try first the
-	;; state-logs, then the body text
-	(when (and state-log state-strategy)
-	  (cond
-	   ((and (symbolp state-strategy)
-		 (fboundp state-strategy)
-		 (setq all-links
-		       (gnorb-org-find-links
-			(buffer-substring
-			 (org-element-property :begin state-log)
-			 (org-element-property :end state-log))
-			state-strategy))
-		 (setq state-success t)))
-	   ((listp state-strategy)
-	    (when (setq all-links
-			(gnorb-org-scan-log-notes
-			 state-log state-strategy))
-	      (setq state-success t)))
-	   (t
-	    (and (setq
-		  all-links
-		  (gnorb-org-find-links
-		   (buffer-substring
-		    (org-element-property :begin state-log)
-		    (org-element-property :end state-log))))
-		 (setq state-success t)))))
-	;; at last, we get to check the plain old text
-	(when (and (not state-success) text-strategy)
-	  (cond
-	   ((and (symbolp text-strategy)
-		 (fboundp text-strategy))
-	    (setq strings
-		  (cons
-		   head-text
-		   pars))
-	    (setq search-func text-strategy))
-	   ((eq 'text text-strategy)
-	    (setq strings
-		  (cons
-		   head-text
-		   pars)))
-	   ((eq 'subtree text-strategy)
-	    (setq strings
-		  (list
-		   head-text
-		   (buffer-substring-no-properties
-		    (org-element-map headline 'paragraph
-		      (lambda (p)
-			(org-element-property :begin p))
-		      nil t 'drawer)
-		    (point-max)))))
-	   ((integerp text-strategy)
-	    (setq strings
-		  (cons
-		   head-text
-		   (subseq pars 0 text-strategy)))))))
-      ;; return the links if we've got them, or find them in strings
-      (setq strings (delq nil strings))
-      (when (and strings (not all-links))
-	(setq all-links (gnorb-org-find-links strings search-func)))
-      all-links)))
-
-(defun gnorb-org-scan-log-notes (state-log strategy)
-  ;; `gnorb-org-extract-mail-stuff' was way too long already
-
-  ;; I've had a hell of a time just figuring out how to get the
-  ;; complete paragraph text out of a parsed paragraph.
-  (let ((type (plist-get strategy :type))
-	(scope (plist-get strategy :scope))
-	(rev (not org-log-states-order-reversed))
-	(par-texts (org-element-map state-log 'paragraph
-		     (lambda (p)
-		       (buffer-substring
-			(org-element-property :contents-begin p)
-			(org-element-property :contents-end p)))))
-	(note-match "Note taken on ")
-	(state-match "State \"")	; good enough?
-	(link-match "\\[\\[\\(gnus:\\|mailto:\\|bbdb:\\)")
-	(count 0)
-	candidates)
-    (when rev
-      (setq par-texts (nreverse par-texts)))
-    (when (eq scope 'first)
-      (setq scope 1))
-    (catch 'bail
-      (dolist (p par-texts)
-	(when (or (and (not (eq type 'state))
-		       (string-match-p note-match p))
-		  (and (not (eq type 'note))
-		       (string-match-p state-match p)))
-	  (incf count)
-	  (when (and (integerp scope)
-		     (>= count scope)))
-	  (when (string-match-p link-match p)
-	    (push p candidates)
-	    (when (eq scope 'first-link)
-	      (throw 'bail t))))))
-    (when candidates
-      (gnorb-org-find-links candidates))))
-
-(defun gnorb-org-find-links (strings &optional func)
-  "Do the actual check to see if there are viable links in the
-places we've decided to look."
-  (when strings
-    (when (not (listp strings))
-      (setq strings (list strings)))
-    (with-temp-buffer
-      (dolist (s strings)
-	(insert s)
-	(insert "\n"))
-      (goto-char (point-min))
-      (if func
-	  (funcall func (point-max))
+(defun gnorb-org-extract-links (&optional arg region)
+  "See if there are viable links in the subtree under point."
+  ;; We're not currently using the arg. What could we do with it?
+  (let (strings)
+    ;; If the region was active, only use the region
+    (if region
+	(push (buffer-substring (car region) (cdr region))
+	      strings)
+      ;; Otherwise collect the heading text, and all the paragraph
+      ;; text.
+      (save-restriction
+	(org-narrow-to-subtree)
+	(let ((head (org-element-at-point))
+	      (tree (org-element-parse-buffer)))
+	  (push (org-element-property
+		 :raw-value
+		 head)
+		strings)
+	  (org-element-map tree 'paragraph
+	    (lambda (p)
+	      ;; Don't select paragraphs from the LOGBOOK drawer. This
+	      ;; will actually skip over any list, but we'll refine
+	      ;; that later.
+	      (when (not (eq
+			  (org-element-type
+			   (org-element-property :parent p))
+			  'item))
+		;; Why is this so verbose?
+		(push
+		 (buffer-substring
+		  (org-element-property :contents-begin p)
+		  (org-element-property :contents-end p))
+		 strings)))))))
+    (when strings
+      ;; Limit number of paragraphs based on
+      ;; `gnorb-org-mail-scan-scope'
+      (setq strings
+	    (cond ((eq gnorb-org-mail-scan-scope 'all)
+		   strings)
+		  ((numberp gnorb-org-mail-scan-scope)
+		   (delq nil
+			 (subseq
+			  strings 0 (1+ gnorb-org-mail-scan-scope))))
+		  ;; We could provide more options here. 'tree vs
+		  ;; 'subtree, for instance.
+		  (t
+		   strings)))
+      (with-temp-buffer
+	(dolist (s strings)
+	  (insert s)
+	  (insert "\n"))
+	(goto-char (point-min))
 	(gnorb-scan-links (point-max) 'gnus 'mail 'bbdb)))))
+
+(defun gnorb-org-extract-mail-stuff (&optional arg region)
+  "Decide how to hande the Org heading under point as an email task.
+
+See the docstring of `gnorb-org-handle-mail' for details."
+  (if (or (not gnorb-tracking-enabled)
+	  region)
+      (gnorb-org-extract-links arg region)
+    ;; Get all the messages associated with the IDS in this subtree.
+    (let ((assoc-msg-ids
+	   (delete-dups
+	    (cl-mapcan
+	     (lambda (id)
+	       (gnorb-registry-org-id-search id))
+	     (gnorb-collect-ids)))))
+      (gnorb-org-extract-mail-tracking assoc-msg-ids arg region))))
+
+(defun gnorb-org-extract-mail-tracking (assoc-msg-ids &optional arg region)
+
+  (let* ((all-links (gnorb-org-extract-links nil region))
+	 ;; The latest (by the creation-time registry key) of all the
+	 ;; tracked messages that were not sent by our user.
+	 (latest-msg-id
+	  (when assoc-msg-ids
+	    (car
+	     (sort
+	      (remove-if
+	       (lambda (m)
+		 (let ((from (car (gnus-registry-get-id-key m 'sender))))
+		   (or (null from)
+		       (string-match-p
+			user-mail-address from)
+		       (string-match-p
+			message-alternative-emails from))))
+	       assoc-msg-ids)
+	      (lambda (r l)
+		(time-less-p
+		 (car (gnus-registry-get-id-key l 'creation-time))
+		 (car (gnus-registry-get-id-key r 'creation-time)))))))))
+    (cond
+     ;; If there are no tracked messages, or the user has specifically
+     ;; requested we ignore them with the prefix arg, just return the
+     ;; found links in the subtree.
+     ((or arg
+	  (null latest-msg-id))
+      all-links)
+     ;; Otherwise ignore the other links in the subtree, and return
+     ;; the latest message.
+     (latest-msg-id
+      `(:gnus ,(list (gnorb-msg-id-to-link latest-msg-id)))))))
 
 (defun gnorb-org-setup-message
     (&optional messages mails from cc bcc attachments text ids)
@@ -475,11 +352,14 @@ headings."
     (message-goto-to))
   (run-hooks 'gnorb-org-after-message-setup-hook))
 
-(defun gnorb-org-attachment-list ()
+(defun gnorb-org-attachment-list (&optional id)
   "Get a list of files (absolute filenames) attached to the
-current heading."
+current heading, or the heading indicated by optional argument ID."
   (when (featurep 'org-attach)
-    (let* ((attach-dir (org-attach-dir t))
+    (let* ((attach-dir (save-excursion
+			 (when id
+			   (org-id-goto id))
+			 (org-attach-dir t)))
 	   (files
 	    (mapcar
 	     (lambda (f)
@@ -489,12 +369,41 @@ current heading."
 
 ;;;###autoload
 (defun gnorb-org-handle-mail (&optional arg text file)
-  "Handle current headline as a mail TODO."
+  "Handle current headline as a mail TODO.
+
+How this function behaves depends on whether you're using Gnorb
+for email tracking, also on the prefix arg, and on the active
+region.
+
+If tracking is enabled and there is no prefix arg, Gnorb will
+begin a reply to the newest associated message that wasn't sent
+by the user -- ie, the Sender header doesn't match
+`user-mail-address' or `message-alternative-emails'.
+
+If tracking is enabled and there is a prefix arg, ignore the
+tracked messages and instead scan the subtree for mail-related
+links. This means links prefixed with gnus:, mailto:, or bbdb:.
+See `gnorb-org-mail-scan-scope' to limit the scope of this scan.
+Do something appropriate with the resulting links.
+
+With a double prefix arg, ignore all tracked messages and all
+links, and compose a blank new message.
+
+If tracking is enabled and you want to reply to a
+specific (earlier) message in the tracking history, use
+`gnorb-org-view' to open an nnir *Summary* buffer containing all
+the messages, and reply to the one you want. Your reply will be
+automatically tracked, as well.
+
+If tracking is not enabled and you want to use a specific link in
+the subtree as a basis for the email action, then put the region
+around that link before you call this message."
   (interactive "P")
   (setq gnorb-window-conf (current-window-configuration))
   (move-marker gnorb-return-marker (point))
   (when (eq major-mode 'org-agenda-mode)
-    (org-agenda-check-type t 'agenda 'timeline 'todo 'tags)
+    ;; If this is all the different types, we could skip the check.
+    (org-agenda-check-type t 'agenda 'timeline 'todo 'tags 'search)
     (org-agenda-check-no-diary)
     (let* ((marker (or (org-get-at-bol 'org-hd-marker)
 		       (org-agenda-error)))
@@ -503,28 +412,18 @@ current heading."
       (switch-to-buffer buffer)
       (widen)
       (goto-char pos)))
-  (let* ((region
-	  (when (use-region-p)
-	    (cons (region-beginning) (region-end))))
-	 ;; handle malformed values of `gnorb-org-mail-scan-strategies'
-	 (strategy (cond
-		    ((and region
-			  arg)
-		     'reverse-region)
-		    (region
-		     nil)
-		    ((null arg)
-		     (car gnorb-org-mail-scan-strategies))
-		    ((equal '(4) arg)
-		     (nth 1 gnorb-org-mail-scan-strategies))
-		    ((equal '(16) arg)
-		     (nth 2 gnorb-org-mail-scan-strategies)))))
+  (let ((region
+	 (when (use-region-p)
+	   (cons (region-beginning) (region-end)))))
     (deactivate-mark)
     (save-excursion
       (unless (org-back-to-heading t)
 	(error "Not in an org item"))
       (cl-flet ((mp (p) (org-entry-get (point) p t)))
-	(let* ((links (gnorb-org-extract-mail-stuff strategy region))
+	;; Double prefix means ignore everything and compose a blank
+	;; mail.
+	(let* ((links (unless (equal arg '(16))
+			(gnorb-org-extract-mail-stuff arg region)))
 	       (attachments (gnorb-org-attachment-list))
 	       (from (mp "MAIL_FROM"))
 	       (cc (mp "MAIL_CC"))
@@ -537,13 +436,13 @@ current heading."
 	    (cons file attachments))
 	  (when recs
 	    (setq recs
-		  (delete nil
-			  (mapcar
-			   (lambda (r)
-			     (car (bbdb-message-search
-				   (org-link-unescape r)
-				   nil)))
-			   recs))))
+		  (delq nil
+			(mapcar
+			 (lambda (r)
+			   (car (bbdb-message-search
+				 (org-link-unescape r)
+				 nil)))
+			 recs))))
 	  (when recs
 	    (dolist (r recs)
 	      (push (bbdb-mail-address r) mails)))
@@ -558,66 +457,6 @@ current heading."
 	   (append mails (plist-get links :mail))
 	   from cc bcc
 	   attachments text org-id))))))
-
-(defun gnorb-org-add-id-hash-entry (msg-id &optional marker)
-  (org-with-point-at (or marker (point))
-    (let ((old-val (gethash msg-id gnorb-msg-id-to-heading-table))
-	  (new-val (list
-		    (org-id-get-create)
-		    (append
-		     (list
-		      (file-name-nondirectory
-		       (buffer-file-name
-			(org-base-buffer (current-buffer)))))
-		     (org-get-outline-path)
-		     (list
-		      (org-no-properties
-		       (replace-regexp-in-string
-			org-bracket-link-regexp
-			"\\3"
-			(nth 4 (org-heading-components)))))))))
-      (unless (member (car new-val) old-val)
-	(puthash msg-id
-		 (if old-val
-		     (append (list new-val) old-val)
-		   (list new-val))
-		 gnorb-msg-id-to-heading-table)))))
-
-(defun gnorb-org-populate-id-hash ()
-  "Scan all agenda files for headings with the
-  `gnorb-org-msg-id-key' property, and construct a hash table of
-  message-ids as keys, and org headings as values -- actually
-  two-element lists representing the heading's id and outline
-  path."
-  ;; where are all the places where we might conceivably want to
-  ;; refresh this?
-  (interactive)
-  (setq gnorb-msg-id-to-heading-table
-	(make-hash-table
-	 :test 'equal :size 100))
-  (let (props)
-    (org-map-entries
-     (lambda ()
-       (setq props
-	     (org-entry-get-multivalued-property
-	      (point) gnorb-org-msg-id-key))
-       (dolist (p props)
-	 (gnorb-org-add-id-hash-entry p)))
-     gnorb-org-find-candidates-match
-     'agenda 'archive 'comment)))
-
-(defun gnorb-org-find-visit-candidates (ids)
-  "For all message-ids in IDS (which should be a list of
-Message-ID strings, with angle brackets), produce a list of Org
-ids (and ol-paths) for headings that contain one of those id
-values in their `gnorb-org-org-msg-id-key' property."
-  (let (ret-val sub-val)
-    (unless gnorb-msg-id-to-heading-table
-      (gnorb-org-populate-id-hash))
-    (dolist (id ids)
-      (when (setq sub-val (gethash id gnorb-msg-id-to-heading-table))
-	(setq ret-val (append sub-val ret-val))))
-    ret-val))
 
 ;;; Email subtree
 
