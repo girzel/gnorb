@@ -158,7 +158,7 @@ might have been in the outgoing message's headers and call
     (set-window-configuration gnorb-window-conf)
     (goto-char gnorb-return-marker))
   (dolist (id gnorb-message-org-ids)
-    (gnorb-trigger-todo-action id))
+    (gnorb-trigger-todo-action nil id))
   ;; this is a little unnecessary, but it may save grief
   (setq gnorb-gnus-message-info nil)
   (setq gnorb-message-org-ids nil))
