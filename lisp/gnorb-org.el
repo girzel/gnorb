@@ -151,13 +151,9 @@ future!"
 us back where we came from, and go through all the org ids that
 might have been in the outgoing message's headers and call
 `gnorb-trigger-todo-action' on each one."
-  (when (eq major-mode 'gnus-summary-mode)
-    (gnus-summary-exit nil t))
-  (when (and (window-configuration-p gnorb-window-conf)
-	     gnorb-return-marker)
-    (set-window-configuration gnorb-window-conf)
-    (goto-char gnorb-return-marker))
+  (delete-other-windows)
   (dolist (id gnorb-message-org-ids)
+    (org-id-goto id)
     (gnorb-trigger-todo-action nil id))
   ;; this is a little unnecessary, but it may save grief
   (setq gnorb-gnus-message-info nil)
