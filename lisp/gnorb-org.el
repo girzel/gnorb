@@ -179,16 +179,9 @@ might have been in the outgoing message's headers and call
 		strings)
 	  (org-element-map tree 'paragraph
 	    (lambda (p)
-	      ;; Don't select paragraphs from the LOGBOOK drawer. This
-	      ;; will actually skip over any list, but we'll refine
-	      ;; that later.
-	      (when (not (eq
-			  (org-element-type
-			   (org-element-property :parent p))
-			  'item))
-		(push
-		 (org-element-interpret-data p)
-		 strings)))))))
+	      (push (org-element-interpret-data p)
+		    strings))
+	    nil nil 'drawer))))
     (when strings
       ;; Limit number of paragraphs based on
       ;; `gnorb-org-mail-scan-scope'
