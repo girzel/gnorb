@@ -186,11 +186,8 @@ might have been in the outgoing message's headers and call
 			  (org-element-type
 			   (org-element-property :parent p))
 			  'item))
-		;; Why is this so verbose?
 		(push
-		 (buffer-substring
-		  (org-element-property :contents-begin p)
-		  (org-element-property :contents-end p))
+		 (org-element-interpret-data p)
 		 strings)))))))
     (when strings
       ;; Limit number of paragraphs based on
