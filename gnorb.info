@@ -1,0 +1,701 @@
+This is gnorb.info, produced by makeinfo version 5.2 from gnorb.texi.
+
+INFO-DIR-SECTION Emacs
+START-INFO-DIR-ENTRY
+* Gnorb: (gnorb).       Glue code for Gnus, Org, and BBDB.
+END-INFO-DIR-ENTRY
+
+
+File: gnorb.info,  Node: Top,  Next: Introduction,  Up: (dir)
+
+Gnorb Manual
+************
+
+* Menu:
+
+* Introduction::
+* Installation::
+* Setup::
+* Email Tracking::
+* Restoring Window Layout::
+* Recent Mails From BBDB Contacts::
+* BBDB posting styles::
+* BBDB Org tagging::
+* Misc BBDB::
+* Misc Org::
+* Misc Gnus::
+* Suggested Keybindings::
+* Wishlist/TODO::
+* Index::
+
+— The Detailed Node Listing —
+
+Email Tracking
+
+* Email-Related Commands::
+* Trigger Actions::
+* Viewing Tracked Messages in *Summary* Buffers::
+* Hinting in Gnus::
+* Message Attachments::
+
+Misc BBDB
+
+* Searching for messages from BBDB contacts::
+* Citing BBDB contacts::
+* User Options::
+
+Misc Org
+
+* Inserting BBDB links::
+* User Options: User Optionsx. 
+
+Misc Gnus
+
+* Viewing Org headlines relevant to a message::
+* User Options: User Optionsxx. 
+
+
+File: gnorb.info,  Node: Introduction,  Next: Installation,  Prev: Top,  Up: Top
+
+1 Introduction
+**************
+
+Gnorb provides glue code between the Gnus, Org, and BBDB packages.  It’s
+aimed at supporting email-based project management, and generally making
+it easier to keep track of email communication.
+
+   Much of the code consists of single-use convenience functions, but
+tracking email conversations with Org requires is more complicated, and
+requires a bit of setup.
+
+   Gnorb can be used in a modular fashion, by selectively loading the
+files “gnorb-org”, “gnorb-gnus” or “gnorb-bbdb” instead of plain old
+“gnorb”.  The package as a whole is rather Org-centric, though, and it
+won’t do much of interest without “gnorb-org”.
+
+   This means that Gnorb doesn’t have hard requirements to any of the
+three base libraries.  For the libraries you are using, however, you’ll
+get best results from using the most recent stable version (yes, that
+means BBDB 3).  Some of the features in Gnorb only work with development
+versions of these libraries (those cases are noted below).
+
+
+File: gnorb.info,  Node: Installation,  Next: Setup,  Prev: Introduction,  Up: Top
+
+2 Installation
+**************
+
+Gnorb is best installed via the Elpa package manager – look for it in
+‘list-packages’.
+
+   You can also clone the source code from
+<https://github.com/girzel/gnorb>, and put the “gnorb” directory on your
+load-path.  The Github site is also a good place to report bugs and
+other issues.
+
+
+File: gnorb.info,  Node: Setup,  Next: Email Tracking,  Prev: Installation,  Up: Top
+
+3 Setup
+*******
+
+Loading “gnorb” will make the basic functions available.  Using Gnorb
+for email tracking takes a bit more setup, however:
+
+  1. Email tracking is done via the Gnus registry, so that must be
+     activated with ‘gnus-registry-initialize’.
+  2. It also requires the org-id package to be loaded, and
+     ‘org-id-track-globally’ set to t (that’s the default value, so
+     simply loading the package should be enough).
+  3. Add a nngnorb entry to your ‘gnus-secondary-select-methods’
+     variable.  It will look like (nngnorb “Server name”).  This does
+     nothing but provide a place to hang nnir searches.
+  4. Then put a call to ‘gnorb-tracking-initialize’ in your init files,
+     at some point after the Gnus registry is initialized.
+  5. If you’re not using a local archive method for saving your sent
+     messages (ie you’re using IMAP), you’ll also need to tell Gnorb
+     where to find your sent messages.  Set the variable
+     ‘gnorb-gnus-sent-groups’ to a list of strings; each string should
+     indicate a fully-qualified group name, eg “nnimap+SERVER:GROUP”.
+
+   Lastly, Gnorb doesn’t bind any keys by default; see the *note
+Suggested Keybindings: Suggested Keybindings. section below for
+possibilities.
+
+
+File: gnorb.info,  Node: Email Tracking,  Next: Restoring Window Layout,  Prev: Setup,  Up: Top
+
+4 Email Tracking
+****************
+
+The most interesting thing Gnorb does is using Org headings to track
+email conversations.  This can mean anything from reminding yourself to
+write to your mother, to conducting delicate business negotiations over
+email, to running an email-based bug tracker.
+
+   Gnorb assists in this process by using the Gnus registry to track
+correspondences between emails and Org headings – specifically, message
+IDs are associated with Org heading ids.  As a conversation develops,
+messages are collected on a heading (and/or its children).  You can
+compose new messages directly from the Org heading, and Gnorb will
+automatically associate your sent message with the conversation.  You
+can open temporary Gnus *Summary* buffers holding all the messages
+associated with an Org subtree, and reply from there.  When you receive
+new messages relevant to a conversation, Gnorb will notice them and
+prompt you to associate them with the appropriate Org heading.
+Attachments on incoming messages can be automatically saved as
+attachments on Org headings, using org-attach.
+
+   In general, the goal is to keep track of whole conversations, reduce
+friction when moving between Gnus and Org, and keep you in the Org
+agenda rather than in Gnus.
+* Menu:
+
+* Email-Related Commands::
+* Trigger Actions::
+* Viewing Tracked Messages in *Summary* Buffers::
+* Hinting in Gnus::
+* Message Attachments::
+
+
+File: gnorb.info,  Node: Email-Related Commands,  Next: Trigger Actions,  Up: Email Tracking
+
+4.1 Email-Related Commands
+==========================
+
+Email tracking starts in one of three ways:
+
+  1. With an Org heading that represents an email TODO. Call
+     ‘gnorb-org-handle-mail’ (see below) on the heading to compose a new
+     message, and start the tracking process.
+  2. By calling org-capture on a received message.  Any heading captured
+     from a message will automatically be associated with that message.
+  3. By calling ‘gnorb-gnus-outgoing-do-todo’ in a message composition
+     buffer – see below.
+
+   There are three main email-related commands:
+
+  1. ‘gnorb-org-handle-mail’ is called on an Org heading to compose a
+     new message.  By default, this will begin a reply to the most
+     recent message in the conversation.  If there are no associated
+     messages to reply to (or you call the function with a double prefix
+     arg), Gnorb will look for mailto: or bbdb: links in the heading,
+     and compose a new message to them.
+
+     The sent message will be associated with the Org heading, and
+     you’ll be brought back to the heading and asked to trigger an
+     action on it.
+
+     ‘gnorb-email-subtree’ is an alternative entry-point to
+     ‘gnorb-org-handle-mail’.  It does the same thing as the latter, but
+     first exports the body of the subtree as either text or a file,
+     then inserts the text into the message body, or attaches the file
+     to the message, depending on what you’ve chosen.
+  2. ‘gnorb-gnus-incoming-do-todo’ is called on a message in a Gnus
+     *Summary* buffer.  You’ll be prompted for an Org heading, taken to
+     that heading, and asked to trigger an action on it.
+  3. ‘gnorb-gnus-outgoing-do-todo’ is called in message mode, while
+     composing a new message.
+
+     If called without a prefix arg, a new Org heading will be created
+     after the message is sent, and the sent message associated with it.
+     The new heading will be created as a capture heading, using the
+     template specified by the ‘gnorb-gnus-new-todo-capture-key’ option.
+
+     If you call this function with a prefix arg, you’ll be prompted to
+     choose an existing Org heading instead.  After the the message is
+     sent, you’ll be taken to that heading and prompted to trigger an
+     action on it.
+
+     It’s also possible to call this function *after* a message is sent,
+     in case you forgot.  Gnorb saves information about the most
+     recently sent message for this purpose.
+
+   Because these three commands all express a similar intent, but are
+called in different modes, it can make sense to give each of them the
+same keybinding in the keymaps for Org mode, Gnus summary mode, and
+Message mode, respectively.
+
+
+File: gnorb.info,  Node: Trigger Actions,  Next: Viewing Tracked Messages in *Summary* Buffers,  Prev: Email-Related Commands,  Up: Email Tracking
+
+4.2 Trigger Actions
+===================
+
+After calling ‘gnorb-gnus-incoming-do-todo’ on a message, or after
+sending a message associated with an Org heading, you’ll be taken to the
+heading and asked to “trigger an action” on it.  At the moment there are
+four different possibilities: triggering a TODO state-change on the
+heading, taking a note on the heading (both these options will associate
+the message with the heading), associating the message but doing nothing
+else, and lastly, doing nothing at all.
+
+   More actions will be added in the future; it’s also possible to add
+your own action: see the docstring of ‘gnorb-org-trigger-actions’.
+
+
+File: gnorb.info,  Node: Viewing Tracked Messages in *Summary* Buffers,  Next: Hinting in Gnus,  Prev: Trigger Actions,  Up: Email Tracking
+
+4.3 Viewing Tracked Messages in *Summary* Buffers
+=================================================
+
+Call ‘gnorb-org-view’ on an Org heading to open an nnir *Summary* buffer
+showing all the messages associated with that heading (this requires
+that you’ve added an nngnorb server to your Gnus backends).  A minor
+mode will be in effect, ensuring that any replies you send to messages
+in this buffer will automatically be associated with the original Org
+heading.  You can also invoke ‘gnorb-summary-disassociate-message’ (“C-c
+d”) to disassociate the message with the Org heading.
+
+   As a bonus, it’s possible to go into Gnus’ *Server* buffer, find the
+line specifying your nngnorb server, and hit “G” (aka
+‘gnus-group-make-nnir-group’).  At the query prompt, enter an Org-style
+tags-todo Agenda query string (eg “+work-computer”, or what have you).
+Gnorb will find all headings matching this query, scan their subtrees
+for gnus links, and then give you a Summary buffer containing all the
+linked messages.  This is dog-slow at the moment; it will get faster.
+
+
+File: gnorb.info,  Node: Hinting in Gnus,  Next: Message Attachments,  Prev: Viewing Tracked Messages in *Summary* Buffers,  Up: Email Tracking
+
+4.4 Hinting in Gnus
+===================
+
+When you receive new mails that might be relevant to existing Org TODOs,
+Gnorb can alert you to that fact.  When
+‘gnorb-gnus-hint-relevant-article’ is t (the default), Gnorb will
+display a message in the minibuffer when opening potentially relevant
+messages.  You can then use ‘gnorb-gnus-incoming-to-todo’ to trigger an
+action on the relevant TODO.
+
+   This hinting can happen in the Gnus summary buffer as well.  If you
+use the escape indicated by ‘gnorb-gnus-summary-mark-format-letter” as
+part of your ‘gnus-summary-line-format’, articles that are relevant to
+TODOs will be marked with a special character in the Summary buffer, as
+determined by ‘gnorb-gnus-summary-mark’.  By default, the format letter
+is “g” (meaning it is used as “%ug” in the format line), and the mark is
+“¡”.
+
+
+File: gnorb.info,  Node: Message Attachments,  Prev: Hinting in Gnus,  Up: Email Tracking
+
+4.5 Message Attachments
+=======================
+
+Gnorb simplifies the handling of attachments that you receive in emails.
+When you call ‘gnorb-gnus-incoming-do-todo’ on a message, you’ll be
+prompted to re-attach the email’s attachments onto the Org heading,
+using the org-attach library.
+
+   You can also do this as part of the capture process.  Set the new
+:gnus-attachments key to “t” in a capture template that you use on mail
+messages, and you’ll be queried to re-attach the message’s attachments
+onto the newly-captured heading.  Or set
+‘gnorb-gnus-capture-always-attach’ to “t” to have Gnorb do this for all
+capture templates.
+
+   You can also do this using the regular system of MIME commands,
+without invoking the email tracking process.  See *note Suggested
+Keybindings: Suggested Keybindings, below.
+
+   The same process works in reverse: when you send a message from an
+Org heading using ‘gnorb-org-handle-mail’, Gnorb will ask if you want to
+attach the files in the heading’s org-attach directory to the outgoing
+message.
+
+
+File: gnorb.info,  Node: Restoring Window Layout,  Next: Recent Mails From BBDB Contacts,  Prev: Email Tracking,  Up: Top
+
+5 Restoring Window Layout
+*************************
+
+Many Gnorb functions alter the window layout and value of point.  In
+most of these cases, you can restore the previous layout using the
+interactive function ‘gnorb-restore-layout’.
+
+
+File: gnorb.info,  Node: Recent Mails From BBDB Contacts,  Next: BBDB posting styles,  Prev: Restoring Window Layout,  Up: Top
+
+6 Recent Mails From BBDB Contacts
+*********************************
+
+If you’re using a recent git version of BBDB (circa mid-May 2014 or
+later), you can give your BBDB contacts a special field which will
+collect links to recent emails from that contact.  The default name of
+the field is “messages”, but you can customize that name using the
+‘gnorb-bbdb-messages-field’ option.
+
+   Gnorb will not collect links by default: you need to call
+‘gnorb-bbdb-open-link’ on a contact once to start the process.
+Thereafter, opening mails from that contact will store a link to the
+message.
+
+   Once some links are stored, ‘gnorb-bbdb-open-link’ will open them:
+Use a prefix arg to the function call to select particular messages to
+open.  There are several options controlling how all this works; see the
+gnorb-bbdb user options section below for details.
+
+
+File: gnorb.info,  Node: BBDB posting styles,  Next: BBDB Org tagging,  Prev: Recent Mails From BBDB Contacts,  Up: Top
+
+7 BBDB posting styles
+*********************
+
+Gnorb comes with a BBDB posting-style system, inspired by (copied from)
+gnus-posting-styles.  You can specify how messages are composed to
+specific contacts, by matching on contact field values (the same way
+gnus-posting-styles matches on group names).  See the docstring of
+‘gnorb-bbdb-posting-styles’ for details.
+
+   In order not to be too intrusive, Gnorb doesn’t alter the behavior of
+‘bbdb-mail’, the usual mail-composition function.  Instead it provides
+an alternate ‘gnorb-bbdb-mail’, which does exactly the same thing, but
+first processes the new mail according to ‘gnorb-bbdb-posting-styles’.
+If you want to use this feature regularly, you can remap ‘bbdb-mail’ to
+‘gnorb-bbdb-mail’ in the ‘bbdb-mode-map’.
+
+
+File: gnorb.info,  Node: BBDB Org tagging,  Next: Misc BBDB,  Prev: BBDB posting styles,  Up: Top
+
+8 BBDB Org tagging
+******************
+
+BBDB contacts can be tagged with the same tags you use in your Org
+files.  This allows you to pop up a *BBDB* buffer alongside your Org
+Agenda when searching for certain tags.  This can happen automatically
+for all Org tags-todo searches, if you set the option
+‘gnorb-org-agenda-popup-bbdb’ to t.  Or you can do it manually, by
+calling the command of the same name.  This command only shows TODOs by
+default: use a prefix argument to show all tagged headings.
+
+   Tags are stored in an xfield named org-tags, by default.  You can
+customize the name of this field using ‘gnorb-bbdb-org-tag-field’.
+
+
+File: gnorb.info,  Node: Misc BBDB,  Next: Misc Org,  Prev: BBDB Org tagging,  Up: Top
+
+9 Misc BBDB
+***********
+
+* Menu:
+
+* Searching for messages from BBDB contacts::
+* Citing BBDB contacts::
+* User Options::
+
+
+File: gnorb.info,  Node: Searching for messages from BBDB contacts,  Next: Citing BBDB contacts,  Up: Misc BBDB
+
+9.1 Searching for messages from BBDB contacts
+=============================================
+
+Call ‘gnorb-bbdb-mail-search’ to search for all mail messages from the
+record(s) displayed.  Currently supports the notmuch, mairix, and namazu
+search backends; set ‘gnorb-gnus-mail-search-backend’ to one of those
+symbol values.
+
+
+File: gnorb.info,  Node: Citing BBDB contacts,  Next: User Options,  Prev: Searching for messages from BBDB contacts,  Up: Misc BBDB
+
+9.2 Citing BBDB contacts
+========================
+
+Calling ‘gnorb-bbdb-cite-contact’ will prompt for a BBDB record and
+insert a string of the type “Bob Smith <bob@smith.com>”.
+
+
+File: gnorb.info,  Node: User Options,  Prev: Citing BBDB contacts,  Up: Misc BBDB
+
+9.3 User Options
+================
+
+‘`gnorb-bbdb-org-tag-field’
+     The name of the BBDB xfield, as a symbol, that holds Org-related
+     tags.  Specified as a string with the “:” separator between tags,
+     same as for Org headings.  Defaults to org-tag.
+‘`gnorb-bbdb-messages-field'’
+     The name of the BBDB xfield that holds links to recently-received
+     messages from this contact.  Defaults to ‘messages.
+‘`gnorb-bbdb-collect-N-messages'’
+     Collect at most this many links to messages from this contact.
+     Defaults to 5.
+‘`gnorb-bbdb-define-recent'’
+     What does “recently-received” mean?  Possible values are the
+     symbols seen and received.  When set to seen, the most
+     recently-opened messages are collected.  When set to received, the
+     most recently-received (by Date header) messages are collected.
+     Defaults to seen.
+‘`gnorb-bbdb-message-link-format-multi'’
+     How is a single message’s link formatted in the multi-line BBDB
+     layout format?  Defaults to “%:count.  %D: %:subject” (see the
+     docstring for details).
+‘` gnorb-bbdb-message-link-format-one'’
+     How is a single message’s link formatted in the one-line BBDB
+     layout format?  Defaults to nil (see the docstring for details).
+‘`gnorb-bbdb-posting-styles'’
+     Styles to use for influencing the format of mails composed to the
+     BBDB record(s) under point (see the docstring for details).
+
+
+File: gnorb.info,  Node: Misc Org,  Next: Misc Gnus,  Prev: Misc BBDB,  Up: Top
+
+10 Misc Org
+***********
+
+* Menu:
+
+* Inserting BBDB links::
+* User Options: User Optionsx. 
+
+
+File: gnorb.info,  Node: Inserting BBDB links,  Next: User Optionsx,  Up: Misc Org
+
+10.1 Inserting BBDB links
+=========================
+
+Calling ‘gnorb-org-contact-link’ will prompt for a BBDB record and
+insert an Org link to that record at point.
+
+
+File: gnorb.info,  Node: User Optionsx,  Prev: Inserting BBDB links,  Up: Misc Org
+
+10.2 User Options
+=================
+
+‘`gnorb-org-after-message-setup-hook'’
+     Hook run in a message buffer after setting up the message, from
+     ‘gnorb-org-handle-mail’ or ‘gnorb-org-email-subtree’.
+‘`gnorb-org-trigger-actions'’
+     List of potential actions that can be taken on headings after a
+     message is sent.  See docstring for details.
+‘`gnorb-org-mail-scan-scope'’
+     The number of paragraphs to scan for mail-related links.  This
+     comes into play when calling ‘gnorb-org-handle-mail’ on a heading
+     with no associated messages, or when ‘gnorb-org-handle-mail’ is
+     called with a prefix arg.
+‘`gnorb-org-find-candidates-match'’
+     When searching all Org files for headings to collect messages from,
+     this option can limit which headings are searched.  It is used as
+     the second argument to a call to ‘org-map-entries’, and has the
+     same syntax as that used in an agenda tags view.
+‘`gnorb-org-email-subtree-text-parameters'’
+     A plist of export parameters corresponding to the EXT-PLIST
+     argument to the export functions, for use when exporting to text.
+‘`gnorb-org-email-subtree-file-parameters'’
+     A plist of export parameters corresponding to the EXT-PLIST
+     argument to the export functions, for use when exporting to a file.
+‘`gnorb-org-email-subtree-text-options'’
+     A list of ts and nils corresponding to Org’s export options, to be
+     used when exporting to text.  The options, in order, are async,
+     subtreep, visible-only, and body-only.
+‘`gnorb-org-email-subtree-file-options'’
+     A list of ts and nils corresponding to Org’s export options, to be
+     used when exporting to a file.  The options, in order, are async,
+     subtreep, visible-only, and body-only.
+‘`gnorb-org-export-extensions'’
+     Correspondence between export backends and their respective (usual)
+     file extensions.
+‘`gnorb-org-capture-collect-link-p'’
+     When this is set to t, the capture process will always store a link
+     to the Gnus message or BBDB record under point, even when the link
+     isn’t part of the capture template.  It can then be added to the
+     captured heading with org-insert-link, as usual.
+‘`gnorb-org-agenda-popup-bbdb'’
+     Set to “t” to automatically pop up the BBDB buffer displaying
+     records corresponding to the Org Agenda tags search underway.  If
+     this is nil you can always do it manually with the command of the
+     same name.
+‘`gnorb-org-bbdb-popup-layout'’
+     Controls the layout of the Agenda-related BBDB popup, takes the
+     same values as bbdb-pop-up-layout.
+
+
+File: gnorb.info,  Node: Misc Gnus,  Next: Suggested Keybindings,  Prev: Misc Org,  Up: Top
+
+11 Misc Gnus
+************
+
+* Menu:
+
+* Viewing Org headlines relevant to a message::
+* User Options: User Optionsxx. 
+
+
+File: gnorb.info,  Node: Viewing Org headlines relevant to a message,  Next: User Optionsxx,  Up: Misc Gnus
+
+11.1 Viewing Org headlines relevant to a message
+================================================
+
+Call ‘gnorb-gnus-view’ on a message that is associated with an Org
+heading to jump to that heading.
+
+
+File: gnorb.info,  Node: User Optionsxx,  Prev: Viewing Org headlines relevant to a message,  Up: Misc Gnus
+
+11.2 User Options
+=================
+
+‘`gnorb-gnus-mail-search-backend'’
+     Specifies the search backend that you use for searching mails.
+     Currently supports notmuch, mairix, and namazu: set this option to
+     one of those symbols.
+‘`gnorb-gnus-capture-always-attach'’
+     Treat all capture templates as if they had the :gnus-attachments
+     key set to “t”.  This only has any effect if you’re capturing from
+     a Gnus summary or article buffer.
+‘`gnorb-trigger-todo-default'’
+     Set to either ‘note or ‘todo to tell ‘gnorb-gnus-incoming-do-todo’
+     what to do by default.  You can reach the non-default behavior by
+     calling that function with a prefix argument.  Alternately, set to
+     ‘prompt to always prompt for the appropriate action.
+‘`gnorb-gnus-trigger-refile-targets'’
+     If you use ‘gnorb-gnus-incoming-do-todo’ on an incoming message,
+     Gnorb will try to locate a TODO heading that’s relevant to that
+     message.  If it can’t, it will prompt you for one, using the refile
+     interface.  This option will be used as the value of
+     ‘org-refile-targets’ during that process: see the docstring of
+     ‘org-refile-targets’ for the appropriate syntax.
+‘`gnorb-gnus-new-todo-capture-key'’
+     Set this to a single-character string pointing at an Org capture
+     template to use when creating TODOs from outgoing messages.  The
+     template is a regular capture template, with a few exceptions.  If
+     Gnus helps you archive outgoing messages (ie you have
+     ‘gnus-message-archive-group’ set to something, and your outgoing
+     messages have a “Fcc” header), a link to that message will be made,
+     and you’ll be able to use all the escapes related to gnus messages.
+     If you don’t archive outgoing messages, you’ll still be able to use
+     the %:subject, %:to, %:toname, %:toaddress, and %:date escapes in
+     the capture template.
+‘`gnorb-gnus-hint-relevant-article'’
+     Set to “t” (the default) to have Gnorb give you a hint in the
+     minibuffer when opening messages that might be relevant to existing
+     Org TODOs.
+‘`gnorb-gnus-summary-mark-format-letter'’
+     The formatting letter to use as part of your
+     ‘gnus-summary-line-format’, to indicate messages which might be
+     relevant to Org TODOs.  Defaults to “g”, meaning it should be used
+     as “%ug” in the format line.
+‘`gnorb-gnus-summary-mark'’
+     The mark used to indicate relevant messages in the Summary buffer,
+     when ‘gnorb-gnus-summary-mark-format-letter’ is present in the
+     format line.  Defaults to “¡”.
+
+
+File: gnorb.info,  Node: Suggested Keybindings,  Next: Wishlist/TODO,  Prev: Misc Gnus,  Up: Top
+
+12 Suggested Keybindings
+************************
+
+     (eval-after-load "gnorb-bbdb"
+       '(progn
+          (define-key bbdb-mode-map (kbd "O") 'gnorb-bbdb-tag-agenda)
+          (define-key bbdb-mode-map (kbd "S") 'gnorb-bbdb-mail-search)
+          (define-key bbdb-mode-map [remap bbdb-mail] 'gnorb-bbdb-mail)
+          (define-key bbdb-mode-map (kbd "l") 'gnorb-bbdb-open-link)
+          (global-set-key (kbd "C-c C") 'gnorb-bbdb-cite-contact)))
+
+     (eval-after-load "gnorb-org"
+       '(progn
+          (org-defkey org-mode-map (kbd "C-c C") 'gnorb-org-contact-link)
+          (org-defkey org-mode-map (kbd "C-c t") 'gnorb-org-handle-mail)
+          (org-defkey org-mode-map (kbd "C-c e") 'gnorb-org-view)
+          (org-defkey org-mode-map (kbd "C-c E") 'gnorb-org-email-subtree)
+          (org-defkey org-mode-map (kbd "C-c V") 'gnorb-org-popup-bbdb)
+          (setq gnorb-org-agenda-popup-bbdb t)
+          (eval-after-load "org-agenda"
+            '(progn (org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail)
+                    (org-defkey org-agenda-mode-map (kbd "V") 'gnorb-org-popup-bbdb)))))
+
+     (eval-after-load "gnorb-gnus"
+       '(progn
+          (define-key gnus-summary-mime-map "a" 'gnorb-gnus-article-org-attach)
+          (define-key gnus-summary-mode-map (kbd "C-c t") 'gnorb-gnus-incoming-do-todo)
+          (push '("attach to org heading" . gnorb-gnus-mime-org-attach)
+                gnus-mime-action-alist)
+          ;; The only way to add mime button command keys is by redefining
+          ;; gnus-mime-button-map, possibly not ideal. Ideal would be a
+          ;; setter function in gnus itself.
+          (push '(gnorb-gnus-mime-org-attach "a" "Attach to Org heading")
+                gnus-mime-button-commands)
+          (setq gnus-mime-button-map
+                (let ((map (make-sparse-keymap)))
+                  (define-key map gnus-mouse-2 'gnus-article-push-button)
+                  (define-key map gnus-down-mouse-3 'gnus-mime-button-menu)
+                  (dolist (c gnus-mime-button-commands)
+                    (define-key map (cadr c) (car c)))
+                  map))))
+
+     (eval-after-load "message"
+       '(progn
+          (define-key message-mode-map (kbd "C-c t") 'gnorb-gnus-outgoing-do-todo)))
+
+
+File: gnorb.info,  Node: Wishlist/TODO,  Next: Index,  Prev: Suggested Keybindings,  Up: Top
+
+13 Wishlist/TODO
+****************
+
+   • Provide a command that, when in the Org Agenda, does an email
+     search for messages received in the visible date span, or day under
+     point, etc.  Make it work in the calendar, as well?
+   • Add trigger actions that create new sibling or child headings on
+     the original Org heading.
+   • Allow tagging of Gnus messages, by giving the message’s registry
+     entry an ‘org-tags key.
+   • Provide persistent nngnorb search groups.
+   • Allow automatic org-tagging of BBDB contacts: when messages from a
+     contact are associated with an Org heading, make it possible for
+     the contact to inherit that heading’s tags automatically.
+   • Provide completion when setting Org tags on a BBDB contact.
+   • Provide a ‘gnorb-bbdb-view’ command that opens a *Summary* buffer
+     containing all the tracked messages from the contact(s) under
+     point.
+   • Provide a ‘gnorb-view’ command that takes a tags-todo search phrase
+     (or a single Org heading ID), finds all relevant messages, Org
+     headings, and BBDB records, and sets up a four-pane view: Org
+     Agenda, **Article* SummaryBBDB* buffer, Gnus *buffer, and an *
+     buffer.
+
+
+File: gnorb.info,  Node: Index,  Prev: Wishlist/TODO,  Up: Top
+
+14 Index
+********
+
+
+
+Tag Table:
+Node: Top194
+Node: Introduction1017
+Node: Installation2126
+Node: Setup2540
+Node: Email Tracking3907
+Node: Email-Related Commands5418
+Node: Trigger Actions8239
+Node: Viewing Tracked Messages in *Summary* Buffers9053
+Node: Hinting in Gnus10287
+Node: Message Attachments11295
+Node: Restoring Window Layout12453
+Node: Recent Mails From BBDB Contacts12817
+Node: BBDB posting styles13813
+Node: BBDB Org tagging14729
+Node: Misc BBDB15475
+Node: Searching for messages from BBDB contacts15688
+Node: Citing BBDB contacts16134
+Node: User Options16455
+Node: Misc Org17994
+Node: Inserting BBDB links18169
+Node: User Optionsx18424
+Node: Misc Gnus21161
+Node: Viewing Org headlines relevant to a message21374
+Node: User Optionsxx21689
+Node: Suggested Keybindings24453
+Node: Wishlist/TODO26824
+Node: Index28139
+
+End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:
