@@ -1,2 +1,4 @@
 *.elc
 notes.org
+gnorb-pkg.el
+gnorb-autoloads.el
