@@ -1,5 +1,11 @@
+GNU Emacs Gnorb NEWS -- history of user-visible changes.  -*- org -*-
 
-Local variables:
-coding: utf-8
-mode: outline
-end:
+* Version 1 [2014-10-07 Tue]
+** First Elpa Version
+** Email Tracking
+The mechanism for email tracking has changed since Gnorb was made
+available on Elpa. See the manual for set-up instructions.
+** Directory Structure
+The directory structure has changed since Gnorb was made available on
+Elpa. There is no longer a lisp/ directory -- all *.el files are now
+at the top level.
