@@ -31,15 +31,6 @@
   :tag "Gnorb Org"
   :group 'gnorb)
 
-(defcustom gnorb-org-mail-todos nil
-  "TODO keywords that are considered mail related -- functions in
-this library may, after completion, call org-(agenda-)todo on
-relevant headings with these keywords. Set to nil to call
-org-todo regardless of TODO type."
-  ;; allowable values should also include 'todo and 'not-done
-  :group 'gnorb-org
-  :type 'list)
-
 (defcustom gnorb-org-after-message-setup-hook nil
   "Hook run in a message buffer after setting up the message from
   `gnorb-org-handle-mail' or `gnorb-org-email-subtree'."
@@ -119,12 +110,7 @@ scan. Set to 0 to only look in the heading.")
 message, this option will limit which headings will be offered as
 target candidates. Specifically it will be used as the second
 argument to `org-map-entries', and syntax is the same as that
-used in an agenda tags view.
-
-For instance, to limit candidates to headings with TODOs in
-`gnorb-org-mail-todos', you might use this:
-
-(mapconcat (lambda (s) (format \"+TODO=\\\"%s\\\"\" s)) gnorb-org-mail-todos \"|\")"
+used in an agenda tags view."
   :group 'gnorb-org
   :type 'symbol)
 
