@@ -595,7 +595,9 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 	     (not (memq (car (gnus-find-method-for-group
 			      gnus-newsgroup-name))
 			'(nnvirtual nnir))))
-    (let* ((ref-ids (gnus-fetch-original-field "references"))
+    (let* ((ref-ids (concat
+		     (gnus-fetch-original-field "references") " "
+		     (gnus-fetch-original-field "in-reply-to")))
 	   (msg-id (gnus-fetch-original-field "message-id"))
 	   (assoc-heading
 	    (gnus-registry-get-id-key msg-id 'gnorb-ids))
