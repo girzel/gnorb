@@ -45,6 +45,12 @@
 
 (defvar nngnorb-status-string "")
 
+(defvar nngnorb-attachment-file-list nil
+  "A place to store Org attachments relevant to the subtree being
+  viewed.")
+
+(make-variable-buffer-local 'nngnorb-attachment-file-list)
+
 (gnus-declare-backend "nngnorb" 'none)
 
 (add-to-list 'nnir-method-default-engines '(nngnorb . gnorb))
@@ -77,7 +83,8 @@ be scanned for gnus messages, and those messages displayed."
 	  (buf (get-buffer-create nnir-tmp-buffer))
 	  msg-ids org-ids links vectors)
       (with-current-buffer buf
-	(erase-buffer))
+	(erase-buffer)
+	(setq nngnorb-attachment-file-list nil))
       (when (equal "5.13" gnus-version-number)
 	(setq q (car q)))
       (cond ((string-match "id\\+\\([[:alnum:]-]+\\)$" q)
@@ -93,7 +100,16 @@ be scanned for gnus messages, and those messages displayed."
 		 (setq org-ids
 		       (append
 			(gnorb-collect-ids)
-			org-ids)))))
+			org-ids))
+		 (when org-ids
+		   (with-current-buffer buf
+		     ;; The file list var is buffer local, so set it
+		     ;; (local to the nnir-tmp-buffer) to a full list
+		     ;; of all files in the subtree.
+		     (dolist (id org-ids)
+		       (setq nngnorb-attachment-file-list
+			     (append (gnorb-org-attachment-list id)
+				     nngnorb-attachment-file-list))))))))
 	    ((listp q)
 	     ;; be a little careful: this could be a list of links, or
 	     ;; it could be the full plist
@@ -159,7 +175,13 @@ These *Summary* buffers are usually created by calling
 While active, this mode provides some Gnorb-specific commands,
 and also advises Gnus' reply-related commands in order to
 continue to provide tracking of sent messages."
-  nil " Gnorb" gnorb-summary-minor-mode-map)
+  nil " Gnorb" gnorb-summary-minor-mode-map
+  (setq nngnorb-attachment-file-list
+	;; Copy the list of attached files from the nnir-tmp-buffer to
+	;; this summary buffer.
+	(buffer-local-value
+	 'nngnorb-attachment-file-list
+	  (get-buffer nnir-tmp-buffer))))
 
 (define-key gnorb-summary-minor-mode-map
   [remap gnus-summary-exit]
@@ -240,7 +262,10 @@ continue to provide tracking of sent messages."
   ;; Not actually a "hook"
   (let* ((msg-id (aref message-reply-headers 4))
 	 (org-id (car-safe (gnus-registry-get-id-key msg-id 'gnorb-ids)))
-	 (compose-marker (make-marker)))
+	 (compose-marker (make-marker))
+	 (attachments (buffer-local-value
+		       'nngnorb-attachment-file-list
+		       (get-buffer nnir-tmp-buffer))))
     (when org-id
       (move-marker compose-marker (point))
       (save-restriction
@@ -253,7 +278,16 @@ continue to provide tracking of sent messages."
 	 org-id)
 	(add-to-list 'message-exit-actions
 		     'gnorb-org-restore-after-send t))
-      (goto-char compose-marker))))
+      (goto-char compose-marker))
+    (when attachments
+      (map-y-or-n-p
+       (lambda (a) (format "Attach %s to outgoing message? "
+			   (file-name-nondirectory a)))
+       (lambda (a)
+	 (mml-attach-file a (mm-default-file-encoding a)
+			  nil "attachment"))
+       attachments
+       '("file" "files" "attach")))))
 
 (defun gnorb-summary-exit ()
   "Like `gnus-summary-exit', but restores the gnorb window conf."
