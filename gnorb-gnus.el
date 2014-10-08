@@ -617,10 +617,8 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 
 (add-hook 'gnus-article-prepare-hook 'gnorb-gnus-hint-relevant-message)
 
-(fset (intern (concat "gnus-user-format-function-"
-		      gnorb-gnus-summary-mark-format-letter))
-      (lambda (header)
-	(if (and gnorb-tracking-enabled
+(defun gnorb-gnus-insert-format-letter-maybe (header)
+  (if (and gnorb-tracking-enabled
 		 (not (memq (car (gnus-find-method-for-group
 				  gnus-newsgroup-name))
 			    '(nnvirtual nnir))))
@@ -631,7 +629,12 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 			   (gnorb-find-visit-candidates ref-ids)))
 		  gnorb-gnus-summary-mark
 		" "))
-	  " ")))
+	  " "))
+
+(fset (intern (concat "gnus-user-format-function-"
+		      gnorb-gnus-summary-mark-format-letter))
+      (lambda (header)
+	(gnorb-gnus-insert-format-letter-maybe header)))
 
 ;;;###autoload
 (defun gnorb-gnus-view ()
