@@ -496,11 +496,7 @@ to t (it is, by default)."
 	 (group gnus-newsgroup-name)
 	 (link (call-interactively 'org-store-link))
 	 (org-refile-targets gnorb-gnus-trigger-refile-targets)
-	 ;;
-	 (ref-msg-ids
-	  (with-current-buffer gnus-original-article-buffer
-	    (message-narrow-to-headers-or-head)
-	    (message-fetch-field "references")))
+	 (ref-msg-ids (mail-header-references headers))
 	 (offer-heading
 	  (when (and (not id) ref-msg-ids gnorb-tracking-enabled)
 	    (if org-id-track-globally
