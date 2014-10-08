@@ -156,15 +156,28 @@ each message."
 (defun gnorb-gnus-attach-part (handle &optional org-heading)
   "Attach HANDLE to an existing org heading."
   (let* ((filename (gnorb-gnus-save-part handle))
-	 ;; we should probably do the automatic location routine here,
-	 ;; as well.
 	 (org-refile-targets gnorb-gnus-trigger-refile-targets)
-	 (org-heading (or org-heading
-			  (org-refile-get-location "Attach part to" nil t))))
+	 (ref-msg-ids
+	  (concat (gnus-fetch-original-field "references") " "
+		  (gnus-fetch-original-field "in-reply-to")))
+	 (rel-heading
+	  (when gnorb-tracking-enabled
+	    (car (gnorb-find-visit-candidates
+		  ref-msg-ids))))
+	 (org-heading
+	  (if (and rel-heading
+		   (y-or-n-p (message
+			      "Attach part to %s"
+			      (gnorb-pretty-outline rel-heading))))
+	      rel-heading
+	    (org-refile-get-location "Attach part to" nil t))))
     (require 'org-attach)
     (save-window-excursion
-      (find-file (nth 1 org-heading))
-      (goto-char (nth 3 org-heading))
+      (if (stringp org-heading)
+	  (org-id-goto org-heading)
+	(progn
+	  (find-file (nth 1 org-heading))
+	  (goto-char (nth 3 org-heading))))
       (org-attach-attach filename nil 'mv))))
 
 (defun gnorb-gnus-save-part (handle)
