@@ -118,13 +118,14 @@ relevant to that message."
     (when (stringp ids)
       (setq ids (gnus-extract-references ids)))
     (when gnorb-tracking-enabled
+      (setq ids (delete-dups ids))
       (progn
 	(dolist (id ids)
 	  (when
 	      (setq sub-val
 		    (gnus-registry-get-id-key id 'gnorb-ids))
 	    (setq ret-val (append sub-val ret-val))))))
-    ret-val))
+    (delete-dups ret-val)))
 
 (defun gnorb-registry-org-id-search (id)
   "Find all messages that have the org ID in their 'gnorb-ids
