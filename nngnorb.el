@@ -239,19 +239,21 @@ continue to provide tracking of sent messages."
   "Function that runs after any command that creates a reply."
   ;; Not actually a "hook"
   (let* ((msg-id (aref message-reply-headers 4))
-	 (org-id (car-safe (gnus-registry-get-id-key msg-id 'gnorb-ids))))
+	 (org-id (car-safe (gnus-registry-get-id-key msg-id 'gnorb-ids)))
+	 (compose-marker (make-marker)))
     (when org-id
+      (move-marker compose-marker (point))
       (save-restriction
-	(save-excursion
-	  (widen)
-	  (message-narrow-to-headers-or-head)
-	  (goto-char (point-at-bol))
-	  (open-line 1)
-	  (message-insert-header
-	   (intern gnorb-mail-header)
-	   org-id)
-	  (add-to-list 'message-exit-actions
-		       'gnorb-org-restore-after-send t))))))
+	(widen)
+	(message-narrow-to-headers-or-head)
+	(goto-char (point-at-bol))
+	(open-line 1)
+	(message-insert-header
+	 (intern gnorb-mail-header)
+	 org-id)
+	(add-to-list 'message-exit-actions
+		     'gnorb-org-restore-after-send t))
+      (goto-char compose-marker))))
 
 (defun gnorb-summary-exit ()
   "Like `gnus-summary-exit', but restores the gnorb window conf."

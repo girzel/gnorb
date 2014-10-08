@@ -324,6 +324,7 @@ the outgoing message will still be available -- nothing else will
 work."
   (interactive "P")
   (let ((org-refile-targets gnorb-gnus-trigger-refile-targets)
+	(compose-marker (make-marker))
 	header-ids ref-ids rel-headings gnorb-window-conf
 	reply-id reply-group in-reply-to)
     (when arg
@@ -363,6 +364,9 @@ work."
       ;; to, if this is actually a reply.
       (when message-reply-headers
 	(setq reply-id (aref message-reply-headers 4)))
+      ;; Save-excursion won't work, because point will move if we
+      ;; insert headings.
+      (move-marker compose-marker (point))
       (save-restriction
 	(widen)
 	(message-narrow-to-headers-or-head)
@@ -404,7 +408,7 @@ work."
 	      ;; tell the rest of the function that this is a relevant
 	      ;; message
 	      (push h header-ids)))))
-      (message-goto-body)
+      (goto-char compose-marker)
       (add-to-list
        'message-exit-actions
        (if header-ids
