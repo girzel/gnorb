@@ -284,6 +284,43 @@ child headings."
 	(lambda (hl)
 	  (org-element-property :ID hl))))))
 
+;; Common functions for extracting references and relevant headings
+;; from the message under point. For use in gnorb-gnus.el functions.
+
+(defun gnorb-find-tracked-headings (headers)
+  "Check HEADERS for message references and return relevant heading IDs.
+
+HEADERs is a message's data header, as produced by
+\(gnus-interactive \"H\"\), or, equivalently:
+
+\(gnus-data-header \(gnus-data-find \(gnus-summary-article-number\)\)\)"
+  (let ((references (mail-header-references headers))
+	(msg-id (mail-header-message-id headers)))
+    (when gnorb-tracking-enabled
+      (gnorb-find-visit-candidates
+       (concat msg-id " " references)))))
+
+(defun gnorb-choose-trigger-heading (&optional id)
+  "Given an Org heading ID, ask the user if they want to trigger it.
+
+If not, prompt for another target heading. Either way, return the
+target heading id."
+  (let ((id (if (stringp id)
+		id
+	      (car-safe id)))
+	refile-result)
+    (if (and id
+	     (y-or-n-p (message
+			"Attach part to %s"
+			(gnorb-pretty-outline id))))
+	id
+      (setq refile-result
+	    (org-refile-get-location "Attach part to" nil t))
+      (save-window-excursion
+	(find-file (nth 1 refile-result))
+	(goto-char (nth 3 refile-result))
+	(org-id-get-create)))))
+
 ;; Loading the registry
 
 (defvar gnorb-tracking-enabled nil

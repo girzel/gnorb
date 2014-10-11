@@ -157,27 +157,15 @@ each message."
   "Attach HANDLE to an existing org heading."
   (let* ((filename (gnorb-gnus-save-part handle))
 	 (org-refile-targets gnorb-gnus-trigger-refile-targets)
-	 (ref-msg-ids
-	  (concat (gnus-fetch-original-field "references") " "
-		  (gnus-fetch-original-field "in-reply-to")))
-	 (rel-heading
-	  (when gnorb-tracking-enabled
-	    (car (gnorb-find-visit-candidates
-		  ref-msg-ids))))
-	 (org-heading
-	  (if (and rel-heading
-		   (y-or-n-p (message
-			      "Attach part to %s"
-			      (gnorb-pretty-outline rel-heading))))
-	      rel-heading
-	    (org-refile-get-location "Attach part to" nil t))))
+	 (headers (gnus-data-header
+		   (gnus-data-find
+		    (gnus-summary-article-number))))
+	 (tracked-headings (gnorb-find-tracked-headings headers))
+	 (target-heading
+	  (gnorb-choose-trigger-heading tracked-headings)))
     (require 'org-attach)
     (save-window-excursion
-      (if (stringp org-heading)
-	  (org-id-goto org-heading)
-	(progn
-	  (find-file (nth 1 org-heading))
-	  (goto-char (nth 3 org-heading))))
+      (org-id-goto target-heading)
       (org-attach-attach filename nil 'mv))))
 
 (defun gnorb-gnus-save-part (handle)
@@ -513,7 +501,8 @@ to t (it is, by default)."
 	 (group gnus-newsgroup-name)
 	 (link (call-interactively 'org-store-link))
 	 (org-refile-targets gnorb-gnus-trigger-refile-targets)
-	 (ref-msg-ids (mail-header-references headers))
+	 (ref-msg-ids (concat (mail-header-references headers) " "
+			      msg-id))
 	 (offer-heading
 	  (when (and (not id) ref-msg-ids gnorb-tracking-enabled)
 	    (if org-id-track-globally
@@ -603,17 +592,18 @@ is relevant to any existing TODO headings. If so, flash a message
 to that effect. This function is added to the
 `gnus-article-prepare-hook'. It will only do anything if the
 option `gnorb-gnus-hint-relevant-article' is non-nil."
-  (when (and gnorb-tracking-enabled
-	     gnorb-gnus-hint-relevant-article
+  (when (and gnorb-gnus-hint-relevant-article
 	     (not (memq (car (gnus-find-method-for-group
 			      gnus-newsgroup-name))
 			'(nnvirtual nnir))))
-    (let* ((ref-ids (concat
-		     (gnus-fetch-original-field "references") " "
-		     (gnus-fetch-original-field "in-reply-to")))
-	   (msg-id (gnus-fetch-original-field "message-id"))
+    (let* ((headers
+	    (gnus-data-header
+	     (gnus-data-find
+	      (gnus-summary-article-number))))
 	   (assoc-heading
-	    (gnus-registry-get-id-key msg-id 'gnorb-ids))
+	    (gnus-registry-get-id-key
+	     (gnus-fetch-original-field "message-id") 'gnorb-ids))
+	   (tracked-headings (gnorb-find-tracked-headings headers))
 	   (key
 	    (where-is-internal 'gnorb-gnus-incoming-do-todo
 			       nil t))
@@ -621,30 +611,24 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
       (cond (assoc-heading
 	     (message "Message is associated with %s"
 		      (gnorb-pretty-outline (car assoc-heading) t)))
-	    (ref-ids
-	     (when (setq rel-headings
-			 (gnorb-find-visit-candidates ref-ids))
-	       (message "Possible relevant todo %s, trigger with %s"
-			(gnorb-pretty-outline (car rel-headings) t)
-			(if key
-			    (key-description key)
-			  "M-x gnorb-gnus-incoming-do-todo"))))))))
+	    (tracked-headings
+	     (message "Possible relevant todo %s, trigger with %s"
+		      (gnorb-pretty-outline (car tracked-headings) t)
+		      (if key
+			  (key-description key)
+			"M-x gnorb-gnus-incoming-do-todo")))
+	    (t nil)))))
 
 (add-hook 'gnus-article-prepare-hook 'gnorb-gnus-hint-relevant-message)
 
 (defun gnorb-gnus-insert-format-letter-maybe (header)
-  (if (and gnorb-tracking-enabled
-		 (not (memq (car (gnus-find-method-for-group
-				  gnus-newsgroup-name))
-			    '(nnvirtual nnir))))
-	    (let ((ref-ids (mail-header-references header))
-		  (msg-id (mail-header-message-id header)))
-	      (if (or (gnus-registry-get-id-key msg-id 'gnorb-ids)
-		      (and ref-ids
-			   (gnorb-find-visit-candidates ref-ids)))
-		  gnorb-gnus-summary-mark
-		" "))
-	  " "))
+  (if (not (memq (car (gnus-find-method-for-group
+		       gnus-newsgroup-name))
+		 '(nnvirtual nnir)))
+      (if (gnorb-find-tracked-headings header)
+	  gnorb-gnus-summary-mark
+	" ")
+    " "))
 
 (fset (intern (concat "gnus-user-format-function-"
 		      gnorb-gnus-summary-mark-format-letter))
@@ -652,20 +636,16 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 	(gnorb-gnus-insert-format-letter-maybe header)))
 
 ;;;###autoload
-(defun gnorb-gnus-view ()
+(defun gnorb-gnus-view (headers)
   "Display the first relevant TODO heading for the message under point"
-  ;; this is pretty barebones, need to make sure we have a valid
-  ;; article buffer to access, and think about what to do for
-  ;; window-configuration!
-
-  ;; boy is this broken now.
-  (interactive)
-  (let ((refs (gnus-fetch-original-field "references"))
-	rel-headings)
-    (when refs
-      (setq rel-headings (gnorb-find-visit-candidates refs))
+  (interactive (gnus-interactive "H"))
+  (let ((tracked-headings
+	 (gnorb-find-tracked-headings headers)))
+    (when tracked-headings
+      (setq gnorb-window-conf (current-window-configuration))
+      (move-marker gnorb-return-marker (point))
       (delete-other-windows)
-      (org-id-goto (car rel-headings)))))
+      (org-id-goto (car tracked-headings)))))
 
 (provide 'gnorb-gnus)
 ;;; gnorb-gnus.el ends here
