@@ -147,6 +147,58 @@ be composed, just as in `gnus-posting-styles'.
 An example value might look like:"
   :group 'gnorb-bbdb)
 
+(when (fboundp 'bbdb-record-xfield-string)
+  (fset (intern (format "bbdb-read-xfield-%s"
+			gnorb-bbdb-org-tag-field))
+	(lambda (&optional init)
+	  (gnorb-bbdb-read-org-tags init)))
+
+  (fset (intern (format "bbdb-display-%s-multi-line"
+			gnorb-bbdb-org-tag-field))
+	(lambda (record)
+	  (gnorb-bbdb-display-org-tags record))))
+
+(defun gnorb-bbdb-read-org-tags (&optional init)
+  "Read Org mode tags, with `completing-read-multiple'."
+  (if (string< "24.3" (substring emacs-version 0 4))
+      (let ((crm-separator
+	     (concat "[ \t\n]*"
+		     (cadr (assq gnorb-bbdb-org-tag-field
+				 bbdb-separator-alist))
+		     "[ \t\n]*"))
+	    (crm-local-completion-map bbdb-crm-local-completion-map)
+	    (table (mapcar #'car
+			   (org-global-tags-completion-table
+			    (org-agenda-files))))
+	    (init (if (consp init)
+		      (bbdb-join init
+				 (nth 2 (assq gnorb-bbdb-org-tag-field
+					      bbdb-separator-alist)))
+		    init)))
+	(completing-read-multiple
+	 "Tags: " table
+	 nil nil init))
+    (bbdb-split gnorb-bbdb-org-tag-field
+		(bbdb-read-string "Tags: " init))))
+
+(defun gnorb-bbdb-display-org-tags (record)
+  "Display the Org tags associated with the record.
+
+Org tags are stored in the `gnorb-bbdb-org-tags-field'."
+  (let ((full-field (assq gnorb-bbdb-org-tag-field
+			  (bbdb-record-xfields record)))
+	(val (bbdb-record-xfield
+	      record
+	      gnorb-bbdb-org-tag-field)))
+    (when val
+      (bbdb-display-text (format fmt gnorb-bbdb-org-tag-field)
+			 `(xfields ,full-field field-label)
+			 'bbdb-field-name)
+      (if (consp val)
+	  (bbdb-display-list val gnorb-bbdb-org-tag-field "\n")
+	(insert
+	 (bbdb-indent-string (concat val "\n") indent))))))
+
 ;;;###autoload
 (defun gnorb-bbdb-mail (records &optional subject n verbose)
   "\\<bbdb-mode-map>Acts just like `bbdb-mail', except runs
@@ -405,6 +457,8 @@ layout type."
 			  (eq format 'multi))
 		     (bbdb-indent-string (concat val "\n") indent))
 		    ((listp val)
+		     ;; Why aren't I using `bbdb-display-list' with a
+		     ;; preformatted list of messages?
 		     (concat
 		      (bbdb-indent-string
 		       (mapconcat
