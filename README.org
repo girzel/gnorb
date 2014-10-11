@@ -29,3 +29,51 @@ If you want to use Gnorb for tracking emails with TODOs, you'll need
 to add a nngnorb server to your `gnus-secondary-select-methods'
 variable, then call `gnorb-tracking-initialize' in your init files.
 Again, see the manual for details.
+** Roadmap
+*** More fully utilize nngnorb
+Instead of just being place to put nnir searches, the nngnorb server
+should have groups in its own right. Users will still be able to make
+ephemeral search groups if they like, but they'll also have the option
+of creating regular Gnus groups that track certain Org subtrees. These
+groups will be persistent, and they will auto-update, so it's possible
+to handle more TODO stuff from the Gnus group buffer. Copying a
+message into the group will set up tracking for the message; deleting
+it from the group will remove tracking.
+*** Comprehensive views of related information
+For instance, A `gnorb-view' command that takes a tags-todo search
+phrase (or a single Org heading ID), finds all relevant messages, Org
+headings, and BBDB records, and sets up a four-pane view: Org Agenda,
+BBDB buffer, Gnus Summary buffer, and Gnus Article buffer.
+
+Or something like that -- more pondering is necessary.
+*** Consider consolidating posting styles, personas, etc
+There are many solutions out there for setting up "personas" in Gnus
+or elsewhere: wrappers for mail composition and reply that create
+certain identities by setting variables and mail headers.
+
+Do we need another one? Gnorb seems so well placed for this sort of
+thing: we've already got bbdb-posting-styles, and allowing further
+configuration based on, say, the Org tags of the subtree we're
+composing messages from... Or maybe it's just a case of NIH.
+** To do list
+*** TODO Agenda date-span message search
+Provide an Org Agenda command that does an email search for messages
+received in the visible date span, or day under point, etc. Make it
+work in the calendar, as well?
+*** TODO Capture to child/subtree trigger actions
+Add trigger actions that create new sibling or child headings on the
+original Org heading.
+*** TODO Gnus message tagging
+Allow tagging of Gnus messages, by giving the message's registry entry
+an 'org-tags key.
+*** TODO Email subtree export to doc and rtf
+When using `gnorb-email-subtree', provide built-in options for
+exporting to doc and rtf attachments; these are such commonly-needed
+formats. Do the odt conversion automatically.
+*** TODO Automatic org-tagging for BBDB contacts
+When messages from a contact are associated with an Org heading, make
+it possible for the contact to inherit that heading's tags
+automatically.
+*** TODO gnorb-bbdb-view
+Provide a `gnorb-bbdb-view' command that opens a Summary buffer
+containing all the tracked messages from the contact(s) under point.

@@ -25,8 +25,6 @@ Gnorb Manual
 * Misc Org::
 * Misc Gnus::
 * Suggested Keybindings::
-* Wishlist/TODO::
-* Index::
 
 — The Detailed Node Listing —
 
@@ -37,6 +35,7 @@ Email Tracking
 * Viewing Tracked Messages in *Summary* Buffers::
 * Hinting in Gnus::
 * Message Attachments::
+* Likely Workflow::
 
 Misc BBDB
 
@@ -156,6 +155,7 @@ agenda rather than in Gnus.
 * Viewing Tracked Messages in *Summary* Buffers::
 * Hinting in Gnus::
 * Message Attachments::
+* Likely Workflow::
 
 
 File: gnorb.info,  Node: Email-Related Commands,  Next: Trigger Actions,  Up: Email Tracking
@@ -230,8 +230,9 @@ heading, taking a note on the heading (both these options will associate
 the message with the heading), associating the message but doing nothing
 else, and lastly, doing nothing at all.
 
-   More actions will be added in the future; it’s also possible to add
-your own action: see the docstring of ‘gnorb-org-trigger-actions’.
+   More actions will be added in the future; it’s also possible to
+rearrange or delete existing actions, and add your own: see the
+docstring of ‘gnorb-org-trigger-actions’.
 
 
 File: gnorb.info,  Node: Viewing Tracked Messages in *Summary* Buffers,  Next: Hinting in Gnus,  Prev: Trigger Actions,  Up: Email Tracking
@@ -277,7 +278,7 @@ is “g” (meaning it is used as “%ug” in the format line), and the mark is
 “¡”.
 
 
-File: gnorb.info,  Node: Message Attachments,  Prev: Hinting in Gnus,  Up: Email Tracking
+File: gnorb.info,  Node: Message Attachments,  Next: Likely Workflow,  Prev: Hinting in Gnus,  Up: Email Tracking
 
 4.5 Message Attachments
 =======================
@@ -302,6 +303,60 @@ Keybindings: Suggested Keybindings, below.
 Org heading using ‘gnorb-org-handle-mail’, Gnorb will ask if you want to
 attach the files in the heading’s org-attach directory to the outgoing
 message.
+
+
+File: gnorb.info,  Node: Likely Workflow,  Prev: Message Attachments,  Up: Email Tracking
+
+4.6 Likely Workflow
+===================
+
+You receive an email from Jimmy, who wants to rent a room in your house.
+“I’ll respond to this later,” you think.
+
+   You capture an Org TODO from the email, call it “Jimmy renting a
+room”, and give it a REPLY keyword.  Gnorb quietly records the
+correspondence between the email and the TODO, using the Gnus registry.
+
+   The next day, looking at your Agenda, you see the TODO and decide to
+respond to the email.  You call ‘gnorb-org-handle-mail’ on the heading,
+and Gnorb opens Jimmy’s email and starts a reply to it.
+
+   You tell Jimmy the room’s available in March, and send the message.
+Gnorb takes you back to the heading, and asks you to trigger an action
+on it.  You choose “todo state”, and change the heading keyword to WAIT.
+
+   Two days later, Jimmy replies to your message, saying that March is
+perfect.  When you open his response, Gnorb politely reminds you that
+the message is relevant to an existing TODO. You call
+‘gnorb-gnus-incoming-do-todo’ on the message, and are again taken to the
+TODO and asked to trigger an action.  Again you choose “todo state”, and
+change the heading keyword back to REPLY.
+
+   You get another email, from Samantha, warning you not to rent the
+room to Jimmy.  She even attaches a picture of a room in her house, as
+it looked after Jimmy had stayed there for six months.  It’s bad.  You
+call ‘gnorb-gnus-incoming-do-todo’ on her message, and pick the “Jimmy
+renting a room” heading.  This time, you choose “take note” as the
+trigger action, and make a brief note about how bad that room looked.
+Gnorb asks if you’d like to attach the picture to the Org heading.  You
+decide you will.
+
+   Now it’s time to write to Jimmy and say something noncommittal.
+Calling ‘gnorb-org-handle-mail’ on the heading would respond to
+Samantha’s email, the most recent of the associated messages, which
+isn’t what you want.  Instead you call ‘gnorb-org-view’ on the heading,
+which opens up a Gnus *Summary* buffer containing all four messages:
+Jimmy’s first, your response, his response to that, and Samantha’s
+message.  You pick Jimmy’s second email, and reply to it normally.
+Gnorb asks if you’d like to send the picture of the room as an
+attachment.  You would not.  When you send the reply Gnorb tracks that
+as well, and does the “trigger an action” trick again.
+
+   In this way Gnorb helps you manage an entire conversation, possibly
+with multiple threads and multiple participants.  Mostly all you need to
+do is call ‘gnorb-gnus-incoming-do-todo’ on newly-received messages, and
+‘gnorb-org-handle-mail’ on the heading when it’s time to compose a new
+reply.
 
 
 File: gnorb.info,  Node: Restoring Window Layout,  Next: Recent Mails From BBDB Contacts,  Prev: Email Tracking,  Up: Top
@@ -581,7 +636,7 @@ File: gnorb.info,  Node: User Optionsxx,  Prev: Viewing Org headlines relevant t
      format line.  Defaults to “¡”.
 
 
-File: gnorb.info,  Node: Suggested Keybindings,  Next: Wishlist/TODO,  Prev: Misc Gnus,  Up: Top
+File: gnorb.info,  Node: Suggested Keybindings,  Prev: Misc Gnus,  Up: Top
 
 12 Suggested Keybindings
 ************************
@@ -629,69 +684,35 @@ File: gnorb.info,  Node: Suggested Keybindings,  Next: Wishlist/TODO,  Prev: Mis
        '(progn
           (define-key message-mode-map (kbd "C-c t") 'gnorb-gnus-outgoing-do-todo)))
 
-
-File: gnorb.info,  Node: Wishlist/TODO,  Next: Index,  Prev: Suggested Keybindings,  Up: Top
-
-13 Wishlist/TODO
-****************
-
-   • Provide a command that, when in the Org Agenda, does an email
-     search for messages received in the visible date span, or day under
-     point, etc.  Make it work in the calendar, as well?
-   • Add trigger actions that create new sibling or child headings on
-     the original Org heading.
-   • Allow tagging of Gnus messages, by giving the message’s registry
-     entry an ‘org-tags key.
-   • Provide persistent nngnorb search groups.
-   • Allow automatic org-tagging of BBDB contacts: when messages from a
-     contact are associated with an Org heading, make it possible for
-     the contact to inherit that heading’s tags automatically.
-   • Provide completion when setting Org tags on a BBDB contact.
-   • Provide a ‘gnorb-bbdb-view’ command that opens a *Summary* buffer
-     containing all the tracked messages from the contact(s) under
-     point.
-   • Provide a ‘gnorb-view’ command that takes a tags-todo search phrase
-     (or a single Org heading ID), finds all relevant messages, Org
-     headings, and BBDB records, and sets up a four-pane view: Org
-     Agenda, **Article* SummaryBBDB* buffer, Gnus *buffer, and an *
-     buffer.
-
-
-File: gnorb.info,  Node: Index,  Prev: Wishlist/TODO,  Up: Top
-
-14 Index
-********
-
 
 
 Tag Table:
 Node: Top194
-Node: Introduction1017
-Node: Installation2126
-Node: Setup2540
-Node: Email Tracking3907
-Node: Email-Related Commands5418
-Node: Trigger Actions8239
-Node: Viewing Tracked Messages in *Summary* Buffers9053
-Node: Hinting in Gnus10287
-Node: Message Attachments11295
-Node: Restoring Window Layout12453
-Node: Recent Mails From BBDB Contacts12817
-Node: BBDB posting styles13813
-Node: BBDB Org tagging14729
-Node: Misc BBDB15475
-Node: Searching for messages from BBDB contacts15688
-Node: Citing BBDB contacts16134
-Node: User Options16455
-Node: Misc Org17994
-Node: Inserting BBDB links18169
-Node: User Optionsx18424
-Node: Misc Gnus21161
-Node: Viewing Org headlines relevant to a message21374
-Node: User Optionsxx21689
-Node: Suggested Keybindings24453
-Node: Wishlist/TODO26824
-Node: Index28139
+Node: Introduction1009
+Node: Installation2118
+Node: Setup2532
+Node: Email Tracking3899
+Node: Email-Related Commands5430
+Node: Trigger Actions8251
+Node: Viewing Tracked Messages in *Summary* Buffers9100
+Node: Hinting in Gnus10334
+Node: Message Attachments11342
+Node: Likely Workflow12524
+Node: Restoring Window Layout15329
+Node: Recent Mails From BBDB Contacts15693
+Node: BBDB posting styles16689
+Node: BBDB Org tagging17605
+Node: Misc BBDB18351
+Node: Searching for messages from BBDB contacts18564
+Node: Citing BBDB contacts19010
+Node: User Options19331
+Node: Misc Org20870
+Node: Inserting BBDB links21045
+Node: User Optionsx21300
+Node: Misc Gnus24037
+Node: Viewing Org headlines relevant to a message24250
+Node: User Optionsxx24565
+Node: Suggested Keybindings27329
 
 End Tag Table
 

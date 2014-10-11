@@ -485,23 +485,3 @@ heading to jump to that heading.
     '(progn
        (define-key message-mode-map (kbd "C-c t") 'gnorb-gnus-outgoing-do-todo)))
 #+END_SRC
-* Wishlist/TODO
-- Provide a command that, when in the Org Agenda, does an email search
-  for messages received in the visible date span, or day under point,
-  etc. Make it work in the calendar, as well?
-- Add trigger actions that create new sibling or child headings on the
-  original Org heading.
-- Allow tagging of Gnus messages, by giving the message's registry
-  entry an 'org-tags key.
-- Provide persistent nngnorb search groups.
-- Allow automatic org-tagging of BBDB contacts: when messages from a
-  contact are associated with an Org heading, make it possible for the
-  contact to inherit that heading's tags automatically.
-- Provide completion when setting Org tags on a BBDB contact.
-- Provide a `gnorb-bbdb-view' command that opens a *Summary* buffer
-  containing all the tracked messages from the contact(s) under point.
-- Provide a `gnorb-view' command that takes a tags-todo search phrase
-  (or a single Org heading ID), finds all relevant messages, Org
-  headings, and BBDB records, and sets up a four-pane view: Org
-  Agenda, *BBDB* buffer, Gnus *Summary* buffer, and an *Article*
-  buffer.
