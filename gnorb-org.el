@@ -259,10 +259,7 @@ headings."
       (compose-mail)
     ;; ...or follow link and start reply.
     (condition-case err
-	(progn
-	  (gnorb-open-gnus-link (car messages))
-	  (call-interactively
-	  'gnus-summary-wide-reply-with-original))
+	(gnorb-reply-to-gnus-link (car messages))
       (error (gnorb-restore-layout)
 	     (signal (car err) (cdr err)))))
   ;; Add MAILS to message To header.

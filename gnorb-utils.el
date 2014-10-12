@@ -116,7 +116,20 @@ and Gnus and BBDB maps."
     (when (buffer-live-p (marker-buffer gnorb-return-marker))
       (goto-char gnorb-return-marker))))
 
-(defun gnorb-open-gnus-link (link)
+(defun gnorb-reply-to-gnus-link (link)
+  "Start a reply to the linked message."
+  (let* ((link (org-link-unescape link))
+	 (group (car (org-split-string link "#")))
+	 (id (second (org-split-string link "#")))
+	 (backend
+	  (car (gnus-find-method-for-group group))))
+    (gnorb-follow-gnus-link group id)
+    (call-interactively
+     (if (eq backend 'nntp)
+	 'gnus-summary-followup-with-original
+       'gnus-summary-wide-reply-with-original))))
+
+(defun gnorb-follow-gnus-link (group id)
   "Be a little clever about following gnus links.
 
 The goal here is reuse frames and windows as much as possible, so
@@ -141,10 +154,7 @@ link.
 
 3. Otherwise just follow the link as usual, in the current
 window."
-  (let* ((link (org-link-unescape link))
-	 (group (car (org-split-string link "#")))
-	 (id (second (org-split-string link "#")))
-	 (sum-buffer (gnus-summary-buffer-name group))
+  (let* ((sum-buffer (gnus-summary-buffer-name group))
 	 (target-buffer
 	  (cond
 	   ((gnus-buffer-exists-p sum-buffer)
@@ -165,7 +175,17 @@ window."
 	  (switch-to-buffer target-buffer)))
     (if (gnus-buffer-exists-p sum-buffer)
 	(gnus-summary-goto-article id nil t)
-      (org-gnus-open link))))
+      (gnorb-open-gnus-link group id))))
+
+(defun gnorb-open-gnus-link (group id)
+  "Gnorb version of `org-gnus-follow-link'."
+  (let ((art-no (cdr (gnus-request-head id group)))
+	success)
+    (gnus-activate-group group)
+    (setq success (gnus-group-read-group 1 t group))
+    (if success
+	(gnus-summary-goto-article (or art-no id) nil t)
+      (signal 'error "Group could not be opened."))))
 
 (defun gnorb-trigger-todo-action (arg &optional id)
   "Do the actual restore action. Two main things here. First: if
