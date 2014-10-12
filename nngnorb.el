@@ -156,7 +156,8 @@ be scanned for gnus messages, and those messages displayed."
 	  (setq m (org-link-unescape m))
 	  (when (string-match "\\`\\([^#]+\\)\\(#\\(.*\\)\\)?" m)
 	    (setq server-group (match-string 1 m)
-		  msg-id (match-string 3 m)
+		  msg-id (gnorb-bracket-message-id
+			  (match-string 3 m))
 		  result (ignore-errors (gnus-request-head msg-id server-group)))
 	    (when result
 	     (setq artno (cdr result))

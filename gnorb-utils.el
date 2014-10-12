@@ -112,15 +112,36 @@ to what it was. Bind it to a global key, or to local keys in Org
 and Gnus and BBDB maps."
   (interactive)
   (when (window-configuration-p gnorb-window-conf)
+    (select-frame-set-input-focus
+     (window-configuration-frame gnorb-window-conf))
     (set-window-configuration gnorb-window-conf)
     (when (buffer-live-p (marker-buffer gnorb-return-marker))
       (goto-char gnorb-return-marker))))
+
+(defun gnorb-bracket-message-id (id)
+  "Ensure message-id ID is bound by angle brackets."
+  ;; Always use a message-id with angle brackets around it.
+  ;; `gnus-summary-goto-article' can handle either, but
+  ;; `gnus-request-head' will fail without brackets IF you're
+  ;; requesting from an nntp group. Mysterious.
+  (unless (string-match "\\`<" id)
+    (setq id (concat "<" id)))
+  (unless (string-match ">\\'" id)
+    (setq id (concat id ">")))
+  id)
+
+(defun gnorb-unbracket-message-id (id)
+  "Ensure message-id ID is NOT bound by angle brackets."
+  ;; This shit is annoying, but Org wants an id with no brackets, and
+  ;; Gnus is safest with an id that has brackets. So here we are.
+  (replace-regexp-in-string "\\(\\`<\\|>\\'\\)" "" id))
 
 (defun gnorb-reply-to-gnus-link (link)
   "Start a reply to the linked message."
   (let* ((link (org-link-unescape link))
 	 (group (car (org-split-string link "#")))
-	 (id (second (org-split-string link "#")))
+	 (id (gnorb-bracket-message-id
+	      (second (org-split-string link "#"))))
 	 (backend
 	  (car (gnus-find-method-for-group group))))
     (gnorb-follow-gnus-link group id)
@@ -173,16 +194,21 @@ window."
       ;; Our target buffer exists, but isn't displayed: pull it up.
       (if target-buffer
 	  (switch-to-buffer target-buffer)))
+    (message "Following link...")
     (if (gnus-buffer-exists-p sum-buffer)
 	(gnus-summary-goto-article id nil t)
       (gnorb-open-gnus-link group id))))
 
 (defun gnorb-open-gnus-link (group id)
   "Gnorb version of `org-gnus-follow-link'."
-  (let ((art-no (cdr (gnus-request-head id group)))
-	success)
+  ;; We've probably already bracketed the id, but just in case this is
+  ;; called from elsewhere...
+  (let* ((id (gnorb-bracket-message-id id))
+	 (art-no (cdr (gnus-request-head id group)))
+	 (arts (gnus-group-unread group))
+	 success)
     (gnus-activate-group group)
-    (setq success (gnus-group-read-group 1 t group))
+    (setq success (gnus-group-read-group arts t group))
     (if success
 	(gnus-summary-goto-article (or art-no id) nil t)
       (signal 'error "Group could not be opened."))))
@@ -311,7 +337,9 @@ and 'gnus."
 message."
   (let ((server-group (gnorb-msg-id-to-group msg-id)))
     (when server-group
-      (org-link-escape (concat server-group "#" msg-id)))))
+      (org-link-escape
+       (concat server-group "#"
+	       (gnorb-unbracket-message-id msg-id))))))
 
 (defun gnorb-msg-id-to-group (msg-id)
   "Given a message id, try to find the group it's in.
@@ -320,6 +348,7 @@ So far we're checking the registry, then the groups in
 `gnorb-gnus-sent-groups'. Use search engines? Other clever
 methods?"
   (let (candidates server-group)
+    (setq msg-id (gnorb-bracket-message-id msg-id))
     (catch 'found
       (when gnorb-tracking-enabled
 	;; Make a big list of all the groups where this message might
