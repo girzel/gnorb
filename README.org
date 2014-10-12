@@ -70,6 +70,14 @@ an 'org-tags key.
 When using `gnorb-email-subtree', provide built-in options for
 exporting to doc and rtf attachments; these are such commonly-needed
 formats. Do the odt conversion automatically.
+*** TODO Collect BBDB messages by thread
+At present, when you collect message links on a BBDB contact, each
+message is a separate link. If you have lengthy conversations with
+this contact, you'll get a whole bunch of links with the same summary:
+not very useful. Provide an option to collect one /thread/ per link:
+each link represents the top-level message in the thread, and
+following the link opens a Summary buffer where the whole thread is
+visible.
 *** TODO Automatic org-tagging for BBDB contacts
 When messages from a contact are associated with an Org heading, make
 it possible for the contact to inherit that heading's tags
