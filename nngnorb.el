@@ -305,24 +305,26 @@ the message being included in this search."
   (let* ((msg-id (gnus-fetch-original-field "message-id"))
 	 (org-ids (gnus-registry-get-id-key msg-id 'gnorb-ids))
 	 chosen)
-    (when org-ids
-      (if (= (length org-ids) 1)
-	  ;; Only one associated Org TODO.
-	  (progn (gnus-registry-set-id-key msg-id 'gnorb-ids)
-		 (setq chosen (car org-ids)))
-	;; Multiple associated TODOs, prompt to choose one.
-	(setq chosen
-	      (cdr
-	       (org-completing-read
-		"Choose a TODO to disassociate from: "
-		(mapcar
-		 (lambda (h)
-		   (cons (gnorb-pretty-outline h) h))
-		 org-ids))))
-	(gnus-registry-set-id-key msg-id 'gnorb-ids
-				  (remove chosen org-ids)))
-      (message "Message disassociated from %s"
-	       (gnorb-pretty-outline chosen)))))
+    (if org-ids
+	(progn
+	  (if (= (length org-ids) 1)
+	      ;; Only one associated Org TODO.
+	      (progn (gnus-registry-set-id-key msg-id 'gnorb-ids nil)
+		     (setq chosen (car org-ids)))
+	    ;; Multiple associated TODOs, prompt to choose one.
+	    (setq chosen
+		  (cdr
+		   (org-completing-read
+		    "Choose a TODO to disassociate from: "
+		    (mapcar
+		     (lambda (h)
+		       (cons (gnorb-pretty-outline h) h))
+		     org-ids))))
+	    (gnus-registry-set-id-key msg-id 'gnorb-ids
+				      (remove chosen org-ids)))
+	  (message "Message disassociated from %s"
+		   (gnorb-pretty-outline chosen)))
+      (message "Message already disassociated"))))
 
 (defvar nngnorb-status-string "")
 
