@@ -227,18 +227,21 @@ See the docstring of `gnorb-org-handle-mail' for details."
 	      (lambda (r l)
 		(time-less-p
 		 (car (gnus-registry-get-id-key l 'creation-time))
-		 (car (gnus-registry-get-id-key r 'creation-time)))))))))
+		 (car (gnus-registry-get-id-key r 'creation-time))))))))
+	 (msg-id-link
+	  (when latest-msg-id
+	    (gnorb-msg-id-to-link latest-msg-id))))
     (cond
      ;; If there are no tracked messages, or the user has specifically
      ;; requested we ignore them with the prefix arg, just return the
      ;; found links in the subtree.
      ((or arg
-	  (null latest-msg-id))
+	  (null msg-id-link))
       all-links)
      ;; Otherwise ignore the other links in the subtree, and return
      ;; the latest message.
-     (latest-msg-id
-      `(:gnus ,(list (gnorb-msg-id-to-link latest-msg-id)))))))
+     (msg-id-link
+      `(:gnus ,(list msg-id-link))))))
 
 (defun gnorb-org-setup-message
     (&optional messages mails from cc bcc attachments text ids)
