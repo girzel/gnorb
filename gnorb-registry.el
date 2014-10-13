@@ -127,6 +127,16 @@ relevant to that message."
 	    (setq ret-val (append sub-val ret-val))))))
     (delete-dups ret-val)))
 
+(defun gnorb-delete-association (msg-id org-id)
+  "Disassociate a message and a headline.
+
+This removes an Org heading's ORG-ID from the 'gnorb-ids key of
+the MSG-ID."
+  (let ((org-ids (gnus-registry-get-id-key msg-id 'gnorb-ids)))
+    (when (member org-id org-ids)
+      (gnus-registry-set-id-key msg-id 'gnorb-ids
+				(remove org-id org-ids)))))
+
 (defun gnorb-registry-org-id-search (id)
   "Find all messages that have the org ID in their 'gnorb-ids
 key."
