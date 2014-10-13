@@ -325,7 +325,7 @@ the message being included in this search."
 				      (remove chosen org-ids)))
 	  (message "Message disassociated from %s"
 		   (gnorb-pretty-outline chosen)))
-      (message "Message already disassociated"))))
+      (message "Message has no associations"))))
 
 (defvar nngnorb-status-string "")
 
