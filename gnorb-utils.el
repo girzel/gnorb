@@ -387,7 +387,7 @@ child headings."
 ;; Common functions for extracting references and relevant headings
 ;; from the message under point. For use in gnorb-gnus.el functions.
 
-(defun gnorb-find-tracked-headings (headers)
+(defun gnorb-find-tracked-headings (headers &optional include-zombies)
   "Check HEADERS for message references and return relevant heading IDs.
 
 HEADERs is a message's data header, as produced by
@@ -398,7 +398,7 @@ HEADERs is a message's data header, as produced by
 	(msg-id (mail-header-message-id headers)))
     (when gnorb-tracking-enabled
       (gnorb-find-visit-candidates
-       (concat msg-id " " references)))))
+       (concat msg-id " " references) include-zombies))))
 
 (defun gnorb-choose-trigger-heading (&optional id)
   "Given an Org heading ID, ask the user if they want to trigger it.

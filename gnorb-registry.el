@@ -109,11 +109,14 @@ to the message's registry entry, under the 'gnorb-ids key."
       (error
        (setq abort-note 'dirty)))))
 
-(defun gnorb-find-visit-candidates (ids)
+(defun gnorb-find-visit-candidates (ids &optional include-zombies)
   "For all message-ids in IDS (which should be a list of
 Message-ID strings, with angle brackets, or a single string of
 Message-IDs), produce a list of Org ids for headings that are
-relevant to that message."
+relevant to that message.
+
+If optional argument INCLUDE_ZOMBIES is non-nil, return ID values
+even for headings that appear to no longer exist."
   (let (ret-val sub-val)
     (when (stringp ids)
       (setq ids (gnus-extract-references ids)))
@@ -122,8 +125,13 @@ relevant to that message."
       (progn
 	(dolist (id ids)
 	  (when
-	      (setq sub-val
-		    (gnus-registry-get-id-key id 'gnorb-ids))
+	      (and
+	       (setq sub-val
+		     (gnus-registry-get-id-key id 'gnorb-ids))
+	       ;; This lets us be reasonably confident that the
+	       ;; heading still exists.
+	       (or include-zombies
+		   (org-id-find-id-file id)))
 	    (setq ret-val (append sub-val ret-val))))))
     (delete-dups ret-val)))
 

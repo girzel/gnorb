@@ -503,32 +503,35 @@ to t (it is, by default)."
 	 (org-refile-targets gnorb-gnus-trigger-refile-targets)
 	 (ref-msg-ids (concat (mail-header-references headers) " "
 			      msg-id))
-	 (offer-heading
-	  (when (and (not id) ref-msg-ids gnorb-tracking-enabled)
-	    (if org-id-track-globally
-		;; for now we're basically ignoring the fact that
-		;; multiple candidates could exist; just do the first
-		;; one.
-		(car (gnorb-find-visit-candidates
-		      ref-msg-ids))
-	      (message "Gnorb can't check for relevant headings unless `org-id-track-globally' is t")
-	      (sit-for 1))))
+	 (related-headings
+	  (when (and (null id) ref-msg-ids)
+	    (gnorb-find-tracked-headings headers t)))
 	 targ)
     (setq gnorb-gnus-message-info
-	    `(:subject ,subject :msg-id ,msg-id
-		       :to ,to :from ,from
-		       :link ,link :date ,date :refs ,ref-msg-ids
-		       :group ,group))
+	  `(:subject ,subject :msg-id ,msg-id
+		     :to ,to :from ,from
+		     :link ,link :date ,date :refs ,ref-msg-ids
+		     :group ,group))
     (gnorb-gnus-collect-all-attachments nil t)
     ;; Delete other windows, users can restore with
     ;; `gnorb-restore-layout'.
     (delete-other-windows)
     (if id
 	(gnorb-trigger-todo-action arg id)
-      (if (and offer-heading
+      (if (and related-headings
+	       (while (and
+		       (null (org-id-find-id-file
+			      (setq targ (pop related-headings))))
+		       targ)
+		 (when (y-or-n-p
+			(format
+			 "ID %s no longer exists, disassociate message?"
+			 targ))
+		   (gnorb-delete-association msg-id targ)))
 	       (y-or-n-p (format "Trigger action on %s"
-				 (gnorb-pretty-outline offer-heading))))
-	  (gnorb-trigger-todo-action arg offer-heading)
+				 (gnorb-pretty-outline
+				  targ))))
+	  (gnorb-trigger-todo-action arg targ)
 	(setq targ (org-refile-get-location
 		    "Trigger heading" nil t))
 	(find-file (nth 1 targ))
