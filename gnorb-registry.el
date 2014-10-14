@@ -125,14 +125,16 @@ even for headings that appear to no longer exist."
       (progn
 	(dolist (id ids)
 	  (when
-	      (and
-	       (setq sub-val
-		     (gnus-registry-get-id-key id 'gnorb-ids))
-	       ;; This lets us be reasonably confident that the
-	       ;; heading still exists.
-	       (or include-zombies
-		   (org-id-find-id-file id)))
+	      (setq sub-val
+		    (gnus-registry-get-id-key id 'gnorb-ids))
 	    (setq ret-val (append sub-val ret-val))))))
+    ;; This lets us be reasonably confident that the
+    ;; headings still exist.
+    (unless include-zombies
+      (cl-remove-if-not
+       (lambda (org-id)
+	 (org-id-find-id-file org-id))
+       ret-val))
     (delete-dups ret-val)))
 
 (defun gnorb-delete-association (msg-id org-id)
@@ -144,6 +146,20 @@ the MSG-ID."
     (when (member org-id org-ids)
       (gnus-registry-set-id-key msg-id 'gnorb-ids
 				(remove org-id org-ids)))))
+
+(defun gnorb-delete-all-assocations (org-id)
+  "Delete all message associations for an Org heading.
+
+The heading is identified by ORG-ID. This is suitable for use
+after an Org heading is deleted, for instance."
+  (let ((assoc-msgs (gnorb-registry-org-id-search org-id)))
+    (mapcar
+     (lambda (msg-id)
+       (let ((org-ids
+	      (gnus-registry-get-id-key msg-id 'gnorb-ids)))
+	 (gnus-registry-set-id-key
+	  msg-id 'gnorb-ids (remove org-id org-ids))))
+     assoc-msgs)))
 
 (defun gnorb-registry-org-id-search (id)
   "Find all messages that have the org ID in their 'gnorb-ids
