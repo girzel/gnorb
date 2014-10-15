@@ -427,6 +427,7 @@ target heading id."
   "Internal flag indicating whether Gnorb is successfully plugged
   into the registry or not.")
 
+;;;###autoload
 (defun gnorb-tracking-initialize ()
   "Start using the Gnus registry to track correspondences between
 Gnus messages and Org headings. This requires that the Gnus
