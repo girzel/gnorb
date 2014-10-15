@@ -265,7 +265,8 @@ headings."
   ;; Add MAILS to message To header.
   (when mails
     (message-goto-to)
-    (insert ", ")
+    (when messages
+      (insert ", "))
     (insert (mapconcat 'identity mails ", ")))
   ;; Return us after message is sent.
   (add-to-list 'message-exit-actions
