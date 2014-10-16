@@ -136,17 +136,18 @@ future!"
       link)))
 
 (defun gnorb-org-restore-after-send ()
-  "After an email is sent, clean up the gnus summary buffer, put
-us back where we came from, and go through all the org ids that
-might have been in the outgoing message's headers and call
-`gnorb-trigger-todo-action' on each one."
+  "After an email is sent, go through all the org ids that might
+have been in the outgoing message's headers and call
+`gnorb-trigger-todo-action' on each one, then put us back where
+we came from."
   (delete-other-windows)
   (dolist (id gnorb-message-org-ids)
     (org-id-goto id)
     (gnorb-trigger-todo-action nil id))
   ;; this is a little unnecessary, but it may save grief
   (setq gnorb-gnus-message-info nil)
-  (setq gnorb-message-org-ids nil))
+  (setq gnorb-message-org-ids nil)
+  (gnorb-restore-layout))
 
 (defun gnorb-org-extract-links (&optional arg region)
   "See if there are viable links in the subtree under point."
