@@ -98,16 +98,17 @@ to the message's registry entry, under the 'gnorb-ids key."
 (defun gnorb-registry-capture-abort-cleanup ()
   (when (and (org-capture-get :gnorb-id)
 	     org-note-abort)
-    (condition-case error
-	(let* ((msg-id (format "<%s>" (plist-get org-store-link-plist :message-id)))
-	       (existing-org-ids (gnus-registry-get-id-key msg-id 'gnorb-ids))
-	       (org-id (org-capture-get :gnorb-id)))
-	  (when (member org-id existing-org-ids)
-	    (gnus-registry-set-id-key msg-id 'gnorb-ids
-				      (remove org-id existing-org-ids)))
-	  (setq abort-note 'clean))
-      (error
-       (setq abort-note 'dirty)))))
+    (with-no-warnings ; For `abort-note'
+      (condition-case error
+	  (let* ((msg-id (format "<%s>" (plist-get org-store-link-plist :message-id)))
+		 (existing-org-ids (gnus-registry-get-id-key msg-id 'gnorb-ids))
+		 (org-id (org-capture-get :gnorb-id)))
+	    (when (member org-id existing-org-ids)
+	      (gnus-registry-set-id-key msg-id 'gnorb-ids
+					(remove org-id existing-org-ids)))
+	    (setq abort-note 'clean))
+	(error
+	 (setq abort-note 'dirty))))))
 
 (defun gnorb-find-visit-candidates (ids &optional include-zombies)
   "For all message-ids in IDS (which should be a list of

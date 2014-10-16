@@ -236,15 +236,16 @@ save them into `gnorb-tmp-dir'."
 (add-hook 'org-capture-mode-hook 'gnorb-gnus-capture-attach)
 
 (defun gnorb-gnus-capture-abort-cleanup ()
-  (when (and org-note-abort
-	     (org-capture-get :gnus-attachments))
-    (condition-case error
-	(progn (org-attach-delete-all)
-	       (setq abort-note 'clean)
-	       ;; remove any gnorb-mail-header values here
-	       )
-      (error
-       (setq abort-note 'dirty)))))
+  (with-no-warnings ; For `org-note-abort'
+   (when (and org-note-abort
+	      (org-capture-get :gnus-attachments))
+     (condition-case error
+	 (progn (org-attach-delete-all)
+		(setq abort-note 'clean)
+		;; remove any gnorb-mail-header values here
+		)
+       (error
+	(setq abort-note 'dirty))))))
 
 (add-hook 'org-capture-prepare-finalize-hook
 	  'gnorb-gnus-capture-abort-cleanup)
@@ -560,10 +561,11 @@ work."
 	     (user-error
 	      "Please add a \"nngnorb\" backend to your gnus installation."))))
     (when (version= "5.13" gnus-version-number)
-      (setq nnir-current-query nil
-	    nnir-current-server nil
-	    nnir-current-group-marked nil
-	    nnir-artlist nil))
+      (with-no-warnings		  ; All these variables are available.
+	(setq nnir-current-query nil
+	      nnir-current-server nil
+	      nnir-current-group-marked nil
+	      nnir-artlist nil)))
     (gnus-group-read-ephemeral-group
      ;; in 24.4, the group name is mostly decorative. in 24.3, the
      ;; query itself is read from there. It should look like (concat
