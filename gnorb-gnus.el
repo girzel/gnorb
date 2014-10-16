@@ -509,6 +509,8 @@ to t (it is, by default)."
 			      msg-id))
 	 (related-headings
 	  (when (and (null id) ref-msg-ids)
+	    ;; Specifically ask for zombies, so the user has chance to
+	    ;; flush them out.
 	    (gnorb-find-tracked-headings headers t)))
 	 targ)
     (setq gnorb-gnus-message-info
@@ -522,19 +524,25 @@ to t (it is, by default)."
     (delete-other-windows)
     (if id
 	(gnorb-trigger-todo-action arg id)
-      (if (and related-headings
-	       (while (and
-		       (null (org-id-find-id-file
-			      (setq targ (pop related-headings))))
-		       targ)
+      ;; Flush out zombies (dead associations).
+      (setq related-headings
+	    (cl-remove-if
+	     (lambda (h)
+	       (when (null (org-id-find-id-file h))
 		 (when (y-or-n-p
 			(format
 			 "ID %s no longer exists, disassociate message?"
 			 targ))
-		   (gnorb-delete-association msg-id targ)))
-	       (y-or-n-p (format "Trigger action on %s"
-				 (gnorb-pretty-outline
-				  targ))))
+		   (gnorb-delete-association msg-id targ))))
+	     related-headings))
+      (if (catch 'target
+	    (mapcar
+	     (lambda (h)
+	       (when (yes-or-no-p
+		      (format "Trigger action on %s"
+			      (gnorb-pretty-outline h)))
+		 (throw 'target (setq targ h))))
+	     related-headings))
 	  (gnorb-trigger-todo-action arg targ)
 	(setq targ (org-refile-get-location
 		    "Trigger heading" nil t))
@@ -577,8 +585,7 @@ work."
 	 (list 'nnir nnir-address)
        (list 'nnir "nnir"))
      nil
-     ret ;; it's possible you can't just put an arbitrary form in
-	 ;; here, which sucks.
+     ret
      nil nil
      ;; the following seems to simply be ignored under gnus 5.13
      (list (cons 'nnir-specs (list (cons 'nnir-query-spec `((query . ,str)))
