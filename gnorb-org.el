@@ -24,6 +24,9 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'cl))
+
 (require 'gnorb-utils)
 
 (defgroup gnorb-org nil
@@ -177,7 +180,7 @@ might have been in the outgoing message's headers and call
 		   strings)
 		  ((numberp gnorb-org-mail-scan-scope)
 		   (delq nil
-			 (subseq
+			 (cl-subseq
 			  strings 0 (1+ gnorb-org-mail-scan-scope))))
 		  ;; We could provide more options here. 'tree vs
 		  ;; 'subtree, for instance.
@@ -215,7 +218,7 @@ See the docstring of `gnorb-org-handle-mail' for details."
 	  (when assoc-msg-ids
 	    (car
 	     (sort
-	      (remove-if
+	      (cl-remove-if
 	       (lambda (m)
 		 (let ((from (car (gnus-registry-get-id-key m 'sender))))
 		   (or (null from)
@@ -601,7 +604,7 @@ search."
 	     (setq tag-clause (cdr (org-make-tags-matcher str)))
 	     (unless (equal str "")
 	       (setq recs
-		     (remove-if-not
+		     (cl-remove-if-not
 		      (lambda (r)
 			(let ((rec-tags (bbdb-record-xfield
 					 r gnorb-bbdb-org-tag-field)))

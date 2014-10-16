@@ -24,6 +24,9 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'cl))
+
 (require 'gnorb-utils)
 
 (defgroup gnorb-bbdb nil
@@ -167,7 +170,7 @@ An example value might look like:"
 				 bbdb-separator-alist))
 		     "[ \t\n]*"))
 	    (crm-local-completion-map bbdb-crm-local-completion-map)
-	    (table (mapcar #'car
+	    (table (cl-mapcar #'car
 			   (org-global-tags-completion-table
 			    (org-agenda-files))))
 	    (init (if (consp init)
@@ -384,9 +387,10 @@ both, use \"C-u\" before the \"*\"."
 	 (mapconcat
 	  'identity
 	  (delete-dups
-	   (mapcan (lambda (r)
-		     (bbdb-record-xfield-split r gnorb-bbdb-org-tag-field))
-		   records))
+	   (cl-mapcan
+	    (lambda (r)
+	      (bbdb-record-xfield-split r gnorb-bbdb-org-tag-field))
+	    records))
 	  "|")))
     (if tag-string
 	;; C-u = all headings, not just todos
@@ -607,7 +611,7 @@ to a message into the record's `gnorb-bbdb-messages-field'."
 			      (time-less-p
 			       (gnorb-bbdb-link-date b)
 			       (gnorb-bbdb-link-date a))))))
-	  (setq val (subseq val 0 gnorb-bbdb-collect-N-messages))
+	  (setq val (cl-subseq val 0 gnorb-bbdb-collect-N-messages))
 	  (bbdb-record-set-xfield record
 				  gnorb-bbdb-messages-field
 				  (delq nil val))

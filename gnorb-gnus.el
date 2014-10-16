@@ -24,6 +24,9 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'cl))
+
 (require 'gnorb-utils)
 
 (declare-function org-gnus-article-link "org-gnus"

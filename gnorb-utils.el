@@ -24,7 +24,8 @@
 
 ;;; Code:
 
-(require 'cl)
+(eval-when-compile
+  (require 'cl))
 (require 'mailcap)
 (require 'gnus)
 ;(require 'message)
