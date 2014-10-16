@@ -237,6 +237,8 @@ agenda. Then let the user choose an action from the value of
 	   (save-excursion
 	     (org-id-goto id)
 	     (move-marker root-marker (point-at-bol)))))
+    (unless agenda-p
+      (org-reveal))
     ;; Query about attaching email attachments.
     (org-with-point-at root-marker
       (map-y-or-n-p

@@ -143,7 +143,6 @@ might have been in the outgoing message's headers and call
   (delete-other-windows)
   (dolist (id gnorb-message-org-ids)
     (org-id-goto id)
-    (org-reveal)
     (gnorb-trigger-todo-action nil id))
   ;; this is a little unnecessary, but it may save grief
   (setq gnorb-gnus-message-info nil)
