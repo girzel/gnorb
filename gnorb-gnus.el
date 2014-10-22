@@ -555,8 +555,8 @@ to t (it is, by default)."
 		 (when (y-or-n-p
 			(format
 			 "ID %s no longer exists, disassociate message?"
-			 targ))
-		   (gnorb-delete-association msg-id targ))))
+			 h))
+		   (gnorb-delete-association msg-id h))))
 	     related-headings))
       (if (catch 'target
 	    (mapcar
