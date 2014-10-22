@@ -216,10 +216,14 @@ after the message is sent, and the sent message associated with it.
 The new heading will be created as a capture heading, using the
 template specified by the `gnorb-gnus-new-todo-capture-key' option.
 
-If you call this function with a prefix arg, you'll be prompted to
-choose an existing Org heading instead. After the the message is
-sent, you'll be taken to that heading and prompted to trigger an
-action on it.
+If you call this function with a single prefix arg, you'll be
+prompted to choose an existing Org heading instead. After the the
+message is sent, you'll be taken to that heading and prompted to
+trigger an action on it.
+
+If you've called this function, and then realize you've associated
+the message with the wrong TODO, call it again with a double prefix
+to clear all associations.
 
 It's also possible to call this function *after* a message is sent,
 in case you forgot. Gnorb saves information about the most recently
@@ -668,5 +672,5 @@ line. Defaults to ``¡''.
      (define-key message-mode-map (kbd "C-c t") 'gnorb-gnus-outgoing-do-todo)))
 @end lisp
 
-@c Emacs 25.0.50.10 (Org mode 8.3beta)
+@c Emacs 25.0.50.8 (Org mode 8.3beta)
 @bye

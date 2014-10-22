@@ -1,5 +1,15 @@
 GNU Emacs Gnorb NEWS -- history of user-visible changes.  -*- org -*-
 
+* Version 1.0.1 [2014-10-22 Wed]
+** Deleting associations
+It's now possible to delete associations between messages and
+headings; the user is also prompted to do this at a few points.
+** Link following
+Following links to messages is a little more clever, and will re-use
+existing windows/frames when possible.
+** Cleanups/Bugfixes
+Proper autoloads, addressing compiler warnings, better chain of
+requires, bugfixes.
 * Version 1 [2014-10-07 Tue]
 ** First Elpa Version
 ** Email Tracking

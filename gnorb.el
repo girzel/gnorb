@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2014  Eric Abrahamsen
 
-;; Version: 1
+;; Version: 1.0.1
 
 ;; Maintainer: Eric Abrahamsen <eric@ericabrahamsen.net>
 

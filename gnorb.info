@@ -202,10 +202,14 @@ Email tracking starts in one of three ways:
      The new heading will be created as a capture heading, using the
      template specified by the ‘gnorb-gnus-new-todo-capture-key’ option.
 
-     If you call this function with a prefix arg, you’ll be prompted to
-     choose an existing Org heading instead.  After the the message is
-     sent, you’ll be taken to that heading and prompted to trigger an
-     action on it.
+     If you call this function with a single prefix arg, you’ll be
+     prompted to choose an existing Org heading instead.  After the the
+     message is sent, you’ll be taken to that heading and prompted to
+     trigger an action on it.
+
+     If you’ve called this function, and then realize you’ve associated
+     the message with the wrong TODO, call it again with a double prefix
+     to clear all associations.
 
      It’s also possible to call this function *after* a message is sent,
      in case you forgot.  Gnorb saves information about the most
@@ -693,26 +697,26 @@ Node: Installation2118
 Node: Setup2532
 Node: Email Tracking3899
 Node: Email-Related Commands5430
-Node: Trigger Actions8251
-Node: Viewing Tracked Messages in *Summary* Buffers9100
-Node: Hinting in Gnus10334
-Node: Message Attachments11342
-Node: Likely Workflow12524
-Node: Restoring Window Layout15329
-Node: Recent Mails From BBDB Contacts15693
-Node: BBDB posting styles16689
-Node: BBDB Org tagging17605
-Node: Misc BBDB18351
-Node: Searching for messages from BBDB contacts18564
-Node: Citing BBDB contacts19010
-Node: User Options19331
-Node: Misc Org20870
-Node: Inserting BBDB links21045
-Node: User Optionsx21300
-Node: Misc Gnus24037
-Node: Viewing Org headlines relevant to a message24250
-Node: User Optionsxx24565
-Node: Suggested Keybindings27329
+Node: Trigger Actions8440
+Node: Viewing Tracked Messages in *Summary* Buffers9289
+Node: Hinting in Gnus10523
+Node: Message Attachments11531
+Node: Likely Workflow12713
+Node: Restoring Window Layout15518
+Node: Recent Mails From BBDB Contacts15882
+Node: BBDB posting styles16878
+Node: BBDB Org tagging17794
+Node: Misc BBDB18540
+Node: Searching for messages from BBDB contacts18753
+Node: Citing BBDB contacts19199
+Node: User Options19520
+Node: Misc Org21059
+Node: Inserting BBDB links21234
+Node: User Optionsx21489
+Node: Misc Gnus24226
+Node: Viewing Org headlines relevant to a message24439
+Node: User Optionsxx24754
+Node: Suggested Keybindings27518
 
 End Tag Table
 
