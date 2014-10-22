@@ -239,16 +239,18 @@ agenda. Then let the user choose an action from the value of
 	     (move-marker root-marker (point-at-bol)))))
     (unless agenda-p
       (org-reveal))
-    ;; Query about attaching email attachments.
-    (org-with-point-at root-marker
-      (map-y-or-n-p
-       (lambda (a)
-	 (format "Attach %s to heading? "
-		 (file-name-nondirectory a)))
-       (lambda (a) (org-attach-attach a nil 'mv))
-       gnorb-gnus-capture-attachments
-       '("file" "files" "attach")))
-    (setq gnorb-gnus-capture-attachments nil)
+    ;; Query about attaching email attachments. No matter what
+    ;; happens, clear `gnorb-gnus-capture-attachments'.
+    (unwind-protect
+	(org-with-point-at root-marker
+	  (map-y-or-n-p
+	   (lambda (a)
+	     (format "Attach %s to heading? "
+		     (file-name-nondirectory a)))
+	   (lambda (a) (org-attach-attach a nil 'mv))
+	   gnorb-gnus-capture-attachments
+	   '("file" "files" "attach")))
+      (setq gnorb-gnus-capture-attachments nil))
     (cl-labels
 	((make-entry
 	  (id)
