@@ -336,8 +336,8 @@ work."
   (interactive "P")
   (let ((org-refile-targets gnorb-gnus-trigger-refile-targets)
 	(compose-marker (make-marker))
-	header-ids ref-ids rel-headings gnorb-window-conf
-	reply-id reply-group in-reply-to)
+	header-ids ref-ids rel-headings
+	gnorb-window-conf in-reply-to)
     (when (equal arg '(4))
       (setq rel-headings
 	    (org-refile-get-location "Trigger action on" nil t))
@@ -374,8 +374,6 @@ work."
       ;; We are still in the message composition buffer, so let's see
       ;; what we've got.
 
-      ;; What we want is a link to the original message we're replying
-      ;; to, if this is actually a reply.
       (if (equal arg '(16))
 	  ;; Double prefix arg means delete the association we already
 	  ;; made.
@@ -390,8 +388,6 @@ work."
 	      (message-remove-header
 	       gnorb-mail-header)
 	      (message "Message associations have been reset")))
-	(when message-reply-headers
-	  (setq reply-id (aref message-reply-headers 4)))
 	;; Save-excursion won't work, because point will move if we
 	;; insert headings.
 	(move-marker compose-marker (point))
@@ -407,16 +403,6 @@ work."
 	  (setq in-reply-to (unless arg (mail-fetch-field "In-Reply-to" t)))
 	  (when in-reply-to
 	    (setq ref-ids (concat ref-ids " " in-reply-to)))
-	  (setq reply-group (when (mail-fetch-field "X-Draft-From" t)
-			      (car-safe (read (mail-fetch-field "X-Draft-From" t)))))
-	  ;; when it's a reply, store a link to the reply just in case.
-	  ;; This is pretty embarrassing -- we follow a link just to
-	  ;; create a link. But I'm not going to recreate all of
-	  ;; `org-store-link' by hand.
-	  (when (and reply-group reply-id)
-	    (save-window-excursion
-	      (org-gnus-follow-link reply-group reply-id)
-	      (call-interactively 'org-store-link)))
 	  (when ref-ids
 	    ;; if the References header points to any message ids that are
 	    ;; tracked by TODO headings...
