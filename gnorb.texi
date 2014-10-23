@@ -120,7 +120,8 @@ variable. It will look like (nngnorb ``Server name''). This does
 nothing but provide a place to hang nnir searches.
 @item
 Then put a call to `gnorb-tracking-initialize' in your init files,
-at some point after the Gnus registry is initialized.
+at some point after the Gnus registry is initialized. You may also
+need to add (require 'gnorb-utils) if this is to succeed.
 @item
 If you're not using a local archive method for saving your sent
 messages (ie you're using IMAP), you'll also need to tell Gnorb
