@@ -304,6 +304,9 @@ This is used in a Gnorb-created *Summary* buffer to remove the
 connection between the message and whichever Org TODO resulted in
 the message being included in this search."
   (interactive)
+  (unless (get-buffer-window gnus-article-buffer t)
+    (gnus-summary-display-article
+     (gnus-summary-article-number)))
   (let* ((msg-id (gnus-fetch-original-field "message-id"))
 	 (org-ids (gnus-registry-get-id-key msg-id 'gnorb-ids))
 	 chosen)
