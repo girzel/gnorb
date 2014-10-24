@@ -26,13 +26,6 @@
 
 (eval-when-compile
   (require 'cl))
-(require 'mailcap)
-(require 'gnus)
-;(require 'message)
-(require 'bbdb)
-(require 'org)
-(require 'org-bbdb)
-(require 'org-gnus)
 
 (mailcap-parse-mimetypes)
 
@@ -104,6 +97,7 @@ with `gnorb-window-conf'.")
 	     (mapconcat
 	      'identity ign-headers-list "|")))))
 
+;;;###autoload
 (defun gnorb-restore-layout ()
   "Restore window layout and value of point after a Gnorb command.
 

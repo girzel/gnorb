@@ -27,6 +27,7 @@
 (eval-when-compile
   (require 'cl))
 
+(require 'bbdb)
 (require 'gnorb-utils)
 
 (defgroup gnorb-bbdb nil

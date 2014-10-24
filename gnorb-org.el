@@ -649,6 +649,7 @@ This won't work unless you've added a \"nngnorb\" server to
 your gnus select methods."
   ;; this should also work on the active region, if there is one.
   (interactive)
+  (require 'gnorb-gnus)
   (setq gnorb-window-conf (current-window-configuration))
   (move-marker gnorb-return-marker (point))
   (when (eq major-mode 'org-agenda-mode)

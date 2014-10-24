@@ -27,6 +27,7 @@
 (eval-when-compile
   (require 'cl))
 
+(require 'gnus)
 (require 'gnorb-utils)
 
 (declare-function org-gnus-article-link "org-gnus"
@@ -573,6 +574,7 @@ will all be displayed in an ephemeral group on the \"nngnorb\"
 server. There must be an active \"nngnorb\" server for this to
 work."
   (interactive)
+  (require 'nnir)
   (let ((nnir-address
 	 (or (gnus-method-to-server '(nngnorb))
 	     (user-error

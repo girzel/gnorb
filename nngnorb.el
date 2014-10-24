@@ -39,6 +39,7 @@
 
 ;;; Code:
 
+(require 'gnus)
 (eval-and-compile
   (require 'nnheader)
   (require 'nnir))
