@@ -546,13 +546,11 @@ to t (it is, by default)."
 		   (gnorb-delete-association msg-id h))))
 	     related-headings))
       (if (catch 'target
-	    (mapcar
-	     (lambda (h)
-	       (when (yes-or-no-p
-		      (format "Trigger action on %s"
-			      (gnorb-pretty-outline h)))
-		 (throw 'target (setq targ h))))
-	     related-headings))
+	    (dolist (h related-headings nil)
+	     (when (yes-or-no-p
+		    (format "Trigger action on %s"
+			    (gnorb-pretty-outline h)))
+	       (throw 'target (setq targ h)))))
 	  (gnorb-trigger-todo-action arg targ)
 	(setq targ (org-refile-get-location
 		    "Trigger heading" nil t))
