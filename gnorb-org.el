@@ -665,13 +665,13 @@ your gnus select methods."
   (let (id)
     (save-excursion
       (org-back-to-heading)
-      (setq id (concat "id+" (org-id-get-create))))
-    (gnorb-gnus-search-messages
-     id
-     `(when (and (window-configuration-p gnorb-window-conf)
-		 gnorb-return-marker)
-	(set-window-configuration gnorb-window-conf)
-	(goto-char gnorb-return-marker)))))
+      (setq id (concat "id+" (org-id-get-create)))
+      (gnorb-gnus-search-messages
+       id
+       `(when (and (window-configuration-p gnorb-window-conf)
+		   gnorb-return-marker)
+	  (set-window-configuration gnorb-window-conf)
+	  (goto-char gnorb-return-marker))))))
 
 (provide 'gnorb-org)
 ;;; gnorb-org.el ends here
