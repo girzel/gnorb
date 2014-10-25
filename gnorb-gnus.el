@@ -483,7 +483,7 @@ work."
 ;;; call this function on it.
 
 ;;;###autoload
-(defun gnorb-gnus-incoming-do-todo (arg headers &optional id)
+(defun gnorb-gnus-incoming-do-todo (arg &optional id)
   "Call this function from a received gnus message to store a
 link to the message, prompt for a related Org heading, visit the
 heading, and either add a note or trigger a TODO state change.
@@ -498,7 +498,7 @@ there match the value of the `gnorb-org-msg-id-key' property for
 any headings. In order for this to work, you will have to have
 loaded org-id, and have the variable `org-id-track-globally' set
 to t (it is, by default)."
-  (interactive (gnus-interactive "P\nH"))
+  (interactive "P")
   (when (not (memq major-mode '(gnus-summary-mode gnus-article-mode)))
     (user-error "Only works in gnus summary or article mode"))
   ;; We should only store a link if it's not already at the head of
@@ -507,7 +507,10 @@ to t (it is, by default)."
   (setq gnorb-window-conf (current-window-configuration))
   (move-marker gnorb-return-marker (point))
   (setq gnorb-gnus-message-info nil)
-  (let* ((msg-id (mail-header-id headers))
+  (let* ((headers (gnus-data-header
+		   (gnus-data-find
+		    (gnus-summary-article-number))))
+	 (msg-id (mail-header-id headers))
 	 (from (mail-header-from headers))
 	 (subject (mail-header-subject headers))
 	 (date (mail-header-date headers))
@@ -547,10 +550,10 @@ to t (it is, by default)."
 	     related-headings))
       (if (catch 'target
 	    (dolist (h related-headings nil)
-	     (when (yes-or-no-p
-		    (format "Trigger action on %s"
-			    (gnorb-pretty-outline h)))
-	       (throw 'target (setq targ h)))))
+	      (when (yes-or-no-p
+		     (format "Trigger action on %s"
+			     (gnorb-pretty-outline h)))
+		(throw 'target (setq targ h)))))
 	  (gnorb-trigger-todo-action arg targ)
 	(setq targ (org-refile-get-location
 		    "Trigger heading" nil t))
@@ -660,10 +663,13 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 	(gnorb-gnus-insert-format-letter-maybe header)))
 
 ;;;###autoload
-(defun gnorb-gnus-view (headers)
+(defun gnorb-gnus-view ()
   "Display the first relevant TODO heading for the message under point"
-  (interactive (gnus-interactive "H"))
-  (let ((tracked-headings
+  (interactive)
+  (let ((headers (gnus-data-header
+		   (gnus-data-find
+		    (gnus-summary-article-number))))
+	(tracked-headings
 	 (gnorb-find-tracked-headings headers)))
     (when tracked-headings
       (setq gnorb-window-conf (current-window-configuration))
