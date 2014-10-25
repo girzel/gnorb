@@ -49,6 +49,7 @@
 ;;; Code:
 
 (require 'gnus-registry)
+(require 'gnorb-utils)
 
 (defgroup gnorb-registry nil
   "Gnorb's use of the Gnus registry."
