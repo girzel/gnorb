@@ -86,6 +86,8 @@ be scanned for gnus messages, and those messages displayed."
       (with-current-buffer buf
 	(erase-buffer)
 	(setq nngnorb-attachment-file-list nil))
+      (when (and (equal "5.13" gnus-version-number) (version< emacs-version "24.4"))
+	(setq q (car q)))
       (cond ((string-match "id\\+\\([[:alnum:]-]+\\)$" q)
 	     (with-demoted-errors "Error: %S"
 	       (org-id-goto (match-string 1 q))
