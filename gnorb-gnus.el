@@ -483,18 +483,15 @@ work."
 (defun gnorb-gnus-incoming-do-todo (arg &optional id)
   "Call this function from a received gnus message to store a
 link to the message, prompt for a related Org heading, visit the
-heading, and either add a note or trigger a TODO state change.
-Set `gnorb-trigger-todo-default' to 'note or 'todo (you can
-get the non-default behavior by calling this function with a
-prefix argument), or to 'prompt to always be prompted.
+heading, and trigger an action on it \(see
+`gnorb-org-trigger-actions'\).
 
-In some cases, Gnorb can guess for you which Org heading you
-probably want to trigger, which can save some time. It does this
-by looking in the References header, and seeing if any of the IDs
-there match the value of the `gnorb-org-msg-id-key' property for
-any headings. In order for this to work, you will have to have
-loaded org-id, and have the variable `org-id-track-globally' set
-to t (it is, by default)."
+If you've set up message tracking \(with
+`gnorb-tracking-initialize'\), Gnorb can guess which Org heading
+you probably want to trigger, which can save some time. It does
+this by looking in the References header, and seeing if any of
+the messages referenced there are already being tracked by any
+headings."
   (interactive "P")
   (when (not (memq major-mode '(gnus-summary-mode gnus-article-mode)))
     (user-error "Only works in gnus summary or article mode"))
