@@ -591,16 +591,10 @@ to a message into the record's `gnorb-bbdb-messages-field'."
 			  (parse-time-string (mail-header-date heads))))
 	     (subject (mail-header-subject heads))
 	     (id (mail-header-id heads))
-	     (group gnus-newsgroup-name)
+	     (group (gnorb-get-real-group-name
+		     gnus-newsgroup-name
+		     art-no))
 	     link)
-	;; check for both nnvirtual and nnir, and link to the real
-	;; group in those cases
-	(when (eq (car (gnus-find-method-for-group group))
-		  'nnvirtual)
-	  (setq group (car (nnvirtual-map-article art-no))))
-	(when (eq (car (gnus-find-method-for-group group))
-		  'nnir)
-	  (setq group (nnir-article-group art-no)))
 	(if (not (and date subject id group))
 	    (message "Could not save a link to this message")
 	  (setq link (make-gnorb-bbdb-link :subject subject :date date

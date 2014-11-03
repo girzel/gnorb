@@ -385,6 +385,16 @@ child headings."
 ;; Common functions for extracting references and relevant headings
 ;; from the message under point. For use in gnorb-gnus.el functions.
 
+(defun gnorb-get-real-group-name (group art-no)
+  "Find the original group name of a message in a virtual or nnir
+group."
+  (cl-case (car (gnus-find-method-for-group group))
+    (nnvirtual
+     (setq group (car (nnvirtual-map-article art-no))))
+    (nnir
+     (setq group (nnir-article-group art-no))))
+  group)
+
 (defun gnorb-find-tracked-headings (headers &optional include-zombies)
   "Check HEADERS for message references and return relevant heading IDs.
 

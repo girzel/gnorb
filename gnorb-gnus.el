@@ -501,15 +501,17 @@ headings."
   (setq gnorb-window-conf (current-window-configuration))
   (move-marker gnorb-return-marker (point))
   (setq gnorb-gnus-message-info nil)
-  (let* ((headers (gnus-data-header
-		   (gnus-data-find
-		    (gnus-summary-article-number))))
+  (let* ((art-no (gnus-summary-article-number))
+	 (headers (gnus-data-header
+		   (gnus-data-find art-no)))
 	 (msg-id (mail-header-id headers))
 	 (from (mail-header-from headers))
 	 (subject (mail-header-subject headers))
 	 (date (mail-header-date headers))
 	 (to (cdr (assoc 'To (mail-header-extra headers))))
-	 (group gnus-newsgroup-name)
+	 (group (gnorb-get-real-group-name
+		 gnus-newsgroup-name
+		 art-no))
 	 (link (call-interactively 'org-store-link))
 	 (org-refile-targets gnorb-gnus-trigger-refile-targets)
 	 (ref-msg-ids (concat (mail-header-references headers) " "
