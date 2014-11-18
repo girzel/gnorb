@@ -52,7 +52,7 @@
 
 (make-variable-buffer-local 'nngnorb-attachment-file-list)
 
-(gnus-declare-backend "nngnorb" 'none)
+(gnus-declare-backend "nngnorb" 'post-mail 'virtual)
 
 (add-to-list 'nnir-method-default-engines '(nngnorb . gnorb))
 
