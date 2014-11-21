@@ -163,6 +163,37 @@ after an Org heading is deleted, for instance."
 	  msg-id 'gnorb-ids (remove org-id org-ids))))
      assoc-msgs)))
 
+(defun gnorb-flush-dead-associations (&optional clean-archived)
+  "Clean the registry of associations with nonexistent headings.
+
+Gnus will not prune registry entries that appear to be associated
+with an Org heading.  If your registry is limited to a very small
+size, you may end up with a full registry.  Use this function to
+remove dead associations, and free up more entries for possible
+pruning.
+
+By default, associations are considered \"live\" if the Org
+heading exists in an Org file or in an Org archive file.  When
+optional CLEAN_ARCHIVED is non-nil, delete associations from
+archived headings as well."
+  (interactive "P")
+  (let ((gnorb-id-tracker
+	 (registry-lookup-secondary gnus-registry-db 'gnorb-ids))
+	(deleted-count 0))
+    (require 'org-id)
+    (maphash
+     (lambda (k _)
+       (let ((file (org-id-find-id-file k)))
+	 (unless
+	     (and file
+		  (and clean-archived
+		       (string-match-p "org_archive$" file)))
+	   (gnorb-delete-all-associations k)
+	   (incf deleted-count))))
+     gnorb-id-tracker)
+    (message "Disassociated %d nonexistent Org headings"
+	     deleted-count)))
+
 (defun gnorb-registry-org-id-search (id)
   "Find all messages that have the org ID in their 'gnorb-ids
 key."
