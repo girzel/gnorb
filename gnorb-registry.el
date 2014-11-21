@@ -149,7 +149,7 @@ the MSG-ID."
       (gnus-registry-set-id-key msg-id 'gnorb-ids
 				(remove org-id org-ids)))))
 
-(defun gnorb-delete-all-assocations (org-id)
+(defun gnorb-delete-all-associations (org-id)
   "Delete all message associations for an Org heading.
 
 The heading is identified by ORG-ID. This is suitable for use
