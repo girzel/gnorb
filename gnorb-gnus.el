@@ -535,50 +535,56 @@ you'll stay in the Gnus summary buffer."
 		     :link ,link :date ,date :refs ,ref-msg-ids
 		     :group ,group))
     (gnorb-gnus-collect-all-attachments nil t)
-    (if id
-	(progn
-	  (delete-other-windows)
-	  (gnorb-trigger-todo-action nil id))
-      ;; Flush out zombies (dead associations).
-      (setq related-headings
-	    (cl-remove-if
-	     (lambda (h)
-	       (when (null (org-id-find-id-file h))
-		 (when (y-or-n-p
-			(format
-			 "ID %s no longer exists, disassociate message?"
-			 h))
-		   (gnorb-delete-association msg-id h))))
-	     related-headings))
-      ;; See if one of the related headings is chosen.
-      (unless (catch 'target
-		(dolist (h related-headings nil)
-		  (when (yes-or-no-p
-			 (format "Trigger action on %s"
-				 (gnorb-pretty-outline h)))
-		    (throw 'target (setq targ h)))))
-	;; If not, use the refile interface to choose one.
-	(setq targ (org-refile-get-location
-		    "Trigger heading" nil t))
-	(setq targ
-	      (save-window-excursion
-		(find-file (nth 1 targ))
-		(goto-char (nth 3 targ))
-		(org-id-get-create))))
-      ;; Either bulk associate multiple messages...
-      (if (> (length articles) 1)
-	  (progn
-	    (dolist (a articles)
-	      (gnorb-registry-make-entry
-	       (mail-header-id
-		(gnus-data-header
-		 (gnus-data-find a)))
-	       from subject targ group))
-	    (message "Associated %d messages with %s"
-		     (length articles) (gnorb-pretty-outline targ)))
-	;; ...or just trigger the one.
-	(delete-other-windows)
-	(gnorb-trigger-todo-action nil targ)))))
+    (condition-case nil
+     (if id
+	 (progn
+	   (delete-other-windows)
+	   (gnorb-trigger-todo-action nil id))
+       ;; Flush out zombies (dead associations).
+       (setq related-headings
+	     (cl-remove-if
+	      (lambda (h)
+		(when (null (org-id-find-id-file h))
+		  (when (y-or-n-p
+			 (format
+			  "ID %s no longer exists, disassociate message?"
+			  h))
+		    (gnorb-delete-association msg-id h))))
+	      related-headings))
+       ;; See if one of the related headings is chosen.
+       (unless (catch 'target
+		 (dolist (h related-headings nil)
+		   (when (yes-or-no-p
+			  (format "Trigger action on %s"
+				  (gnorb-pretty-outline h)))
+		     (throw 'target (setq targ h)))))
+	 ;; If not, use the refile interface to choose one.
+	 (setq targ (org-refile-get-location
+		     "Trigger heading" nil t))
+	 (setq targ
+	       (save-window-excursion
+		 (find-file (nth 1 targ))
+		 (goto-char (nth 3 targ))
+		 (org-id-get-create))))
+       ;; Either bulk associate multiple messages...
+       (if (> (length articles) 1)
+	   (progn
+	     (dolist (a articles)
+	       (gnorb-registry-make-entry
+		(mail-header-id
+		 (gnus-data-header
+		  (gnus-data-find a)))
+		from subject targ group))
+	     (message "Associated %d messages with %s"
+		      (length articles) (gnorb-pretty-outline targ)))
+	 ;; ...or just trigger the one.
+	 (delete-other-windows)
+	 (gnorb-trigger-todo-action nil targ)))
+     (error
+      ;; If these are left populated after an error, it plays hell
+      ;; with future trigger processes.
+      (setq gnorb-gnus-message-info nil)
+      (setq gnorb-gnus-capture-attachments nil)))))
 
 ;;;###autoload
 (defun gnorb-gnus-search-messages (str &optional ret)
