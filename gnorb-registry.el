@@ -85,15 +85,11 @@ to the message's registry entry, under the 'gnorb-ids key."
 	       (memq major-mode '(gnus-summary-mode gnus-article-mode)))
 	     (not org-note-abort))
     (let* ((msg-id
-	    (format "<%s>" (plist-get org-store-link-plist :message-id)))
-	   (entry (gnus-registry-get-or-make-entry msg-id))
-	   (org-ids
-	    (gnus-registry-get-id-key msg-id 'gnorb-ids))
-	   (new-org-id (org-id-get-create)))
-      (plist-put org-capture-plist :gnorb-id new-org-id)
-      (setq org-ids (cons new-org-id org-ids))
-      (setq org-ids (delete-dups org-ids))
-      (gnus-registry-set-id-key msg-id 'gnorb-ids org-ids))))
+	    (gnorb-bracket-message-id
+	     (plist-get org-store-link-plist :message-id)))
+	   (org-id (org-id-get-create)))
+      (plist-put org-capture-plist :gnorb-id org-id)
+      (gnorb-registry-make-entry msg-id nil nil org-id nil))))
 
 
 (defun gnorb-registry-capture-abort-cleanup ()
