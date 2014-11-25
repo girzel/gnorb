@@ -606,7 +606,9 @@ search."
 			(let ((rec-tags (bbdb-record-xfield
 					 r gnorb-bbdb-org-tag-field)))
 			  (and rec-tags
-			       (let ((tags-list (org-split-string rec-tags ":"))
+			       (let ((tags-list (if (stringp rec-tags)
+						    (org-split-string rec-tags ":")
+						  rec-tags))
 				     (case-fold-search t)
 				     (org-trust-scanner-tags t))
 				 (eval tag-clause)))))
