@@ -663,7 +663,8 @@ File: gnorb.info,  Node: Suggested Keybindings,  Prev: Misc Gnus,  Up: Top
           (setq gnorb-org-agenda-popup-bbdb t)
           (eval-after-load "org-agenda"
             '(progn (org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail)
-                    (org-defkey org-agenda-mode-map (kbd "V") 'gnorb-org-popup-bbdb)))))
+                    (org-defkey org-agenda-mode-map (kbd "C-c v") 'gnorb-org-popup-bbdb)
+                    (org-defkey org-agenda-mode-map (kbd "V") 'gnorb-org-view)))))
 
      (eval-after-load "gnorb-gnus"
        '(progn
