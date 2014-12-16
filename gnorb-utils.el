@@ -240,7 +240,9 @@ agenda. Then let the user choose an action from the value of
 	   (lambda (a)
 	     (format "Attach %s to heading? "
 		     (file-name-nondirectory a)))
-	   (lambda (a) (org-attach-attach a nil 'mv))
+	   (lambda (a)
+	     (with-demoted-errors
+		 (org-attach-attach a nil 'mv)))
 	   gnorb-gnus-capture-attachments
 	   '("file" "files" "attach")))
       (setq gnorb-gnus-capture-attachments nil))
