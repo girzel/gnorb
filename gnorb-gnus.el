@@ -574,7 +574,8 @@ you'll stay in the Gnus summary buffer."
 		(mail-header-id
 		 (gnus-data-header
 		  (gnus-data-find a)))
-		from subject targ group))
+		from subject targ group)
+	       (gnus-summary-remove-process-mark a))
 	     (message "Associated %d messages with %s"
 		      (length articles) (gnorb-pretty-outline targ)))
 	 ;; ...or just trigger the one.
