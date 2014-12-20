@@ -309,7 +309,7 @@ the message being included in this search."
      (gnus-summary-article-number)))
   (let* ((msg-id (gnus-fetch-original-field "message-id"))
 	 (org-ids (gnus-registry-get-id-key msg-id 'gnorb-ids))
-	 chosen)
+	 chosen multiple-alist)
     (if org-ids
 	(progn
 	  (if (= (length org-ids) 1)
@@ -317,14 +317,18 @@ the message being included in this search."
 	      (progn (gnus-registry-set-id-key msg-id 'gnorb-ids nil)
 		     (setq chosen (car org-ids)))
 	    ;; Multiple associated TODOs, prompt to choose one.
+	    (setq multiple-alist
+		  (mapcar
+		   (lambda (h)
+		     (cons (gnorb-pretty-outline h) h))
+		   org-ids))
 	    (setq chosen
 		  (cdr
-		   (org-completing-read
-		    "Choose a TODO to disassociate from: "
-		    (mapcar
-		     (lambda (h)
-		       (cons (gnorb-pretty-outline h) h))
-		     org-ids))))
+		   (assoc
+		    (org-completing-read
+		     "Choose a TODO to disassociate from: "
+		     multiple-alist)
+		    multiple-alist)))
 	    (gnus-registry-set-id-key msg-id 'gnorb-ids
 				      (remove chosen org-ids)))
 	  (message "Message disassociated from %s"
