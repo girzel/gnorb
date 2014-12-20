@@ -535,7 +535,7 @@ you'll stay in the Gnus summary buffer."
 		     :link ,link :date ,date :refs ,ref-msg-ids
 		     :group ,group))
     (gnorb-gnus-collect-all-attachments nil t)
-    (condition-case nil
+    (condition-case err
      (if id
 	 (progn
 	   (delete-other-windows)
@@ -585,7 +585,8 @@ you'll stay in the Gnus summary buffer."
       ;; If these are left populated after an error, it plays hell
       ;; with future trigger processes.
       (setq gnorb-gnus-message-info nil)
-      (setq gnorb-gnus-capture-attachments nil)))))
+      (setq gnorb-gnus-capture-attachments nil)
+      (signal (car err) (cdr err))))))
 
 ;;;###autoload
 (defun gnorb-gnus-search-messages (str &optional ret)
