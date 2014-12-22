@@ -16,7 +16,31 @@ mini mailboxes.
 *Note for previous users*: If you were using Gnorb from Github before
 it shifted to the Elpa repository, the email tracking mechanism has
 changed, please see the manual for details.
+** Known bugs/issues
+*** Gnus Registry
+Prior to late December, 2014, the Gnus registry had some issues with
+preserving "precious" entries while pruning.
 
+When the registry approaches its maximum size it will delete excess
+entries, a process referred to as "pruning". "Precious" entries are
+those that contain important information: they should not be pruned.
+
+Gnorb uses the registry to track associations between messages and Org
+headings, and marks those entries as precious. The entire process of
+tracking, in fact, relies on these entries being preserved, and Gnorb
+goes to some lengths to protect this information. Older versions of
+the registry could nevertheless delete those entries.
+
+These issues are fixed circa the end of December, 2014, around "Ma
+Gnus v0.12", whatever that means. If you think there's a possibility
+your registry is full, and associations are being deleted, you might
+consider upgrading to a recent Gnus.
+*** Multiple Associations
+Gnorb theoretically supports email messages being associated with
+multiple Org headings. In practice, however, this situation hasn't
+been thought through completely, and you may experience weirdness. If
+you do, and you have some ideas about how it should be handled, please
+contact the author and suggest them.
 ** Installation
 
 It's easiest to install Gnorb from Elpa: run `list-packages' and look
