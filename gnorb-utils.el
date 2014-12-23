@@ -1,6 +1,6 @@
 ;;; gnorb-utils.el --- Common utilities for all gnorb stuff.
 
-;; Copyright (C) 2014  Eric Abrahamsen
+;; Copyright (C) 2014  Free Software Foundation, Inc.
 
 ;; Author: Eric Abrahamsen <eric@ericabrahamsen.net>
 ;; Keywords:
@@ -26,6 +26,7 @@
 
 (require 'cl-lib)
 
+(require 'mailcap)
 (mailcap-parse-mimetypes)
 
 (defgroup gnorb nil
@@ -365,8 +366,7 @@ methods?"
 		     (ignore-errors
 		       (gnus-request-head msg-id server-group)))
 		(throw 'found server-group))))
-      (when (featurep 'notmuch)
-	nil))))
+      nil)))
 
 (defun gnorb-collect-ids (&optional id)
   "Collect all Org IDs for a subtree.

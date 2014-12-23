@@ -1,6 +1,6 @@
 ;;; gnorb-gnus.el --- The gnus-centric fuctions of gnorb
 
-;; Copyright (C) 2014  Eric Abrahamsen
+;; Copyright (C) 2014  Free Software Foundation, Inc.
 
 ;; Author: Eric Abrahamsen <eric@ericabrahamsen.net>
 ;; Keywords: 

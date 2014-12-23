@@ -1,6 +1,6 @@
 ;;; gnorb-registry.el --- Registry implementation for Gnorb
 
-;; This file is in the public domain.
+;; Copyright (C) 2014  Free Software Foundation, Inc.
 
 ;; Author: Eric Abrahamsen <eric@ericabrahamsen.net.>
 

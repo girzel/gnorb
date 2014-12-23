@@ -1,6 +1,6 @@
 ;;; gnorb-bbdb.el --- The BBDB-centric functions of gnorb
 
-;; Copyright (C) 2014  Eric Abrahamsen
+;; Copyright (C) 2014  Free Software Foundation, Inc.
 
 ;; Author: Eric Abrahamsen <eric@ericabrahamsen.net>
 ;; Keywords: 
@@ -24,8 +24,9 @@
 
 ;;; Code:
 
-(require 'bbdb)
+(require 'bbdb nil t)
 (require 'gnorb-utils)
+(require 'cl-lib)
 
 (defgroup gnorb-bbdb nil
   "The BBDB bits of gnorb."
@@ -37,8 +38,9 @@
   :group 'gnorb-bbdb
   :type 'symbol)
 
-(unless (assoc gnorb-bbdb-org-tag-field bbdb-separator-alist)
-  (push `(,gnorb-bbdb-org-tag-field ":" ":") bbdb-separator-alist))
+(when (boundp 'bbdb-separator-alist)    ;Allow compilation if BBDB is absent!
+  (unless (assoc gnorb-bbdb-org-tag-field bbdb-separator-alist)
+    (push `(,gnorb-bbdb-org-tag-field ":" ":") bbdb-separator-alist)))
 
 (defcustom gnorb-bbdb-messages-field 'messages
   "The name (as a symbol) of the field where links to recent gnus

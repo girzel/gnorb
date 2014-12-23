@@ -1,6 +1,6 @@
 ;;; gnorb.el --- Glue code between Gnus, Org, and BBDB
 
-;; Copyright (C) 2014  Eric Abrahamsen
+;; Copyright (C) 2014  Free Software Foundation, Inc.
 
 ;; Version: 1.0.1
 

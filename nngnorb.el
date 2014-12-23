@@ -1,6 +1,6 @@
 ;;; nngnorb.el --- Gnorb backend for Gnus
 
-;; This file is in the public domain.
+;; Copyright (C) 2014  Free Software Foundation, Inc.
 
 ;; Author: Eric Abrahamsen <eric@ericabrahamsen.net.>
 

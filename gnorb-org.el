@@ -1,6 +1,6 @@
 ;;; gnorb-org.el --- The Org-centric functions of gnorb
 
-;; Copyright (C) 2014  Eric Abrahamsen
+;; Copyright (C) 2014  Free Software Foundation, Inc.
 
 ;; Author: Eric Abrahamsen  <eric@ericabrahamsen.net>
 ;; Keywords: 
@@ -25,6 +25,7 @@
 ;;; Code:
 
 (require 'gnorb-utils)
+(require 'cl-lib)
 
 (defgroup gnorb-org nil
   "The Org bits of Gnorb."
@@ -514,7 +515,7 @@ default set of parameters."
 	    (apply 'org-export-to-file
 		   `(,backend-symbol
 		     ,(org-export-output-file-name
-		       (second (assoc backend-symbol gnorb-org-export-extensions))
+		       (cl-second (assoc backend-symbol gnorb-org-export-extensions))
 		       t gnorb-tmp-dir)
 		     ,@opts
 		     ,gnorb-org-email-subtree-file-parameters))))
