@@ -177,9 +177,10 @@ we came from."
 	    (cond ((eq gnorb-org-mail-scan-scope 'all)
 		   strings)
 		  ((numberp gnorb-org-mail-scan-scope)
-		   (delq nil
-			 (cl-subseq
-			  strings 0 (1+ gnorb-org-mail-scan-scope))))
+		   (cl-subseq
+		    strings 0 (min
+			       (length strings)
+			       (1+ gnorb-org-mail-scan-scope))))
 		  ;; We could provide more options here. 'tree vs
 		  ;; 'subtree, for instance.
 		  (t
