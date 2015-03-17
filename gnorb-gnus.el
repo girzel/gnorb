@@ -235,8 +235,9 @@ save them into `gnorb-tmp-dir'."
 
 (defun gnorb-gnus-capture-abort-cleanup ()
   (with-no-warnings ; For `org-note-abort'
-   (when (and org-note-abort
-	      (org-capture-get :gnus-attachments))
+    (when (and org-note-abort
+	       (or gnorb-gnus-capture-always-attach
+		   (org-capture-get :gnus-attachments)))
      (condition-case error
 	 (progn (org-attach-delete-all)
 		(setq abort-note 'clean)
