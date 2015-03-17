@@ -74,6 +74,11 @@ are sent, or Org headings triggered.")
   "Return point here after various actions, to be used together
 with `gnorb-window-conf'.")
 
+(defvar gnorb-trigger-capture-location nil
+  "Marker pointing at the location where we want to place capture
+  templates, for the capture-to-child and capture-to-sibling
+  trigger actions.")
+
 (defcustom gnorb-mail-header "X-Org-ID"
   "Name of the mail header used to store the ID of a related Org
   heading. Only used locally: always stripped when the mail is
@@ -239,20 +244,6 @@ agenda. Then let the user choose an action from the value of
 		       gnorb-org-trigger-actions))))
     (unless agenda-p
       (org-reveal))
-    ;; Query about attaching email attachments. No matter what
-    ;; happens, clear `gnorb-gnus-capture-attachments'.
-    (unwind-protect
-	(org-with-point-at root-marker
-	  (map-y-or-n-p
-	   (lambda (a)
-	     (format "Attach %s to heading? "
-		     (file-name-nondirectory a)))
-	   (lambda (a)
-	     (with-demoted-errors
-		 (org-attach-attach a nil 'mv)))
-	   gnorb-gnus-capture-attachments
-	   '("file" "files" "attach")))
-      (setq gnorb-gnus-capture-attachments nil))
     (cl-labels
 	((make-entry
 	  (id)
@@ -263,28 +254,81 @@ agenda. Then let the user choose an action from the value of
 	   id
 	   (plist-get gnorb-gnus-message-info :group))))
       ;; Handle our action.
-      (cond ((eq action 'note)
+      (if (fboundp action)
+	  (org-with-point-at root-marker
+	    (make-entry (org-id-get-create))
+	    (funcall action gnorb-gnus-message-info))
+	(cl-case action
+	  (note
+	   (org-with-point-at root-marker
+	     (make-entry (org-id-get-create))
+	     (call-interactively 'org-add-note)))
+	  (todo
+	   (if agenda-p
+	       (progn
+		 (org-with-point-at root-marker
+		   (make-entry (org-id-get-create)))
+		 (call-interactively 'org-agenda-todo))
 	     (org-with-point-at root-marker
 	       (make-entry (org-id-get-create))
-	       (call-interactively 'org-add-note)))
-	    ((eq action 'todo)
-	     (if agenda-p
-		 (progn
-		   (org-with-point-at root-marker
-		     (make-entry (org-id-get-create)))
-		   (call-interactively 'org-agenda-todo))
-	       (org-with-point-at root-marker
-		 (make-entry (org-id-get-create))
-		 (call-interactively 'org-todo))))
-	    ((eq action 'no-associate)
-	     nil)
-	    ((eq action 'associate)
-	     (org-with-point-at root-marker
-	       (make-entry (org-id-get-create))))
-	    ((fboundp action)
-	     (org-with-point-at root-marker
-	       (make-entry (org-id-get-create))
-	       (funcall action gnorb-gnus-message-info)))))))
+	       (call-interactively 'org-todo))))
+	  (no-associate
+	   nil)
+	  (associate
+	   (org-with-point-at root-marker
+	     (make-entry (org-id-get-create))))
+	  ;; We're going to capture a new heading
+	  ((cap-child cap-sib)
+	   (org-with-point-at root-marker
+		(setq gnorb-trigger-capture-location (point-marker)))
+	   (let ((entry
+		  ;; Pick a template.
+		  (copy-sequence (org-capture-select-template))))
+	     ;; Do surgery on that template so that it finds its
+	     ;; location using our function.
+	     (setf (nth 3 entry)
+		   `(function
+		     ,(if (eq action 'cap-child)
+			  #'gnorb-trigger-capture-child
+			#'gnorb-trigger-capture-sibling)))
+	     ;; This will likely fail horribly for capture templates
+	     ;; that aren't entries or list items.
+	     (let ((org-capture-entry entry))
+	       ;; When org-capture-entry is let-bound, the capture
+	       ;; process will use that template instead of
+	       ;; prompting the user. Also, `gnorb-registry-capture'
+	       ;; will take care of making the registry entry for us.
+	       (call-interactively 'org-capture)))))))
+    ;; Lastly, query about attaching email attachments. No matter what
+    ;; happens, clear `gnorb-gnus-capture-attachments'.
+    (unwind-protect
+	(org-with-point-at
+	    (if (memq action '(cap-child cap-sib))
+		(point)
+	      root-marker)
+	  (map-y-or-n-p
+	   (lambda (a)
+	     (format "Attach %s to heading? "
+		     (file-name-nondirectory a)))
+	   (lambda (a)
+	     (with-demoted-errors
+		 (org-attach-attach a nil 'mv)))
+	   gnorb-gnus-capture-attachments
+	   '("file" "files" "attach")))
+      (setq gnorb-gnus-capture-attachments nil))))
+
+(defun gnorb-trigger-capture-child ()
+  ;; The capture process creates a child by default
+  (org-goto-marker-or-bmk gnorb-trigger-capture-location)
+  (org-back-to-heading))
+
+(defun gnorb-trigger-capture-sibling ()
+  ;; This only works if we're not trying to create a sibling for a
+  ;; top-level heading, there appears to be no way to do that.  But in
+  ;; that case this trigger action isn't really necessary, just
+  ;; handle it with a regular capture.
+  (org-goto-marker-or-bmk gnorb-trigger-capture-location)
+  (org-up-heading-safe))
 
 (defun gnorb-pretty-outline (id &optional kw)
   "Return pretty outline path of the Org heading indicated by ID.

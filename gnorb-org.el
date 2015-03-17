@@ -43,9 +43,8 @@
     ("take note" . note)
     ("don't associate" . no-associate)
     ("only associate" . associate)
-;    ("capture to child" . cap-child)
-;    ("capture to sibling" . cap-sib)
-)
+    ("capture to child" . cap-child)
+    ("capture to sibling" . cap-sib))
   "List of potential actions that can be taken on headings.
 
 When triggering an Org heading after receiving or sending a
@@ -56,8 +55,8 @@ todo state: Associate the message, and change TODO state.
 take note: Associate the message, and take a note.
 don't associate: Do nothing at all, don't connect the message and TODO.
 only associate: Associate the message with this heading, do nothing else.
-capture to child: [not yet implemented] Associate this message with a new child heading.
-capture to sibling: [not yet implemented] Associate this message with a new sibling heading.
+capture to child: Associate this message with a new child heading.
+capture to sibling: Associate this message with a new sibling heading.
 
 You can reorder this list or remove items as suits your workflow.
 The two \"capture\" options will use the value of
@@ -270,10 +269,14 @@ headings."
     (when messages
       (insert ", "))
     (insert (mapconcat 'identity mails ", ")))
-  ;; Return us after message is sent.
-  (add-to-list 'message-exit-actions
-	       'gnorb-org-restore-after-send t)
-  ;; Set headers from MAIL_* properties (from, cc, and bcc).
+  ;; Commenting this out because
+  ;; `gnorb-gnus-check-outgoing-headers' is set unconditionally in the
+  ;; `message-send-hook, so this should be redundant.  Also, we've
+  ;; switched to using message-send-actions.
+  
+  ;; (add-to-list
+  ;; 'message-exit-actions 'gnorb-org-restore-after-send t) Set
+  ;; headers from MAIL_* properties (from, cc, and bcc).
   (cl-flet ((sh (h)
 		(when (cdr h)
 		  (funcall (intern (format "message-goto-%s" (car h))))

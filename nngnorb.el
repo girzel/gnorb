@@ -278,8 +278,12 @@ continue to provide tracking of sent messages."
 	(message-insert-header
 	 (intern gnorb-mail-header)
 	 org-id)
-	(add-to-list 'message-exit-actions
-		     'gnorb-org-restore-after-send t))
+	;; As with elsewhere, this should be redundant with
+	;; `gnorb-gnus-check-outgoing-headers.'  Even if not, it
+	;; should be switched to use `message-send-actions'
+	;; (add-to-list 'message-exit-actions
+	;; 'gnorb-org-restore-after-send t)
+	)
       (goto-char compose-marker))
     (when attachments
       (map-y-or-n-p

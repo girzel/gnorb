@@ -297,11 +297,14 @@ information about the outgoing message into
 	    ;; `gnorb-org-setup-message' may have put this here, but
 	    ;; if we're working from a draft, or triggering this from
 	    ;; a reply, it might not be there yet.
-	    (add-to-list 'message-exit-actions
+	    (add-to-list 'message-send-actions
 			 'gnorb-org-restore-after-send t))
 	(setq gnorb-message-org-ids nil)))))
 
-(add-hook 'message-header-hook 'gnorb-gnus-check-outgoing-headers)
+;; This sets the global value, but the hook is made buffer-local in
+;; `gnus-inews-add-send-actions', so this is ignored
+;(add-hook 'message-header-hook 'gnorb-gnus-check-outgoing-headers)
+(add-hook 'message-send-hook 'gnorb-gnus-check-outgoing-headers t)
 
 ;;;###autoload
 (defun gnorb-gnus-outgoing-do-todo (&optional arg)
@@ -379,10 +382,9 @@ work."
 	  (save-excursion
 	    (save-restriction
 	      (widen)
-	      (setq message-exit-actions
-		    (remove 'gnorb-org-restore-after-send
-			    (remove 'gnorb-gnus-outgoing-make-todo-1
-				    message-exit-actions)))
+	      (setq message-send-actions
+		    (remove 'gnorb-gnus-outgoing-make-todo-1
+			    message-send-actions))
 	      (message-narrow-to-headers-or-head)
 	      (message-remove-header
 	       gnorb-mail-header)
@@ -422,12 +424,9 @@ work."
 		;; message
 		(push h header-ids)))))
 	(goto-char compose-marker)
-	(add-to-list
-	 'message-exit-actions
-	 (if header-ids
-	     'gnorb-org-restore-after-send
-	   'gnorb-gnus-outgoing-make-todo-1)
-	 t)
+	(unless header-ids
+	  (add-to-list 'message-send-actions
+	   'gnorb-gnus-outgoing-make-todo-1 t))
 	(message
 	 (if header-ids
 	     "Message will trigger TODO state-changes after sending"
