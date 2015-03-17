@@ -142,7 +142,7 @@ be scanned for gnus messages, and those messages displayed."
       (dolist (i (delq nil org-ids))
 	(let ((rel-msg-id (gnorb-registry-org-id-search i)))
 	  (when rel-msg-id
-	    (setq msg-ids (append rel-msg-id msg-ids)))))
+	    (setq msg-ids (append (delq nil rel-msg-id) msg-ids)))))
       (when msg-ids
 	  (dolist (id msg-ids)
 	    (let ((link (gnorb-msg-id-to-link id)))
