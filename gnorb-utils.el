@@ -213,24 +213,30 @@ window."
 we were in the agenda when this was called, then keep us in the
 agenda. Then let the user choose an action from the value of
 `gnorb-org-trigger-actions'."
-  (let ((agenda-p (eq major-mode 'org-agenda-mode))
-	(action (cdr (assoc
-		      (org-completing-read
-		       "Action to take: "
-		       gnorb-org-trigger-actions nil t)
-		      gnorb-org-trigger-actions)))
-	(root-marker (make-marker)))
-    ;; Place the marker for the relevant TODO heading.
-    (cond (agenda-p
-	   (setq root-marker
+  (let* ((agenda-p (eq major-mode 'org-agenda-mode))
+	 (root-marker
+	  (cond (agenda-p
 		 (copy-marker
-		  (org-get-at-bol 'org-hd-marker))))
-	  ((derived-mode-p 'org-mode)
-	   (move-marker root-marker (point-at-bol)))
-	  (id
-	   (save-excursion
-	     (org-id-goto id)
-	     (move-marker root-marker (point-at-bol)))))
+		  (org-get-at-bol 'org-hd-marker)))
+		((derived-mode-p 'org-mode)
+		 (save-excursion
+		   (org-back-to-heading)
+		   (point-marker)))
+		(id
+		 (save-excursion
+		   (org-id-goto id)
+		   (org-back-to-heading)
+		   (point-marker)))))
+	 (id (or id
+		 (org-with-point-at root-marker
+		   (org-id-get-create))))
+	 (action (cdr (assoc
+		       (org-completing-read
+			(format
+			 "Trigger action on %s: "
+			 (gnorb-pretty-outline id))
+			gnorb-org-trigger-actions nil t)
+		       gnorb-org-trigger-actions))))
     (unless agenda-p
       (org-reveal))
     ;; Query about attaching email attachments. No matter what
@@ -265,7 +271,7 @@ agenda. Then let the user choose an action from the value of
 	     (if agenda-p
 		 (progn
 		   (org-with-point-at root-marker
-		    (make-entry (org-id-get-create)))
+		     (make-entry (org-id-get-create)))
 		   (call-interactively 'org-agenda-todo))
 	       (org-with-point-at root-marker
 		 (make-entry (org-id-get-create))
