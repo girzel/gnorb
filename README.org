@@ -84,7 +84,10 @@ composing messages from... Or maybe it's just a case of NIH.
 Provide an Org Agenda command that does an email search for messages
 received in the visible date span, or day under point, etc. Make it
 work in the calendar, as well?
-*** TODO Capture to child/subtree trigger actions
+*** DONE Capture to child/subtree trigger actions
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2015-03-17 Tue 17:42]
+:END:
 Add trigger actions that create new sibling or child headings on the
 original Org heading.
 *** TODO Gnus message tagging
