@@ -589,6 +589,53 @@ you'll stay in the Gnus summary buffer."
       (signal (car err) (cdr err))))))
 
 ;;;###autoload
+(defun gnorb-gnus-quick-reply ()
+  "Compose a reply to the message under point, and associate both
+the original message and the reply with the selected heading.
+Take no other action.
+
+Use this when you want to compose a reply to a message on the
+spot, and track both messages, without having to go through the
+hassle of triggering an action on a heading, and then starting a
+reply."
+  (interactive)
+  (when (not (memq major-mode '(gnus-summary-mode gnus-article-mode)))
+    (user-error "Only works in gnus summary or article mode"))
+  (let* ((art-no (gnus-summary-article-number))
+	 (headers (gnus-data-header
+		   (gnus-data-find art-no)))
+	 (msg-id (mail-header-id headers))
+	 (from (mail-header-from headers))
+	 (subject (mail-header-subject headers))
+	 (group (gnorb-get-real-group-name
+		 gnus-newsgroup-name
+		 art-no))
+	 (ref-msg-ids (concat (mail-header-references headers) " "
+			      msg-id))
+	 (related-headings
+	  (when ref-msg-ids
+	    (gnorb-find-tracked-headings headers t)))
+	 (targ (car-safe related-headings)))
+    (if targ
+	(let ((ret (point-marker)))
+	  ;; Assume the first heading is the one we want.
+	  (gnorb-registry-make-entry
+	   msg-id from subject targ group)
+	  (gnus-summary-wide-reply-with-original 1)
+	  (save-restriction
+	    (widen)
+	    (message-narrow-to-headers-or-head)
+	    (goto-char (point-min))
+	    (open-line 1)
+	    (message-insert-header
+	     (intern gnorb-mail-header) targ))
+	  (goto-char ret)
+	  (message
+	   (format "Original message and reply will be associated with %s"
+		   (gnorb-pretty-outline targ))))
+      (message "No associated headings found"))))
+
+;;;###autoload
 (defun gnorb-gnus-search-messages (str &optional ret)
   "Initiate a search for gnus message links in an org subtree.
 The arg STR can be one of two things: an Org heading id value

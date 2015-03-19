@@ -135,6 +135,13 @@ Because these three commands all express a similar intent, but are
 called in different modes, it can make sense to give each of them the
 same keybinding in the keymaps for Org mode, Gnus summary mode, and
 Message mode, respectively.
+
+An additional convenience command is available for use in Gnus summary
+buffers: `gnorb-gnus-quick-reply'. If you don't want to go through the
+whole round trip of triggering an action and then starting a new
+reply, call this command on an incoming message to associate it with a
+heading, start a reply, and associate your reply with the same
+heading.
 ** Trigger Actions
 After calling `gnorb-gnus-incoming-do-todo' on a message, or after
 sending a message associated with an Org heading, you'll be taken to

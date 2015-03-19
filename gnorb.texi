@@ -235,6 +235,13 @@ called in different modes, it can make sense to give each of them the
 same keybinding in the keymaps for Org mode, Gnus summary mode, and
 Message mode, respectively.
 
+An additional convenience command is available for use in Gnus summary
+buffers: `gnorb-gnus-quick-reply'. If you don't want to go through the
+whole round trip of triggering an action and then starting a new
+reply, call this command on an incoming message to associate it with a
+heading, start a reply, and associate your reply with the same
+heading.
+
 @node Trigger Actions
 @section Trigger Actions
 
@@ -673,5 +680,5 @@ line. Defaults to ``¡''.
      (define-key message-mode-map (kbd "C-c t") 'gnorb-gnus-outgoing-do-todo)))
 @end lisp
 
-@c Emacs 25.0.50.6 (Org mode 8.3beta)
+@c Emacs 25.0.50.7 (Org mode 8.3beta)
 @bye

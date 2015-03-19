@@ -220,6 +220,13 @@ called in different modes, it can make sense to give each of them the
 same keybinding in the keymaps for Org mode, Gnus summary mode, and
 Message mode, respectively.
 
+   An additional convenience command is available for use in Gnus
+summary buffers: ‘gnorb-gnus-quick-reply’.  If you don’t want to go
+through the whole round trip of triggering an action and then starting a
+new reply, call this command on an incoming message to associate it with
+a heading, start a reply, and associate your reply with the same
+heading.
+
 
 File: gnorb.info,  Node: Trigger Actions,  Next: Viewing Tracked Messages in *Summary* Buffers,  Prev: Email-Related Commands,  Up: Email Tracking
 
@@ -698,26 +705,26 @@ Node: Installation2118
 Node: Setup2532
 Node: Email Tracking3899
 Node: Email-Related Commands5430
-Node: Trigger Actions8440
-Node: Viewing Tracked Messages in *Summary* Buffers9289
-Node: Hinting in Gnus10523
-Node: Message Attachments11531
-Node: Likely Workflow12713
-Node: Restoring Window Layout15518
-Node: Recent Mails From BBDB Contacts15882
-Node: BBDB posting styles16878
-Node: BBDB Org tagging17794
-Node: Misc BBDB18540
-Node: Searching for messages from BBDB contacts18753
-Node: Citing BBDB contacts19199
-Node: User Options19520
-Node: Misc Org21059
-Node: Inserting BBDB links21234
-Node: User Optionsx21489
-Node: Misc Gnus24226
-Node: Viewing Org headlines relevant to a message24439
-Node: User Optionsxx24754
-Node: Suggested Keybindings27518
+Node: Trigger Actions8801
+Node: Viewing Tracked Messages in *Summary* Buffers9650
+Node: Hinting in Gnus10884
+Node: Message Attachments11892
+Node: Likely Workflow13074
+Node: Restoring Window Layout15879
+Node: Recent Mails From BBDB Contacts16243
+Node: BBDB posting styles17239
+Node: BBDB Org tagging18155
+Node: Misc BBDB18901
+Node: Searching for messages from BBDB contacts19114
+Node: Citing BBDB contacts19560
+Node: User Options19881
+Node: Misc Org21420
+Node: Inserting BBDB links21595
+Node: User Optionsx21850
+Node: Misc Gnus24587
+Node: Viewing Org headlines relevant to a message24800
+Node: User Optionsxx25115
+Node: Suggested Keybindings27879
 
 End Tag Table
 
