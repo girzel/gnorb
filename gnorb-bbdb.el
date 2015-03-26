@@ -610,7 +610,7 @@ to a message into the record's `gnorb-bbdb-messages-field'."
 			      (time-less-p
 			       (gnorb-bbdb-link-date b)
 			       (gnorb-bbdb-link-date a))))))
-	  (setq val (cl-subseq val 0 gnorb-bbdb-collect-N-messages))
+	  (setq val (cl-subseq val 0 (min (length val) gnorb-bbdb-collect-N-messages)))
 	  (bbdb-record-set-xfield record
 				  gnorb-bbdb-messages-field
 				  (delq nil val))
