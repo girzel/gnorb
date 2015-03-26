@@ -617,11 +617,12 @@ reply."
 	    (gnorb-find-tracked-headings headers t)))
 	 (targ (car-safe related-headings)))
     (if targ
-	(let ((ret (point-marker)))
+	(let ((ret (make-marker)))
 	  ;; Assume the first heading is the one we want.
 	  (gnorb-registry-make-entry
 	   msg-id from subject targ group)
 	  (gnus-summary-wide-reply-with-original 1)
+	  (move-marker ret (point))
 	  (save-restriction
 	    (widen)
 	    (message-narrow-to-headers-or-head)
