@@ -195,6 +195,10 @@ archived headings as well."
 key."
   (registry-search gnus-registry-db :member `((gnorb-ids ,id))))
 
+(defun gnorb-registry-tracked-messages ()
+  "Return all message-ids that have non-empty 'gnorb-ids keys."
+  (registry-search gnus-registry-db :regex `((gnorb-ids ".+"))))
+
 (defun gnorb-registry-transition-from-props (arg)
   "Helper function for transitioning the old tracking system to the new.
 
