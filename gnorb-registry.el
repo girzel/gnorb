@@ -150,14 +150,17 @@ the MSG-ID."
 
 The heading is identified by ORG-ID. This is suitable for use
 after an Org heading is deleted, for instance."
-  (let ((assoc-msgs (gnorb-registry-org-id-search org-id)))
+  (let ((assoc-msgs (gnorb-registry-org-id-search org-id))
+	(gnorb-id-tracker
+	 (registry-lookup-secondary gnus-registry-db 'gnorb-ids)))
     (mapcar
      (lambda (msg-id)
        (let ((org-ids
 	      (gnus-registry-get-id-key msg-id 'gnorb-ids)))
 	 (gnus-registry-set-id-key
 	  msg-id 'gnorb-ids (remove org-id org-ids))))
-     assoc-msgs)))
+     assoc-msgs)
+    (remhash org-id gnorb-id-tracker)))
 
 (defun gnorb-flush-dead-associations (&optional clean-archived)
   "Clean the registry of associations with nonexistent headings.
@@ -180,14 +183,13 @@ archived headings as well."
     (maphash
      (lambda (k _)
        (let ((file (org-id-find-id-file k)))
-	 (unless
-	     (and file
-		  (and clean-archived
-		       (string-match-p "org_archive$" file)))
+	 (when (or (not file)
+		   (and clean-archived
+			(string-match-p "org_archive$" file)))
 	   (gnorb-delete-all-associations k)
 	   (incf deleted-count))))
      gnorb-id-tracker)
-    (message "Disassociated %d nonexistent Org headings"
+    (message "Deleted %d invalid associations"
 	     deleted-count)))
 
 (defun gnorb-registry-org-id-search (id)
@@ -198,6 +200,57 @@ key."
 (defun gnorb-registry-tracked-messages ()
   "Return all message-ids that have non-empty 'gnorb-ids keys."
   (registry-search gnus-registry-db :regex `((gnorb-ids ".+"))))
+
+(defun gnorb-registry-tracked-headings ()
+  "Return all Org heading ids that are associated with messages."
+  (hash-table-keys
+   (registry-lookup-secondary gnus-registry-db 'gnorb-ids)))
+
+(defun gnorb-report-tracking-usage ()
+  "Pop up a temporary window reporting on Gnorb usage of the Gnus
+registry to track message/heading associations.  Reports the
+number of tracked messages, the number of tracked headings, and how much of the registry is occupied."
+  (interactive)
+  (progn
+    (pop-to-buffer
+     (get-buffer-create "*Gnorb Usage*")
+     '(nil . ((window-height . 10))))
+    (gnorb-refresh-usage-status)
+    (special-mode)
+    (setq revert-buffer-function #'gnorb-refresh-usage-status)
+    (local-set-key (kbd "d") (lambda ()
+			       (interactive)
+			       (progn
+				 (gnorb-flush-dead-associations)
+				 (gnorb-refresh-usage-status))))
+    (local-set-key (kbd "D") (lambda ()
+			       (interactive)
+			       (progn
+				 (gnorb-flush-dead-associations t)
+				 (gnorb-refresh-usage-status))))))
+
+(defun gnorb-refresh-usage-status (&optional ignore-auto noconfirm)
+  "Clear and re-format the *Gnorb Usage* buffer."
+  (let ((messages (length (gnorb-registry-tracked-messages)))
+	(headings (length (gnorb-registry-tracked-headings)))
+	(reg-size (registry-size gnus-registry-db))
+	(reg-max-size (oref gnus-registry-db max-size)))
+    (with-current-buffer "*Gnorb Usage*"
+      (let ((inhibit-read-only t))
+       (erase-buffer)
+       (insert
+	(format
+	 "Tracking %d Gnus messages associated with %d Org headings."
+	 messages headings))
+       (insert "\n\n")
+       (insert
+	(format
+	 "Occupying %.2f%% (%d/%d) of the registry (max %d)."
+	 (* 100 (/ (float messages) reg-size))
+	 messages reg-size reg-max-size))
+       (insert "\n\n")
+       (insert "Press 'd' to delete associations for non-existent Org headings.\n")
+       (insert "Press 'D' to delete associations for both non-existent and archived Org headings.")))))
 
 (defun gnorb-registry-transition-from-props (arg)
   "Helper function for transitioning the old tracking system to the new.

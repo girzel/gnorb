@@ -219,6 +219,11 @@ The same process works in reverse: when you send a message from an Org
 heading using `gnorb-org-handle-mail', Gnorb will ask if you want to
 attach the files in the heading's org-attach directory to the outgoing
 message.
+** Registry Usage
+You can see how many associations you've got stored in the registry by
+calling `gnorb-report-tracking-usage'. This will pop up a buffer
+showing how the number of associations, and offering keybindings for
+`gnorb-flush-dead-associations', to help Gnorb clean up after itself.
 ** Likely Workflow
 You receive an email from Jimmy, who wants to rent a room in your
 house. "I'll respond to this later," you think.

@@ -35,6 +35,7 @@ Email Tracking
 * Viewing Tracked Messages in *Summary* Buffers::
 * Hinting in Gnus::
 * Message Attachments::
+* Registry Usage::
 * Likely Workflow::
 
 Misc BBDB
@@ -155,6 +156,7 @@ agenda rather than in Gnus.
 * Viewing Tracked Messages in *Summary* Buffers::
 * Hinting in Gnus::
 * Message Attachments::
+* Registry Usage::
 * Likely Workflow::
 
 
@@ -295,7 +297,7 @@ is “g” (meaning it is used as “%ug” in the format line), and the mark is
 “¡”.
 
 
-File: gnorb.info,  Node: Message Attachments,  Next: Likely Workflow,  Prev: Hinting in Gnus,  Up: Email Tracking
+File: gnorb.info,  Node: Message Attachments,  Next: Registry Usage,  Prev: Hinting in Gnus,  Up: Email Tracking
 
 4.5 Message Attachments
 =======================
@@ -322,9 +324,20 @@ attach the files in the heading’s org-attach directory to the outgoing
 message.
 
 
-File: gnorb.info,  Node: Likely Workflow,  Prev: Message Attachments,  Up: Email Tracking
+File: gnorb.info,  Node: Registry Usage,  Next: Likely Workflow,  Prev: Message Attachments,  Up: Email Tracking
 
-4.6 Likely Workflow
+4.6 Registry Usage
+==================
+
+You can see how many associations you’ve got stored in the registry by
+calling ‘gnorb-report-tracking-usage’.  This will pop up a buffer
+showing how the number of associations, and offering keybindings for
+‘gnorb-flush-dead-associations’, to help Gnorb clean up after itself.
+
+
+File: gnorb.info,  Node: Likely Workflow,  Prev: Registry Usage,  Up: Email Tracking
+
+4.7 Likely Workflow
 ===================
 
 You receive an email from Jimmy, who wants to rent a room in your house.
@@ -706,31 +719,32 @@ File: gnorb.info,  Node: Suggested Keybindings,  Prev: Misc Gnus,  Up: Top
 
 Tag Table:
 Node: Top194
-Node: Introduction1009
-Node: Installation2118
-Node: Setup2532
-Node: Email Tracking3899
-Node: Email-Related Commands5430
-Node: Trigger Actions8801
-Node: Viewing Tracked Messages in *Summary* Buffers9650
-Node: Hinting in Gnus11146
-Node: Message Attachments12154
-Node: Likely Workflow13336
-Node: Restoring Window Layout16141
-Node: Recent Mails From BBDB Contacts16505
-Node: BBDB posting styles17501
-Node: BBDB Org tagging18417
-Node: Misc BBDB19163
-Node: Searching for messages from BBDB contacts19376
-Node: Citing BBDB contacts19822
-Node: User Options20143
-Node: Misc Org21682
-Node: Inserting BBDB links21857
-Node: User Optionsx22112
-Node: Misc Gnus24849
-Node: Viewing Org headlines relevant to a message25062
-Node: User Optionsxx25377
-Node: Suggested Keybindings28141
+Node: Introduction1028
+Node: Installation2137
+Node: Setup2551
+Node: Email Tracking3918
+Node: Email-Related Commands5468
+Node: Trigger Actions8839
+Node: Viewing Tracked Messages in *Summary* Buffers9688
+Node: Hinting in Gnus11184
+Node: Message Attachments12192
+Node: Registry Usage13373
+Node: Likely Workflow13815
+Node: Restoring Window Layout16615
+Node: Recent Mails From BBDB Contacts16979
+Node: BBDB posting styles17975
+Node: BBDB Org tagging18891
+Node: Misc BBDB19637
+Node: Searching for messages from BBDB contacts19850
+Node: Citing BBDB contacts20296
+Node: User Options20617
+Node: Misc Org22156
+Node: Inserting BBDB links22331
+Node: User Optionsx22586
+Node: Misc Gnus25323
+Node: Viewing Org headlines relevant to a message25536
+Node: User Optionsxx25851
+Node: Suggested Keybindings28615
 
 End Tag Table
 
