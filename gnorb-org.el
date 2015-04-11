@@ -645,14 +645,17 @@ search."
 ;;; Groups from the gnorb gnus server backend
 
 ;;;###autoload
-(defun gnorb-org-view ()
+(defun gnorb-org-view (arg)
   "Search the subtree at point for links to gnus messages, and
-then show them in an ephemeral group, in gnus.
+then show them in an ephemeral group, in Gnus.
+
+With a prefix arg, create a search group that will persist across
+Gnus sessions, and can be refreshed.
 
 This won't work unless you've added a \"nngnorb\" server to
 your gnus select methods."
   ;; this should also work on the active region, if there is one.
-  (interactive)
+  (interactive "P")
   (require 'gnorb-gnus)
   (setq gnorb-window-conf (current-window-configuration))
   (move-marker gnorb-return-marker (point))
@@ -671,7 +674,10 @@ your gnus select methods."
       (org-back-to-heading)
       (setq id (concat "id+" (org-id-get-create)))
       (gnorb-gnus-search-messages
-       id
+       id arg
+       (replace-regexp-in-string
+	org-bracket-link-regexp "\\3"
+	(nth 4 (org-heading-components)))
        `(when (and (window-configuration-p gnorb-window-conf)
 		   gnorb-return-marker)
 	  (set-window-configuration gnorb-window-conf)

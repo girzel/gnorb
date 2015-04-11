@@ -637,7 +637,7 @@ reply."
       (message "No associated headings found"))))
 
 ;;;###autoload
-(defun gnorb-gnus-search-messages (str &optional ret)
+(defun gnorb-gnus-search-messages (str persist &optional head-text ret)
   "Initiate a search for gnus message links in an org subtree.
 The arg STR can be one of two things: an Org heading id value
 \(IDs should be prefixed with \"id+\"\), in which case links will
@@ -654,30 +654,37 @@ work."
   (let ((nnir-address
 	 (or (gnus-method-to-server '(nngnorb))
 	     (user-error
-	      "Please add a \"nngnorb\" backend to your gnus installation."))))
+	      "Please add a \"nngnorb\" backend to your gnus installation.")))
+	name method spec)
     (when (version= "5.13" gnus-version-number)
       (with-no-warnings		  ; All these variables are available.
 	(setq nnir-current-query nil
 	      nnir-current-server nil
 	      nnir-current-group-marked nil
 	      nnir-artlist nil)))
-    (gnus-group-read-ephemeral-group
-     ;; in 24.4, the group name is mostly decorative. in 24.3, the
-     ;; query itself is read from there. It should look like (concat
-     ;; "nnir:" (prin1-to-string '((query str))))
-     (if (version= "5.13" gnus-version-number)
-	 (concat "nnir:" (prin1-to-string `((query ,str))))
-       (concat "gnorb-" str))
-     (if (version= "5.13" gnus-version-number)
-	 (list 'nnir nnir-address)
-       (list 'nnir "nnir"))
-     nil
-     ret
-     nil nil
-     ;; the following seems to simply be ignored under gnus 5.13
-     (list (cons 'nnir-specs (list (cons 'nnir-query-spec `((query . ,str)))
+    ;; In 24.4, the group name is mostly decorative, but in 24.3, the
+    ;; actual query is held there.
+    (setq name (if (version= "5.13" gnus-version-number)
+		   (concat "nnir:" (prin1-to-string `((query ,str))))
+		 (if persist
+		     (read-string
+		      (format "Name for group (default %s): " head-text)
+		      nil head-text t)
+		   (concat "gnorb-" str))))
+    (setq method (if (version= "5.13" gnus-version-number)
+		     (list 'nnir nnir-address)
+		   (list 'nnir "nnir")))
+    (setq spec
+	  (list
+	   (cons 'nnir-specs (list (cons 'nnir-query-spec `((query . ,str)))
 				   (cons 'nnir-group-spec `((,nnir-address nil)))))
 	   (cons 'nnir-artlist nil)))
+    (if persist
+	(progn
+	  (switch-to-buffer gnus-group-buffer)
+	  (gnus-group-make-group name method nil spec)
+	  (gnus-group-select-group))
+     (gnus-group-read-ephemeral-group name method nil ret nil nil spec))
     (gnorb-summary-minor-mode)))
 
 ;;; Automatic noticing of relevant messages

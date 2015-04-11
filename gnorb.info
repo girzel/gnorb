@@ -252,12 +252,18 @@ File: gnorb.info,  Node: Viewing Tracked Messages in *Summary* Buffers,  Next: H
 =================================================
 
 Call ‘gnorb-org-view’ on an Org heading to open an nnir *Summary* buffer
-showing all the messages associated with that heading (this requires
-that you’ve added an nngnorb server to your Gnus backends).  A minor
-mode will be in effect, ensuring that any replies you send to messages
-in this buffer will automatically be associated with the original Org
-heading.  You can also invoke ‘gnorb-summary-disassociate-message’ (“C-c
-d”) to disassociate the message with the Org heading.
+showing all the messages associated with that heading and child headings
+(this requires that you’ve added an nngnorb server to your Gnus
+backends).  A minor mode will be in effect, ensuring that any replies
+you send to messages in this buffer will automatically be associated
+with the original Org heading.  You can also invoke
+‘gnorb-summary-disassociate-message’ (“C-c d”) to disassociate the
+message with the Org heading.
+
+   If you call ‘gnorb-org-view’ with a prefix argument, the search group
+will be made persistent across Gnus sessions.  You can re-run the search
+and update the group contents by hitting “M-g” on the group in the Gnus
+*Group* buffer.
 
    As a bonus, it’s possible to go into Gnus’ *Server* buffer, find the
 line specifying your nngnorb server, and hit “G” (aka
@@ -707,24 +713,24 @@ Node: Email Tracking3899
 Node: Email-Related Commands5430
 Node: Trigger Actions8801
 Node: Viewing Tracked Messages in *Summary* Buffers9650
-Node: Hinting in Gnus10884
-Node: Message Attachments11892
-Node: Likely Workflow13074
-Node: Restoring Window Layout15879
-Node: Recent Mails From BBDB Contacts16243
-Node: BBDB posting styles17239
-Node: BBDB Org tagging18155
-Node: Misc BBDB18901
-Node: Searching for messages from BBDB contacts19114
-Node: Citing BBDB contacts19560
-Node: User Options19881
-Node: Misc Org21420
-Node: Inserting BBDB links21595
-Node: User Optionsx21850
-Node: Misc Gnus24587
-Node: Viewing Org headlines relevant to a message24800
-Node: User Optionsxx25115
-Node: Suggested Keybindings27879
+Node: Hinting in Gnus11146
+Node: Message Attachments12154
+Node: Likely Workflow13336
+Node: Restoring Window Layout16141
+Node: Recent Mails From BBDB Contacts16505
+Node: BBDB posting styles17501
+Node: BBDB Org tagging18417
+Node: Misc BBDB19163
+Node: Searching for messages from BBDB contacts19376
+Node: Citing BBDB contacts19822
+Node: User Options20143
+Node: Misc Org21682
+Node: Inserting BBDB links21857
+Node: User Optionsx22112
+Node: Misc Gnus24849
+Node: Viewing Org headlines relevant to a message25062
+Node: User Optionsxx25377
+Node: Suggested Keybindings28141
 
 End Tag Table
 

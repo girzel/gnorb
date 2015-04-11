@@ -158,13 +158,18 @@ docstring of `gnorb-org-trigger-actions'.
 :PROPERTIES:
 :END:
 Call `gnorb-org-view' on an Org heading to open an nnir *Summary*
-buffer showing all the messages associated with that heading (this
-requires that you've added an nngnorb server to your Gnus backends). A
-minor mode will be in effect, ensuring that any replies you send to
-messages in this buffer will automatically be associated with the
-original Org heading. You can also invoke
+buffer showing all the messages associated with that heading and child
+headings (this requires that you've added an nngnorb server to your
+Gnus backends). A minor mode will be in effect, ensuring that any
+replies you send to messages in this buffer will automatically be
+associated with the original Org heading. You can also invoke
 `gnorb-summary-disassociate-message' ("C-c d") to disassociate the
 message with the Org heading.
+
+If you call `gnorb-org-view' with a prefix argument, the search group
+will be made persistent across Gnus sessions. You can re-run the
+search and update the group contents by hitting "M-g" on the group in
+the Gnus *Group* buffer.
 
 As a bonus, it's possible to go into Gnus' *Server* buffer, find the
 line specifying your nngnorb server, and hit "G" (aka
