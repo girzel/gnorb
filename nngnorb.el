@@ -79,7 +79,7 @@ be scanned for gnus messages, and those messages displayed."
   ;; a property, and the new registry-based system, we're going to use
   ;; both methods to collect relevant messages. This could be a little
   ;; slower, but for the time being it will be safer.
-  (save-excursion
+  (save-window-excursion
     (let ((q (cdr (assq 'query query)))
 	  (buf (get-buffer-create nnir-tmp-buffer))
 	  msg-ids org-ids links vectors)
