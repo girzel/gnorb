@@ -35,6 +35,9 @@ https://github.com/girzel/gnorb, and put the "gnorb" directory on your
 load-path. The Github site is also a good place to report bugs and
 other issues.
 * Setup
+:PROPERTIES:
+:ID:       9da59609-bb3c-4970-88f6-bddca18d2ad4
+:END:
 Loading "gnorb" will make the basic functions available. Using Gnorb
 for email tracking takes a bit more setup, however:
 
@@ -68,16 +71,36 @@ message IDs are associated with Org heading ids. As a conversation
 develops, messages are collected on a heading (and/or its children).
 You can compose new messages directly from the Org heading, and Gnorb
 will automatically associate your sent message with the conversation.
-You can open temporary Gnus *Summary* buffers holding all the messages
-associated with an Org subtree, and reply from there. When you receive
-new messages relevant to a conversation, Gnorb will notice them and
-prompt you to associate them with the appropriate Org heading.
-Attachments on incoming messages can be automatically saved as
-attachments on Org headings, using org-attach.
+You can open Gnus *Summary* buffers holding all the messages
+associated with an Org subtree, and reply from there -- these groups
+can be made persistent, if you like. When you receive new messages
+relevant to a conversation, Gnorb will notice them and prompt you to
+associate them with the appropriate Org heading. Attachments on
+incoming messages can be automatically saved as attachments on Org
+headings, using org-attach.
 
 In general, the goal is to keep track of whole conversations, reduce
 friction when moving between Gnus and Org, and keep you in the Org
 agenda rather than in Gnus.
+** Basic Usage
+The following sections might be a bit confusing to read if you haven't
+actually tried using Gnorb. If you don't want to dive in all the way
+just yet, you can just dabble your toes. First set up email tracking
+as specified in [[id:9da59609-bb3c-4970-88f6-bddca18d2ad4][Setup]], then do the following:
+
+1. Add "%ug" somewhere appropriate in your `gnus-summary-line-format'
+   variable.
+2. If you don't use a local archive method, add your sent message
+   groups to `gnorb-gnus-sent-groups' (see the docstring).
+3. Use Org capture from Gnus summary buffers to create reminders for
+   emails you need to reply to.
+4. Reply to those emails by pressing "C-c t" on the TODO heading in
+   either the Agenda, or in regular Org files.
+5. If you ever get confused about what's associated with an Org
+   heading, press "C-c v" on the heading (works in either the Agenda,
+   or regular Org files).
+
+That should be enough to get started.
 ** Email-Related Commands
 Email tracking starts in one of three ways:
 
@@ -109,7 +132,7 @@ There are three main email-related commands:
    `gnorb-org-handle-mail'. It does the same thing as the latter, but
    first exports the body of the subtree as either text or a file,
    then inserts the text into the message body, or attaches the file
-   to the message, depending on what you've chosen.
+   to the message, respectively.
 2. `gnorb-gnus-incoming-do-todo' is called on a message in a Gnus
    *Summary* buffer. You'll be prompted for an Org heading, taken to
    that heading, and asked to trigger an action on it.
@@ -137,7 +160,7 @@ There are three main email-related commands:
 Because these three commands all express a similar intent, but are
 called in different modes, it can make sense to give each of them the
 same keybinding in the keymaps for Org mode, Gnus summary mode, and
-Message mode, respectively.
+Message mode.
 
 An additional convenience command is available for use in Gnus summary
 buffers: `gnorb-gnus-quick-reply'. If you don't want to go through the
@@ -149,23 +172,25 @@ heading.
 After calling `gnorb-gnus-incoming-do-todo' on a message, or after
 sending a message associated with an Org heading, you'll be taken to
 the heading and asked to "trigger an action" on it. At the moment
-there are four different possibilities: triggering a TODO state-change
+there are six different possibilities: triggering a TODO state-change
 on the heading, taking a note on the heading (both these options will
 associate the message with the heading), associating the message but
-doing nothing else, and lastly, doing nothing at all.
+doing nothing else, capturing a new Org heading as a sibling to the
+tracked heading, capturing a new Org heading as a child, and lastly,
+doing nothing at all.
 
-More actions will be added in the future; it's also possible to
+More actions may be added in the future; it's also possible to
 rearrange or delete existing actions, and add your own: see the
 docstring of `gnorb-org-trigger-actions'.
 ** Viewing Tracked Messages in *Summary* Buffers
 :PROPERTIES:
 :END:
-Call `gnorb-org-view' on an Org heading to open an nnir *Summary*
-buffer showing all the messages associated with that heading and child
-headings (this requires that you've added an nngnorb server to your
-Gnus backends). A minor mode will be in effect, ensuring that any
-replies you send to messages in this buffer will automatically be
-associated with the original Org heading. You can also invoke
+Call `gnorb-org-view' on an Org heading to open an nnir summary buffer
+showing all the messages associated with that heading and child
+headings (this requires you to have added an nngnorb server to your
+Gnus backends). A minor mode is in effect, ensuring that any replies
+you send to messages in this buffer will automatically be associated
+with the original Org heading. You can also invoke
 `gnorb-summary-disassociate-message' ("C-c d") to disassociate the
 message with the Org heading.
 
@@ -226,8 +251,9 @@ message.
 ** Registry Usage
 You can see how many associations you've got stored in the registry by
 calling `gnorb-report-tracking-usage'. This will pop up a buffer
-showing how the number of associations, and offering keybindings for
-`gnorb-flush-dead-associations', to help Gnorb clean up after itself.
+showing how much of the registry you're using, and offering
+keybindings for `gnorb-flush-dead-associations', to help Gnorb clean
+up after itself.
 ** Likely Workflow
 You receive an email from Jimmy, who wants to rent a room in your
 house. "I'll respond to this later," you think.
@@ -488,7 +514,7 @@ heading to jump to that heading.
        (org-defkey org-mode-map (kbd "C-c V") 'gnorb-org-popup-bbdb)
        (setq gnorb-org-agenda-popup-bbdb t)
        (eval-after-load "org-agenda"
-         '(progn (org-defkey org-agenda-mode-map (kbd "H") 'gnorb-org-handle-mail)
+         '(progn (org-defkey org-agenda-mode-map (kbd "C-c t") 'gnorb-org-handle-mail)
                  (org-defkey org-agenda-mode-map (kbd "C-c v") 'gnorb-org-popup-bbdb)
                  (org-defkey org-agenda-mode-map (kbd "V") 'gnorb-org-view)))))
 
