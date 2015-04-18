@@ -679,7 +679,7 @@ work."
 		   (concat "gnorb-" str))))
     (setq method (if (version= "5.13" gnus-version-number)
 		     (list 'nnir nnir-address)
-		   (list 'nnir "nnir")))
+		   (list 'nnir "Gnorb")))
     (setq spec
 	  (list
 	   (cons 'nnir-specs (list (cons 'nnir-query-spec `((query . ,str)))
@@ -690,8 +690,16 @@ work."
 	  (switch-to-buffer gnus-group-buffer)
 	  (gnus-group-make-group name method nil spec)
 	  (gnus-group-select-group))
-     (gnus-group-read-ephemeral-group name method nil ret nil nil spec))
-    (gnorb-summary-minor-mode)))
+     (gnus-group-read-ephemeral-group name method nil ret nil nil spec))))
+
+(defun gnorb-gnus-summary-mode-hook ()
+  "Check if we've entered a Gnorb-generated group, and activate
+  `gnorb-summary-minor-mode', if so."
+  (let ((method (gnus-find-method-for-group gnus-newsgroup-name)))
+    (when (string-match-p "Gnorb" (cadr method))
+      (gnorb-summary-minor-mode))))
+
+(add-hook 'gnus-summary-mode-hook #'gnorb-gnus-summary-mode-hook)
 
 ;;; Automatic noticing of relevant messages
 
