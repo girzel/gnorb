@@ -191,11 +191,12 @@ action on the relevant TODO.
 
 This hinting can happen in the Gnus summary buffer as well. If you use
 the escape indicated by `gnorb-gnus-summary-mark-format-letter" as
-part of your `gnus-summary-line-format', articles that are relevant to
-TODOs will be marked with a special character in the Summary buffer,
-as determined by `gnorb-gnus-summary-mark'. By default, the format
-letter is "g" (meaning it is used as "%ug" in the format line), and
-the mark is "¡".
+part of your `gnus-summary-line-format', articles that may be relevant
+to TODOs will be marked with a special character in the Summary
+buffer, as determined by `gnorb-gnus-summary-mark'. By default, the
+format letter is "g" (meaning it is used as "%ug" in the format line),
+and the mark is "&" for messages that are already tracked, and "¡" for
+messages that may be relevant.
 ** Message Attachments
 :PROPERTIES:
 :END:
@@ -454,10 +455,14 @@ heading to jump to that heading.
      use as part of your `gnus-summary-line-format', to indicate
      messages which might be relevant to Org TODOs. Defaults to "g",
      meaning it should be used as "%ug" in the format line.
-- `gnorb-gnus-summary-mark' :: The mark used to indicate relevant
-     messages in the Summary buffer, when
+- `gnorb-gnus-summary-mark' :: The mark used to indicate potentially
+     relevant messages in the Summary buffer, when
      `gnorb-gnus-summary-mark-format-letter' is present in the format
      line. Defaults to "¡".
+- `gnorb-gnus-summary-tracked-mark' :: The mark used to indicate
+     already-tracked messages in the Summary buffer, when
+     `gnorb-gnus-summary-mark-format-letter' is present in the format
+     line. Defaults to "&".
 * Suggested Keybindings
 :PROPERTIES:
 :ID:       de1b2579-86c2-4bb1-b77e-3467a3d2b3c7

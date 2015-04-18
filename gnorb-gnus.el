@@ -107,6 +107,12 @@ Basically behave as if all attachments have \":gnus-attachments t\"."
   :group 'gnorb-gnus
   :type 'string)
 
+(defcustom gnorb-gnus-summary-tracked-mark "&"
+  "Default mark to insert in the summary format line of articles
+  that are already tracked by TODO headings."
+  :group 'gnorb-gnus
+  :type 'string)
+
 (defcustom gnorb-gnus-trigger-refile-targets
   '((org-agenda-files :maxlevel . 4))
   "A value to use as an equivalent of `org-refile-targets' (which
@@ -733,9 +739,12 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
   (if (not (memq (car (gnus-find-method-for-group
 		       gnus-newsgroup-name))
 		 '(nnvirtual nnir)))
-      (if (gnorb-find-tracked-headings header)
-	  gnorb-gnus-summary-mark
-	" ")
+      (cond ((gnus-registry-get-id-key
+	      (mail-header-message-id header) 'gnorb-ids)
+	     gnorb-gnus-summary-tracked-mark)
+	    ((gnorb-find-tracked-headings header)
+	     gnorb-gnus-summary-mark)
+	    (t " "))
     " "))
 
 (fset (intern (concat "gnus-user-format-function-"
