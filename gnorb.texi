@@ -192,11 +192,14 @@ There are three main email-related commands:
 `gnorb-org-handle-mail' is called on an Org heading to compose a
 new message. By default, this will begin a reply to the most recent
 message in the conversation. If there are no associated messages to
-reply to (or you call the function with a double prefix arg), Gnorb
+reply to (or you call the function with a single prefix arg), Gnorb
 will look for mailto: or bbdb: links in the heading, and compose a
 new message to them.
 
-The sent message will be associated with the Org heading, and
+Calling the function with a double prefix arg will ignore all
+associated messages and links, and compose a blank message.
+
+Once sent, the message will be associated with the Org heading, and
 you'll be brought back to the heading and asked to trigger an
 action on it.
 
