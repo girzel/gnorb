@@ -715,8 +715,7 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 	   (tracked-headings (gnorb-find-tracked-headings headers))
 	   (key
 	    (where-is-internal 'gnorb-gnus-incoming-do-todo
-			       nil t))
-	   rel-headings)
+			       nil t)))
       (cond (assoc-heading
 	     (message "Message is associated with %s"
 		      (gnorb-pretty-outline (car assoc-heading) t)))
