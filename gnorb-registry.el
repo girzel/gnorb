@@ -50,6 +50,7 @@
 
 (require 'gnus-registry)
 (require 'gnorb-utils)
+(require 'cl-lib)
 
 (defgroup gnorb-registry nil
   "Gnorb's use of the Gnus registry."
@@ -287,8 +288,8 @@ your Org files."
 		       'gnus))
 	  (dolist (l (plist-get links :gnus))
 	    (gnorb-registry-make-entry
-	     (second (split-string l "#")) nil nil
-	     id (first (split-string l "#"))))
+	     (cl-second (split-string l "#")) nil nil
+	     id (cl-first (split-string l "#"))))
 	  (dolist (p props)
 	    (setq id )
 	    (gnorb-registry-make-entry p nil nil id nil)
@@ -297,7 +298,7 @@ your Org files."
 	    ;; it.
 	    (unless (gnus-registry-get-id-key p 'group)
 	      (gnorb-msg-id-to-group p))
-	    (incf count)))))
+	    (cl-incf count)))))
      gnorb-org-find-candidates-match
      'agenda 'archive 'comment)
     (message "Collecting all relevant Org headings, this could take a while... done")

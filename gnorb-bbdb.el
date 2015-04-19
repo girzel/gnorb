@@ -107,7 +107,7 @@ mentioned in the docstring of `format-time-string', which see."
   Defaults to org-link."
   :group 'gnorb-bbdb)
 
-(defstruct gnorb-bbdb-link
+(cl-defstruct gnorb-bbdb-link
   subject date group id)
 
 (defcustom gnorb-bbdb-posting-styles nil
@@ -419,14 +419,14 @@ a prefix arg and \"*\", the prefix arg must come first."
 			     gnorb-gnus-mail-search-backends)
 		      (error "No search backend specified")))
 	 (search-string
-	  (funcall (second backend)
+	  (funcall (cl-second backend)
 		   (cl-mapcan 'bbdb-record-mail records))))
     (when (equal current-prefix-arg '(4))
       (setq search-string
 	    (read-from-minibuffer
 	     (format "%s search string: " (first backend)) search-string)))
-    (funcall (third backend) search-string)
-    (delete-other-windows)))  
+    (funcall (cl-third backend) search-string)
+    (delete-other-windows)))
 
 ;;;###autoload
 (defun gnorb-bbdb-cite-contact (rec)
