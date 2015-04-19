@@ -31,15 +31,14 @@
 
 ;;; Code:
 
-(eval-after-load 'gnus
-  '(progn
-     (require 'nngnorb)
-     (require 'gnorb-gnus)
-     (require 'gnorb-registry)))
-(eval-after-load 'bbdb
-  '(require 'gnorb-bbdb))
-(eval-after-load 'org
-  '(require 'gnorb-org))
+(with-eval-after-load 'gnus
+  (require 'nngnorb)
+  (require 'gnorb-gnus)
+  (require 'gnorb-registry))
+(with-eval-after-load 'bbdb
+  (require 'gnorb-bbdb))
+(with-eval-after-load 'org
+  (require 'gnorb-org))
 
 
 (provide 'gnorb)

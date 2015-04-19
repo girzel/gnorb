@@ -494,10 +494,9 @@ Gnus messages and Org headings. This requires that the Gnus
 registry be in use, and should be called after the call to
 `gnus-registry-initialize'."
   (require 'gnorb-registry)
-  (eval-after-load 'gnus-registry
-    '(progn
-       (add-to-list 'gnus-registry-extra-entries-precious 'gnorb-ids)
-       (add-to-list 'gnus-registry-track-extra 'gnorb-ids)))
+  (with-eval-after-load 'gnus-registry
+    (add-to-list 'gnus-registry-extra-entries-precious 'gnorb-ids)
+    (add-to-list 'gnus-registry-track-extra 'gnorb-ids))
   (add-hook
    'gnus-started-hook
    (lambda ()
