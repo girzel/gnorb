@@ -244,6 +244,8 @@ See the docstring of `gnorb-org-handle-mail' for details."
      (msg-id-link
       `(:gnus ,(list msg-id-link))))))
 
+(defvar message-beginning-of-line)
+
 (defun gnorb-org-setup-message
     (&optional messages mails from cc bcc attachments text ids)
   "Common message setup routine for other gnorb-org commands.
@@ -339,6 +341,8 @@ current heading, or the heading indicated by optional argument ID."
 	       (expand-file-name f attach-dir))
 	     (org-attach-file-list attach-dir))))
       files)))
+
+(defvar message-mode-hook)
 
 ;;;###autoload
 (defun gnorb-org-handle-mail (&optional arg text file)
@@ -476,6 +480,8 @@ async, subtreep, visible-only, and body-only."
 respective (usual) file extensions. Ugly way to do it, but what
 the hey..."
   :group 'gnorb-org)
+
+(defvar org-export-show-temporary-export-buffer)
 
 ;;;###autoload
 (defun gnorb-org-email-subtree (&optional arg)

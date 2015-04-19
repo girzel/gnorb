@@ -205,6 +205,8 @@ Org tags are stored in the `gnorb-bbdb-org-tags-field'."
 	 (insert
 	  (bbdb-indent-string (concat val "\n") indent)))))))
 
+(defvar message-mode-hook)
+
 ;;;###autoload
 (defun gnorb-bbdb-mail (records &optional subject n verbose)
   "\\<bbdb-mode-map>Acts just like `bbdb-mail', except runs
@@ -437,8 +439,8 @@ a prefix arg and \"*\", the prefix arg must come first."
      mail-string)))
 
 ;;; Field containing links to recent messages
-
-(add-to-list 'bbdb-xfield-label-list gnorb-bbdb-messages-field nil 'eq)
+(when (boundp 'bbdb-xfield-label-list)
+ (add-to-list 'bbdb-xfield-label-list gnorb-bbdb-messages-field nil 'eq))
 
 (defun gnorb-bbdb-display-messages (record format)
   "Show links to the messages collected in the

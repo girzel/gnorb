@@ -195,7 +195,7 @@ save them into `gnorb-tmp-dir'."
       (set-buffer (org-capture-get :original-buffer)))
     (unless (memq major-mode '(gnus-summary-mode gnus-article-mode))
       (error "Only works in Gnus summary or article buffers"))
-    (let ((article (gnus-summary-article-number)) 
+    (let ((article (gnus-summary-article-number))
 	  mime-handles)
       (when (or (null gnus-current-article)
 		(null gnus-article-current)
@@ -238,6 +238,8 @@ save them into `gnorb-tmp-dir'."
     (setq gnorb-gnus-capture-attachments nil)))
 
 (add-hook 'org-capture-mode-hook 'gnorb-gnus-capture-attach)
+
+(defvar org-note-abort)
 
 (defun gnorb-gnus-capture-abort-cleanup ()
   (with-no-warnings ; For `org-note-abort'
@@ -437,6 +439,8 @@ work."
 	 (if header-ids
 	     "Message will trigger TODO state-changes after sending"
 	   "A TODO will be made from this message after it's sent"))))))
+
+(defvar org-capture-link-is-already-stored)
 
 (defun gnorb-gnus-outgoing-make-todo-1 ()
   (unless gnorb-gnus-new-todo-capture-key
