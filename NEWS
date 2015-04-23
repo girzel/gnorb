@@ -1,5 +1,15 @@
 GNU Emacs Gnorb NEWS -- history of user-visible changes.  -*- org -*-
 
+* Version 1.1.0 [2015-04-23 Thu]
+** New trigger actions
+Two new trigger actions allow you to capture a new sibling or child
+heading relative to the heading you're triggering.
+** Persistent Gnorb groups
+Give a prefix argument to `gnorb-org-view' to create a named,
+persistent group containing tracked headings.
+** Gnorb registry usage reports
+Call `gnorb-report-tracking-usage' to see how much of the Gnus
+registry Gnorb is occupying, and run cleaning routines.
 * Version 1.0.1 [2014-10-22 Wed]
 ** Deleting associations
 It's now possible to delete associations between messages and
