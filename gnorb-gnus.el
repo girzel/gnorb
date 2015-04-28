@@ -628,6 +628,8 @@ reply."
 	 (targ (car-safe related-headings)))
     (if targ
 	(let ((ret (make-marker)))
+	  (setq gnorb-window-conf (current-window-configuration))
+	  (move-marker gnorb-return-marker (point))
 	  ;; Assume the first heading is the one we want.
 	  (gnorb-registry-make-entry
 	   msg-id from subject targ group)
