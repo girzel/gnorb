@@ -164,7 +164,7 @@ we came from."
 		 :raw-value
 		 head)
 		strings)
-	  (org-element-map tree 'paragraph
+	  (org-element-map tree '(paragraph drawer)
 	    (lambda (p)
 	      (push (org-element-interpret-data p)
 		    strings))
