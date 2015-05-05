@@ -309,10 +309,7 @@ information about the outgoing message into
 			 'gnorb-org-restore-after-send t))
 	(setq gnorb-message-org-ids nil)))))
 
-;; This sets the global value, but the hook is made buffer-local in
-;; `gnus-inews-add-send-actions', so this is ignored
-;(add-hook 'message-header-hook 'gnorb-gnus-check-outgoing-headers)
-(add-hook 'message-send-hook 'gnorb-gnus-check-outgoing-headers t)
+(add-hook 'message-sent-hook 'gnorb-gnus-check-outgoing-headers t)
 
 ;;;###autoload
 (defun gnorb-gnus-outgoing-do-todo (&optional arg)
