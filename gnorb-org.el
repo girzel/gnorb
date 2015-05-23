@@ -302,7 +302,7 @@ headings."
   ;; insert text, if any
   (when text
     (message-goto-body)
-    (insert"\n")
+    (insert "\n")
     (if (bufferp text)
 	(insert-buffer-substring text)
       (insert text)))
