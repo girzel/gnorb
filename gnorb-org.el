@@ -502,12 +502,17 @@ default set of parameters."
   ;; got too much hard-coded stuff.
   (interactive "P")
   (org-back-to-heading t)
-  (let* ((backend-string
+  (let* ((bkend-var
+	  (if (boundp 'org-export--registered-backends)
+	      org-export--registered-backends
+	    org-export-registered-backends))
+	 (backend-string
 	  (org-completing-read
 	   "Export backend: "
 	   (mapcar (lambda (b)
 		     (symbol-name (org-export-backend-name b)))
-		   org-export--registered-backends) nil t))
+		   bkend-var)
+	   nil t))
 	 (backend-symbol (intern backend-string))
 	 (f-or-t (org-completing-read "Export as file or text? "
 				      '("file" "text") nil t))
