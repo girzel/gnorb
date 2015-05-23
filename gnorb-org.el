@@ -530,8 +530,6 @@ default set of parameters."
 		     ,@opts
 		     ,gnorb-org-email-subtree-file-parameters))))
 	 text file)
-    (setq gnorb-window-conf (current-window-configuration))
-    (move-marker gnorb-return-marker (point))
     (if (bufferp result)
 	(setq text result)
       (setq file result))
