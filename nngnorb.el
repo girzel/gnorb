@@ -183,7 +183,7 @@ continue to provide tracking of sent messages."
 	;; this summary buffer.
 	(buffer-local-value
 	 'nngnorb-attachment-file-list
-	  (get-buffer nnir-tmp-buffer))))
+	  (get-buffer-create nnir-tmp-buffer))))
 
 (define-key gnorb-summary-minor-mode-map
   [remap gnus-summary-exit]
