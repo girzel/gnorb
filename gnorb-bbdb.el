@@ -244,7 +244,7 @@ is non-nil (as in interactive calls) be verbose."
 (defun gnorb-bbdb-configure-posting-styles (recs)
   ;; My most magnificent work of copy pasta!
   (dolist (r recs)
-    (let (field val label rec-val element filep
+    (let (field val label rec-val element filep matchp
 		element v value results name address)
       (dolist (style gnorb-bbdb-posting-styles)
 	(setq field (pop style)
@@ -257,22 +257,26 @@ is non-nil (as in interactive calls) be verbose."
 	  (setq rec-val (bbdb-record-field r field)))
 	(when (cond
 	       ((eq field 'address)
-		(dolist (a rec-val)
+		(dolist (a rec-val matchp)
 		  (unless (and label
 			       (not (string-match label (car a))))
-		    (string-match val (bbdb-format-address-default a)))))
+		    (setq matchp
+			  (string-match-p
+			   val
+			   (bbdb-format-address-default a))))))
 	       ((eq field 'phone)
-		(dolist (p rec-val)
+		(dolist (p rec-val matchp)
 		  (unless (and label
 			       (not (string-match label (car p))))
-		    (string-match val (bbdb-phone-string p)))))
+		    (setq matchp
+			  (string-match-p val (bbdb-phone-string p))))))
 	       ((consp rec-val)
-		(dolist (f rec-val)
-		  (string-match val f)))
+		(dolist (f rec-val matchp)
+		  (setq matchp (string-match-p val f))))
 	       ((fboundp field)
-		(funcall field r))
+		(setq matchp (funcall field r)))
 	       ((stringp rec-val)
-		(string-match val rec-val)))
+		(setq matchp (string-match-p val rec-val))))
 	  ;; there are matches, run through the field setters in last
 	  ;; element of the sexp
 	  (dolist (attribute style)
