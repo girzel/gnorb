@@ -244,7 +244,7 @@ is non-nil (as in interactive calls) be verbose."
 (defun gnorb-bbdb-configure-posting-styles (recs)
   ;; My most magnificent work of copy pasta!
   (dolist (r recs)
-    (let (field val label rec-val element filep matchp
+    (let (field val label rec-val element filep
 		element v value results name address)
       (dolist (style gnorb-bbdb-posting-styles)
 	(setq field (pop style)
@@ -255,28 +255,34 @@ is non-nil (as in interactive calls) be verbose."
 	(unless (fboundp field)
 	  ;; what's the record's existing value for this field?
 	  (setq rec-val (bbdb-record-field r field)))
-	(when (cond
-	       ((eq field 'address)
-		(dolist (a rec-val matchp)
-		  (unless (and label
-			       (not (string-match label (car a))))
-		    (setq matchp
+	(when (catch 'match
+		(cond
+		 ((eq field 'address)
+		  (dolist (a rec-val matchp)
+		    (unless (and label
+				 (not (string-match label (car a))))
+		      (when
 			  (string-match-p
 			   val
-			   (bbdb-format-address-default a))))))
-	       ((eq field 'phone)
-		(dolist (p rec-val matchp)
-		  (unless (and label
-			       (not (string-match label (car p))))
-		    (setq matchp
-			  (string-match-p val (bbdb-phone-string p))))))
-	       ((consp rec-val)
-		(dolist (f rec-val matchp)
-		  (setq matchp (string-match-p val f))))
-	       ((fboundp field)
-		(setq matchp (funcall field r)))
-	       ((stringp rec-val)
-		(setq matchp (string-match-p val rec-val))))
+			   (bbdb-format-address-default a))
+			(throw 'match)))))
+		 ((eq field 'phone)
+		  (dolist (p rec-val matchp)
+		    (unless (and label
+				 (not (string-match label (car p))))
+		      (when
+			  (string-match-p val (bbdb-phone-string p))
+			(throw 'match)))))
+		 ((consp rec-val)
+		  (dolist (f rec-val matchp)
+		    (when (string-match-p val f)
+		      (throw 'catch))))
+		 ((fboundp field)
+		  (when (matchp (funcall field r))
+		    (throw 'catch)))
+		 ((stringp rec-val)
+		  (when (string-match-p val rec-val)
+		    (throw 'match)))))
 	  ;; there are matches, run through the field setters in last
 	  ;; element of the sexp
 	  (dolist (attribute style)
