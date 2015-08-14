@@ -334,24 +334,27 @@ agenda. Then let the user choose an action from the value of
   "Return pretty outline path of the Org heading indicated by ID.
 
 If the KW argument is true, add the TODO keyword into the path."
-  (org-with-point-at (org-id-find id t)
-    (let ((el (org-element-at-point)))
-      (concat
-       (if kw
-	   (format "(%s): "
-		   (org-element-property :todo-keyword el))
-	 "")
-       (org-format-outline-path
-	(append
-	 (list
-	  (file-name-nondirectory
-	   (buffer-file-name
-	    (org-base-buffer (current-buffer)))))
-	 (org-get-outline-path)
-	 (list
-	  (replace-regexp-in-string
-	   org-bracket-link-regexp
-	   "\\3" (org-element-property :raw-value el)))))))))
+  (let ((pt (org-id-find id t)))
+    (if pt
+	(org-with-point-at pt
+	  (let ((el (org-element-at-point)))
+	    (concat
+	     (if kw
+		 (format "(%s): "
+			 (org-element-property :todo-keyword el))
+	       "")
+	     (org-format-outline-path
+	      (append
+	       (list
+		(file-name-nondirectory
+		 (buffer-file-name
+		  (org-base-buffer (current-buffer)))))
+	       (org-get-outline-path)
+	       (list
+		(replace-regexp-in-string
+		 org-bracket-link-regexp
+		 "\\3" (org-element-property :raw-value el))))))))
+      "[none]")))
 
 (defun gnorb-scan-links (bound &rest types)
   "Scan from point to BOUND looking for links of type in TYPES.
