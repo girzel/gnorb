@@ -235,7 +235,9 @@ number of tracked messages, the number of tracked headings, and how much of the 
   (let ((messages (length (gnorb-registry-tracked-messages)))
 	(headings (length (gnorb-registry-tracked-headings)))
 	(reg-size (registry-size gnus-registry-db))
-	(reg-max-size (oref gnus-registry-db max-size)))
+	(reg-max-size (if (slot-exists-p gnus-registry-db 'max-size)
+			  (oref gnus-registry-db max-size)
+			(oref gnus-registry-db max-hard))))
     (with-current-buffer "*Gnorb Usage*"
       (let ((inhibit-read-only t))
        (erase-buffer)
