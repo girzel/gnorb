@@ -177,9 +177,10 @@ we came from."
 		   strings)
 		  ((numberp gnorb-org-mail-scan-scope)
 		   (cl-subseq
-		    strings 0 (min
-			       (length strings)
-			       (1+ gnorb-org-mail-scan-scope))))
+		    (nreverse strings)
+		    0 (min
+		       (length strings)
+		       (1+ gnorb-org-mail-scan-scope))))
 		  ;; We could provide more options here. 'tree vs
 		  ;; 'subtree, for instance.
 		  (t
