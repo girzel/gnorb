@@ -258,31 +258,31 @@ is non-nil (as in interactive calls) be verbose."
 	(when (catch 'match
 		(cond
 		 ((eq field 'address)
-		  (dolist (a rec-val matchp)
+		  (dolist (a rec-val)
 		    (unless (and label
 				 (not (string-match label (car a))))
 		      (when
 			  (string-match-p
 			   val
 			   (bbdb-format-address-default a))
-			(throw 'match)))))
+			(throw 'match t)))))
 		 ((eq field 'phone)
-		  (dolist (p rec-val matchp)
+		  (dolist (p rec-val)
 		    (unless (and label
 				 (not (string-match label (car p))))
 		      (when
 			  (string-match-p val (bbdb-phone-string p))
-			(throw 'match)))))
+			(throw 'match t)))))
 		 ((consp rec-val)
-		  (dolist (f rec-val matchp)
+		  (dolist (f rec-val)
 		    (when (string-match-p val f)
-		      (throw 'match))))
+		      (throw 'match t))))
 		 ((fboundp field)
-		  (when (matchp (funcall field r))
-		    (throw 'match)))
+		  (when (string-match-p (funcall field r))
+		    (throw 'match t)))
 		 ((stringp rec-val)
 		  (when (string-match-p val rec-val)
-		    (throw 'match)))))
+		    (throw 'match t)))))
 	  ;; there are matches, run through the field setters in last
 	  ;; element of the sexp
 	  (dolist (attribute style)
