@@ -177,7 +177,7 @@ we came from."
 		   strings)
 		  ((numberp gnorb-org-mail-scan-scope)
 		   (cl-subseq
-		    (nreverse strings)
+		    (reverse strings)
 		    0 (min
 		       (length strings)
 		       (1+ gnorb-org-mail-scan-scope))))
