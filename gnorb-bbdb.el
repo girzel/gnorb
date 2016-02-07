@@ -442,7 +442,7 @@ a prefix arg and \"*\", the prefix arg must come first."
 
 ;;;###autoload
 (defun gnorb-bbdb-cite-contact (rec)
-  (interactive (list (gnorb-prompt-for-bbdb-record)))
+  (interactive (list (bbdb-completing-read-record "Record: ")))
   (let ((mail-string (bbdb-dwim-mail rec)))
    (if (called-interactively-p 'any)
        (insert mail-string)

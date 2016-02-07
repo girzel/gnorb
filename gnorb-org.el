@@ -123,7 +123,7 @@ There's really no reason to use this instead of regular old
 `org-insert-link' with BBDB completion. But there might be in the
 future!"
   ;; this needs to handle an active region.
-  (interactive (list (gnorb-prompt-for-bbdb-record)))
+  (interactive (list (bbdb-completing-read-record "Record: ")))
   (let* ((name (bbdb-record-name rec))
 	 (link (concat "bbdb:" (org-link-escape name))))
     (org-store-link-props :type "bbdb" :name name

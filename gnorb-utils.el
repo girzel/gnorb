@@ -39,21 +39,6 @@
 `gnorb-org-trigger-actions'"
  "September 8, 2014" 'set)
 
-(defun gnorb-prompt-for-bbdb-record ()
-  "Prompt the user for a BBDB record."
-  (let ((recs (bbdb-records))
-	name)
-    (while (> (length recs) 1)
-      (setq name
-	    (completing-read
-	     (format "Filter records by regexp (%d remaining): "
-		     (length recs))
-	     (mapcar 'bbdb-record-name recs)))
-      (setq recs (bbdb-search recs name name name nil nil)))
-    (if recs
-	(car recs)
-      (error "No matching records"))))
-
 (defvar gnorb-tmp-dir (make-temp-file "emacs-gnorb" t)
   "Temporary directory where attachments etc are saved.")
 
