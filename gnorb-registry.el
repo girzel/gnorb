@@ -280,7 +280,7 @@ your Org files."
        (let ((id (org-id-get))
 	     (props (org-entry-get-multivalued-property
 	       (point) gnorb-org-msg-id-key))
-	     links group id)
+	     links group)
 	(when props
 	  ;; If the property is set, we should probably assume that any
 	  ;; Gnus links in the subtree are relevant, and should also be
@@ -293,7 +293,6 @@ your Org files."
 	     (cl-second (split-string l "#")) nil nil
 	     id (cl-first (split-string l "#"))))
 	  (dolist (p props)
-	    (setq id )
 	    (gnorb-registry-make-entry p nil nil id nil)
 	    ;; This function will try to find the group for the message
 	    ;; and set that value on the registry entry if it can find
