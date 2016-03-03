@@ -144,26 +144,33 @@ be scanned for gnus messages, and those messages displayed."
 	  (when rel-msg-id
 	    (setq msg-ids (append (delq nil rel-msg-id) msg-ids)))))
       (when msg-ids
-	  (dolist (id msg-ids)
-	    (let ((link (gnorb-msg-id-to-link id)))
-	      (when link
-		(push link links)))))
-      (setq links (delete-dups links))
+	(dolist (id msg-ids)
+	  (let ((link (gnorb-msg-id-to-link id)))
+	    (when link
+	      (push link links)))))
+      (setq links (sort (delete-dups links) 'string<))
       (unless (gnus-alive-p)
 	(gnus))
       (dolist (m links (when vectors
-			 (nreverse vectors)))
-	(let (server-group msg-id result artno)
+			 (reverse vectors)))
+	(let (server-group msg-id artno check)
 	  (setq m (org-link-unescape m))
 	  (when (string-match "\\`\\([^#]+\\)\\(#\\(.*\\)\\)?" m)
 	    (setq server-group (match-string 1 m)
 		  msg-id (gnorb-bracket-message-id
 			  (match-string 3 m))
-		  result (ignore-errors (gnus-request-head msg-id server-group)))
-	    (when result
-	     (setq artno (cdr result))
-	     (when (and (integerp artno) (> artno 0))
-	       (push (vector server-group artno 100) vectors)))))))))
+		  artno (or (car (gnus-registry-get-id-key msg-id 'artno))
+			    (when (setq check
+					(cdr (ignore-errors
+					       (gnus-request-head
+						msg-id server-group))))
+			      (gnus-registry-set-id-key
+			       msg-id 'artno
+			       (list check))
+			      check)))
+	    (when artno
+	      (when (and (integerp artno) (> artno 0))
+		(push (vector server-group artno 100) vectors)))))))))
 
 (defvar gnorb-summary-minor-mode-map (make-sparse-keymap)
   "Keymap for use in Gnorb's *Summary* minor mode.")

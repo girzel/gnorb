@@ -189,13 +189,16 @@ window."
   ;; We've probably already bracketed the id, but just in case this is
   ;; called from elsewhere...
   (let* ((id (gnorb-bracket-message-id id))
-	 (art-no (cdr (gnus-request-head id group)))
 	 (arts (gnus-group-unread group))
-	 success)
+	 artno success)
+    (or (setq artno (car (gnus-registry-get-id-key id 'artno)))
+	(progn
+	  (setq artno (cdr (gnus-request-head id group)))
+	  (gnus-registry-set-id-key id 'artno (list artno))))
     (gnus-activate-group group)
     (setq success (gnus-group-read-group arts t group))
     (if success
-	(gnus-summary-goto-article (or art-no id) nil t)
+	(gnus-summary-goto-article arto nil t)
       (signal 'error "Group could not be opened."))))
 
 (defun gnorb-trigger-todo-action (arg &optional id)
@@ -386,24 +389,27 @@ message."
 So far we're checking the registry, then the groups in
 `gnorb-gnus-sent-groups'. Use search engines? Other clever
 methods?"
-  (let (candidates server-group)
+  (let (candidates server-group check)
     (setq msg-id (gnorb-bracket-message-id msg-id))
     (catch 'found
       (when gnorb-tracking-enabled
-	;; Make a big list of all the groups where this message might
-	;; conceivably be.
-	(setq candidates
-	      (append (gnus-registry-get-id-key msg-id 'group)
-		      gnorb-gnus-sent-groups))
-	(while (setq server-group (pop candidates))
-	  (when (and (stringp server-group)
-		     (not
-		      (string-match-p
-		       "\\(nnir\\|nnvirtual\\|UNKNOWN\\)"
-		       server-group))
-		     (ignore-errors
-		       (gnus-request-head msg-id server-group)))
-		(throw 'found server-group))))
+	(setq candidates (gnus-registry-get-id-key msg-id 'group))
+	(if (= 1 (length candidates))
+	    (throw 'found (car candidates))
+	  (setq candidates (append candidates gnorb-gnus-sent-groups))
+	  (while (setq server-group (pop candidates))
+	    (when (and (stringp server-group)
+		       (not
+			(string-match-p
+			 "\\(nnir\\|nnvirtual\\|UNKNOWN\\)"
+			 server-group)))
+	      (setq check
+		    (ignore-errors
+		      (gnus-request-head msg-id server-group)))
+	      (when check
+		(gnus-registry-set-id-key msg-id 'group (list (car check)))
+		(gnus-registry-set-id-key msg-id 'artno (list (cdr check)))
+		(throw 'found (car check)))))))
       nil)))
 
 (defun gnorb-collect-ids (&optional id)
@@ -484,6 +490,7 @@ registry be in use, and should be called after the call to
   (require 'gnorb-registry)
   (with-eval-after-load 'gnus-registry
     (add-to-list 'gnus-registry-extra-entries-precious 'gnorb-ids)
+    (add-to-list 'gnus-registry-extra-entries-precious 'artno)
     (add-to-list 'gnus-registry-track-extra 'gnorb-ids))
   (add-hook
    'gnus-started-hook
