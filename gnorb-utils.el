@@ -198,7 +198,7 @@ window."
     (gnus-activate-group group)
     (setq success (gnus-group-read-group arts t group))
     (if success
-	(gnus-summary-goto-article arto nil t)
+	(gnus-summary-goto-article artno nil t)
       (signal 'error "Group could not be opened."))))
 
 (defun gnorb-trigger-todo-action (arg &optional id)
