@@ -399,6 +399,7 @@ methods?"
 	  (setq candidates (append candidates gnorb-gnus-sent-groups))
 	  (while (setq server-group (pop candidates))
 	    (when (and (stringp server-group)
+		       (string-match-p "+" server-group)
 		       (not
 			(string-match-p
 			 "\\(nnir\\|nnvirtual\\|UNKNOWN\\)"
@@ -407,7 +408,7 @@ methods?"
 		    (ignore-errors
 		      (gnus-request-head msg-id server-group)))
 	      (when check
-		(gnus-registry-set-id-key msg-id 'group (list (car check)))
+		(gnus-registry-set-id-key msg-id 'group (list server-group))
 		(gnus-registry-set-id-key msg-id 'artno (list (cdr check)))
 		(throw 'found (car check)))))))
       nil)))
