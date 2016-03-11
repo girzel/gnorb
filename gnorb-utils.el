@@ -160,6 +160,8 @@ link.
 
 3. Otherwise just follow the link as usual, in the current
 window."
+  (unless (gnus-alive-p)
+    (gnus))
   (let* ((sum-buffer (gnus-summary-buffer-name group))
 	 (target-buffer
 	  (cond
