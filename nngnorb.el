@@ -269,7 +269,14 @@ continue to provide tracking of sent messages."
 (defun gnorb-summary-reply-hook (&rest args)
   "Function that runs after any command that creates a reply."
   ;; Not actually a "hook"
-  (let* ((msg-id (aref message-reply-headers 4))
+  (let* ((msg-id (if message-reply-headers
+		     (aref message-reply-headers 4)
+		   ;; When forwarding messages,
+		   ;; `message-reply-headers' is nil.
+		   (save-excursion
+		     (let ((case-fold-search t))
+		       (when (re-search-forward "message-id: +\\(.*\\)$" (point-max) t)
+			 (match-string 1))))))
 	 (org-id (car-safe (gnus-registry-get-id-key msg-id 'gnorb-ids)))
 	 (compose-marker (make-marker))
 	 (attachments (buffer-local-value
