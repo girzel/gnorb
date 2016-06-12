@@ -220,11 +220,11 @@ See the docstring of `gnorb-org-handle-mail' for details."
 	      (cl-remove-if
 	       (lambda (m)
 		 (let ((from (car (gnus-registry-get-id-key m 'sender))))
-		   (or (null from)
-		       (string-match-p
-			user-mail-address from)
-		       (string-match-p
-			message-alternative-emails from))))
+		   (and from
+			(null (or (string-match-p
+				   user-mail-address from)
+				  (string-match-p
+				   message-alternative-emails from))))))
 	       assoc-msg-ids)
 	      (lambda (r l)
 		(time-less-p
