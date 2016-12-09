@@ -744,7 +744,7 @@ option `gnorb-gnus-hint-relevant-article' is non-nil."
 			"M-x gnorb-gnus-incoming-do-todo")))
 	    (t nil)))))
 
-(add-hook 'gnus-article-prepare-hook 'gnorb-gnus-hint-relevant-message)
+(add-hook 'gnus-select-article-hook 'gnorb-gnus-hint-relevant-message)
 
 (defun gnorb-gnus-insert-format-letter-maybe (header)
   (if (not (memq (car (gnus-find-method-for-group
