@@ -208,6 +208,17 @@ See the docstring of `gnorb-org-handle-mail' for details."
 	     (gnorb-collect-ids)))))
       (gnorb-org-extract-mail-tracking assoc-msg-ids arg region))))
 
+(defun gnorb-user-address-match-p (addr)
+  "Return t if ADDR seems to match the user's email address."
+  (cond
+   ((stringp message-alternative-emails)
+    (string-match-p message-alternative-emails
+		    addr))
+   ((functionp message-alternative-emails)
+    (funcall message-alternative-emails addr))
+   (user-mail-address
+    (string-match-p user-mail-address addr))))
+
 (defun gnorb-org-extract-mail-tracking (assoc-msg-ids &optional arg region)
 
   (let* ((all-links (gnorb-org-extract-links nil region))
@@ -221,10 +232,7 @@ See the docstring of `gnorb-org-handle-mail' for details."
 	       (lambda (m)
 		 (let ((from (car (gnus-registry-get-id-key m 'sender))))
 		   (and from
-			(null (or (string-match-p
-				   user-mail-address from)
-				  (string-match-p
-				   message-alternative-emails from))))))
+			(null (gnorb-user-address-match-p from)))))
 	       assoc-msg-ids)
 	      (lambda (r l)
 		(time-less-p
