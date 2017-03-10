@@ -498,6 +498,11 @@ registry be in use, and should be called after the call to
   (add-hook
    'gnus-started-hook
    (lambda ()
+     ;; The require may be necessary in order to get
+     ;; `gnus-user-format-function-g' defined before it's used.  That
+     ;; function is likely the first hit on gnorb-gnus, and there's no
+     ;; way to autoload it, as it is dynamically defined.
+     (require 'gnorb-gnus)
      (unless (gnus-registry-install-p)
        (user-error "Gnorb tracking requires that the Gnus registry be installed."))
      (add-hook 'org-capture-mode-hook 'gnorb-registry-capture)
