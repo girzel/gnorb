@@ -20,11 +20,14 @@
 
 ;;; Commentary:
 
-;; 
+;; The Gnorb package has no hard dependency on BBDB, so you'll have to
+;; install it manually.  Gnorb is compatible with whichever version of
+;; BBDB is current in the Emacs package manager.  I believe it comes
+;; from Melpa.
 
 ;;; Code:
 
-(require 'bbdb nil t)
+(require 'bbdb)
 (require 'gnorb-utils)
 (require 'cl-lib)
 
@@ -158,8 +161,8 @@ An example value might look like:"
 
   (fset (intern (format "bbdb-display-%s-multi-line"
 			gnorb-bbdb-org-tag-field))
-	(lambda (record)
-	  (gnorb-bbdb-display-org-tags record))))
+	(lambda (record indent)
+	  (gnorb-bbdb-display-org-tags record indent))))
 
 (defun gnorb-bbdb-read-org-tags (&optional init)
   "Read Org mode tags, with `completing-read-multiple'."
@@ -184,7 +187,7 @@ An example value might look like:"
     (bbdb-split gnorb-bbdb-org-tag-field
 		(bbdb-read-string "Tags: " init))))
 
-(defun gnorb-bbdb-display-org-tags (record)
+(defun gnorb-bbdb-display-org-tags (record indent)
   "Display the Org tags associated with the record.
 
 Org tags are stored in the `gnorb-bbdb-org-tags-field'."
@@ -194,16 +197,14 @@ Org tags are stored in the `gnorb-bbdb-org-tags-field'."
 	      record
 	      gnorb-bbdb-org-tag-field)))
     (when val
-      ;; We already know that `fmt' and `indent' are dynamically
-      ;; bound, shut up about it.
-      (with-no-warnings
-       (bbdb-display-text (format fmt gnorb-bbdb-org-tag-field)
-			  `(xfields ,full-field field-label)
-			  'bbdb-field-name)
-       (if (consp val)
-	   (bbdb-display-list val gnorb-bbdb-org-tag-field "\n")
-	 (insert
-	  (bbdb-indent-string (concat val "\n") indent)))))))
+      (bbdb-display-text (format (format " %%%ds: " (- indent 3))
+				 gnorb-bbdb-org-tag-field)
+			 `(xfields ,full-field field-label)
+			 'bbdb-field-name)
+      (if (consp val)
+	  (bbdb-display-list val gnorb-bbdb-org-tag-field "\n")
+	(insert
+	 (bbdb-indent-string (concat val "\n") indent))))))
 
 (defvar message-mode-hook)
 
@@ -452,7 +453,7 @@ a prefix arg and \"*\", the prefix arg must come first."
 (when (boundp 'bbdb-xfield-label-list)
  (add-to-list 'bbdb-xfield-label-list gnorb-bbdb-messages-field nil 'eq))
 
-(defun gnorb-bbdb-display-messages (record format)
+(defun gnorb-bbdb-display-messages (record format &optional indent)
   "Show links to the messages collected in the
 `gnorb-bbdb-messages-field' field of a BBDB record. Each link
 will be formatted using the format string in
@@ -468,14 +469,13 @@ layout type."
     (define-key map (kbd "<RET>") 'gnorb-bbdb-RET-open-link)
     (when val
       (when (eq format 'multi)
-	(with-no-warnings ; For `fmt'
-	  (bbdb-display-text (format fmt gnorb-bbdb-messages-field)
-			     `(xfields ,full-field field-label)
-			     'bbdb-field-name)))
+	(bbdb-display-text (format (format " %%%ds: " (- indent 3))
+				   gnorb-bbdb-messages-field)
+			   `(xfields ,full-field field-label)
+			   'bbdb-field-name))
       (insert (cond ((and (stringp val)
 			  (eq format 'multi))
-		     (with-no-warnings ; For `indent'
-		       (bbdb-indent-string (concat val "\n") indent)))
+		     (bbdb-indent-string (concat val "\n") indent))
 		    ((listp val)
 		     ;; Why aren't I using `bbdb-display-list' with a
 		     ;; preformatted list of messages?
@@ -510,8 +510,8 @@ layout type."
 
 (fset (intern (format "bbdb-display-%s-multi-line"
 		      gnorb-bbdb-messages-field))
-      (lambda (record)
-	(gnorb-bbdb-display-messages record 'multi)))
+      (lambda (record indent)
+	(gnorb-bbdb-display-messages record 'multi indent)))
 
 (fset (intern (format "bbdb-display-%s-one-line"
 		      gnorb-bbdb-messages-field))
