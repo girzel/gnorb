@@ -81,6 +81,8 @@ which we're triggering."
 (defcustom gnorb-org-mail-scan-scope 2
   "Number of paragraphs to scan for mail-related links.
 
+Or set to 'all to scan the whole subtree.
+
 When handling a TODO heading with `gnorb-org-handle-mail', Gnorb
 will typically reply to the most recent message associated with
 this heading. If there are no such messages, or message tracking
