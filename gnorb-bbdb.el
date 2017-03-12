@@ -107,7 +107,7 @@ mentioned in the docstring of `format-time-string', which see."
   :group 'gnorb-bbdb
   :type 'string)
 
-(defface gnorb-bbdb-link 'org-link
+(defface gnorb-bbdb-link '((t :inherit org-link))
   "Custom face for displaying message links in the *BBDB* buffer.
   Defaults to org-link."
   :group 'gnorb-bbdb)
