@@ -28,6 +28,8 @@
 ;;; Code:
 
 (require 'bbdb)
+(require 'bbdb-com)
+(require 'bbdb-mua)
 (require 'gnorb-utils)
 (require 'cl-lib)
 
@@ -105,7 +107,7 @@ mentioned in the docstring of `format-time-string', which see."
   :group 'gnorb-bbdb
   :type 'string)
 
-(defface gnorb-bbdb-link (org-compatible-face 'org-link nil)
+(defface gnorb-bbdb-link 'org-link
   "Custom face for displaying message links in the *BBDB* buffer.
   Defaults to org-link."
   :group 'gnorb-bbdb)
@@ -148,10 +150,10 @@ returns either t or nil. In this case, the second element of the
 list is disregarded.
 
 All following elements should be field setters for the message to
-be composed, just as in `gnus-posting-styles'.
+be composed, just as in `gnus-posting-styles'."
 
-An example value might look like:"
-  :group 'gnorb-bbdb)
+  :group 'gnorb-bbdb
+  :type 'list)
 
 (when (fboundp 'bbdb-record-xfield-string)
   (fset (intern (format "bbdb-read-xfield-%s"
@@ -174,12 +176,12 @@ An example value might look like:"
 		     "[ \t\n]*"))
 	    (crm-local-completion-map bbdb-crm-local-completion-map)
 	    (table (cl-mapcar #'car
-			   (org-global-tags-completion-table
-			    (org-agenda-files))))
+			      (org-global-tags-completion-table
+			       (org-agenda-files))))
 	    (init (if (consp init)
-		      (bbdb-join init
-				 (nth 2 (assq gnorb-bbdb-org-tag-field
-					      bbdb-separator-alist)))
+		      (apply #'bbdb-concat (nth 2 (assq gnorb-bbdb-org-tag-field
+							bbdb-separator-alist))
+			     init)
 		    init)))
 	(completing-read-multiple
 	 "Tags: " table
@@ -245,7 +247,7 @@ is non-nil (as in interactive calls) be verbose."
 (defun gnorb-bbdb-configure-posting-styles (recs)
   ;; My most magnificent work of copy pasta!
   (dolist (r recs)
-    (let (field val label rec-val element filep
+    (let (field val label rec-val filep
 		element v value results name address)
       (dolist (style gnorb-bbdb-posting-styles)
 	(setq field (pop style)
@@ -334,7 +336,6 @@ is non-nil (as in interactive calls) be verbose."
       (setq name (assq 'name results)
 	    address (assq 'address results))
       (setq results (delq name (delq address results)))
-      (gnus-make-local-hook 'message-setup-hook)
       (setq results (sort results (lambda (x y)
 				    (string-lessp (car x) (car y)))))
       (dolist (result results)
@@ -522,7 +523,7 @@ layout type."
 
 (fset (intern (format "bbdb-read-xfield-%s"
 		      gnorb-bbdb-messages-field))
-      (lambda (&optional init)
+      (lambda (&optional _init)
 	(user-error "This field shouldn't be edited manually")))
 
 ;; Open links from the *BBDB* buffer.
@@ -545,8 +546,7 @@ that contact will start collecting links to messages."
 		current-prefix-arg))
   (unless (fboundp 'bbdb-record-xfield-string)
     (user-error "This function only works with the git version of BBDB"))
-  (let* ((record (bbdb-current-record))
-	 msg-list target-msg)
+  (let (msg-list target-msg)
     (if (not (memq gnorb-bbdb-messages-field
 		   (mapcar 'car (bbdb-record-xfields record))))
 	(when (y-or-n-p

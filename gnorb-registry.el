@@ -97,7 +97,7 @@ to the message's registry entry, under the 'gnorb-ids key."
   (when (and (org-capture-get :gnorb-id)
 	     org-note-abort)
     (with-no-warnings ; For `abort-note'
-      (condition-case error
+      (condition-case nil
 	  (let* ((msg-id (format "<%s>" (plist-get org-store-link-plist :message-id)))
 		 (existing-org-ids (gnus-registry-get-id-key msg-id 'gnorb-ids))
 		 (org-id (org-capture-get :gnorb-id)))
@@ -154,7 +154,7 @@ after an Org heading is deleted, for instance."
   (let ((assoc-msgs (gnorb-registry-org-id-search org-id))
 	(gnorb-id-tracker
 	 (registry-lookup-secondary gnus-registry-db 'gnorb-ids)))
-    (mapcar
+    (mapc
      (lambda (msg-id)
        (let ((org-ids
 	      (gnus-registry-get-id-key msg-id 'gnorb-ids)))
@@ -230,7 +230,7 @@ number of tracked messages, the number of tracked headings, and how much of the 
 				 (gnorb-flush-dead-associations t)
 				 (gnorb-refresh-usage-status))))))
 
-(defun gnorb-refresh-usage-status (&optional ignore-auto noconfirm)
+(defun gnorb-refresh-usage-status ()
   "Clear and re-format the *Gnorb Usage* buffer."
   (let ((messages (length (gnorb-registry-tracked-messages)))
 	(headings (length (gnorb-registry-tracked-headings)))
@@ -280,7 +280,7 @@ your Org files."
        (let ((id (org-id-get))
 	     (props (org-entry-get-multivalued-property
 	       (point) gnorb-org-msg-id-key))
-	     links group)
+	     links)
 	(when props
 	  ;; If the property is set, we should probably assume that any
 	  ;; Gnus links in the subtree are relevant, and should also be

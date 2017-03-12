@@ -24,15 +24,19 @@
 
 ;;; Code:
 
-(require 'cl-lib)
+(eval-when-compile (require 'cl-lib))
 (require 'pcase)
+(require 'org)
+(require 'org-agenda)
+(require 'org-element)
 
 (require 'mailcap)
 (mailcap-parse-mimetypes)
 
 (defgroup gnorb nil
   "Glue code between Gnus, Org, and BBDB."
-  :tag "Gnorb")
+  :tag "Gnorb"
+  :group 'mail)
 
 (make-obsolete-variable
  'gnorb-trigger-todo-default
@@ -303,7 +307,7 @@ numbers (no upper bound)."
 	(when-let ((win (get-buffer-window gnorb-select-choice-buffer)))
 	  (quit-window win))))))
 
-(defun gnorb-trigger-todo-action (arg &optional id)
+(defun gnorb-trigger-todo-action (_arg &optional id)
   "Do the actual restore action. Two main things here. First: if
 we were in the agenda when this was called, then keep us in the
 agenda. Then let the user choose an action from the value of

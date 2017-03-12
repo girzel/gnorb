@@ -25,7 +25,25 @@
 ;;; Code:
 
 (require 'gnorb-utils)
-(require 'cl-lib)
+(eval-when-compile (require 'cl-lib))
+
+(defvar gnorb-bbdb-posting-styles)
+(defvar gnorb-bbdb-org-tag-field)
+(defvar bbdb-buffer-name)
+(defvar message-alternative-emails)
+
+;; This many autoloads means either we should require bbdb outright,
+;; or something needs refactoring.
+(autoload 'gnorb-bbdb-configure-posting-styles "gnorb-bbdb")
+(autoload 'gnorb-registry-org-id-search "gnorb-registry")
+(autoload 'bbdb-completing-read-record "bbdb")
+(autoload 'bbdb-record-name "bbdb")
+(autoload 'bbdb-message-search "bbdb")
+(autoload 'bbdb-mail-address "bbdb")
+(autoload 'bbdb-record-xfield "bbdb")
+(autoload 'bbdb-records "bbdb")
+(autoload 'bbdb-search "bbdb")
+(autoload 'bbdb-display-records "bbdb")
 
 (defgroup gnorb-org nil
   "The Org bits of Gnorb."
@@ -89,7 +107,10 @@ is disabled entirely, or `gnorb-org-handle-mail' has been called
 with a prefix arg, the heading and body text of the subtree under
 point will instead be scanned for gnus:, mailto:, and bbdb:
 links. This option controls how many paragraphs of body text to
-scan. Set to 0 to only look in the heading.")
+scan. Set to 0 to only look in the heading."
+  :group 'gnorb-org
+  :type '(choice (const :tag "Whole subtree" all)
+		 (integer :tag "Number of paragraphs")))
 
 (make-obsolete-variable
  'gnorb-org-mail-scan-strategies
@@ -147,7 +168,7 @@ we came from."
   (setq gnorb-message-org-ids nil)
   (gnorb-restore-layout))
 
-(defun gnorb-org-extract-links (&optional arg region)
+(defun gnorb-org-extract-links (&optional _arg region)
   "See if there are viable links in the subtree under point."
   ;; We're not currently using the arg. What could we do with it?
   (let (strings)
@@ -489,7 +510,9 @@ async, subtreep, visible-only, and body-only."
   "Correspondence between export backends and their
 respective (usual) file extensions. Ugly way to do it, but what
 the hey..."
-  :group 'gnorb-org)
+  :group 'gnorb-org
+  :type '(repeat
+	  (list symbol string)))
 
 (defvar org-export-show-temporary-export-buffer)
 
@@ -554,7 +577,8 @@ default set of parameters."
   "Should the capture process store a link to the gnus message or
   BBDB record under point, even if it's not part of the template?
   You'll probably end up needing it, anyway."
-  :group 'gnorb-org)
+  :group 'gnorb-org
+  :type 'boolean)
 
 (defun gnorb-org-capture-collect-link ()
   (when gnorb-org-capture-collect-link-p
@@ -577,7 +601,8 @@ default set of parameters."
 Records are considered matching if they have an `org-tags' field
 matching the current Agenda search. The name of that field can be
 customized with `gnorb-bbdb-org-tag-field'."
-  :group 'gnorb-org)
+  :group 'gnorb-org
+  :type 'boolean)
 
 (defcustom gnorb-org-bbdb-popup-layout 'pop-up-multi-line
   "Default BBDB buffer layout for automatic Org Agenda display."
@@ -606,7 +631,7 @@ search."
 		 (eq org-agenda-type 'tags))
 	    (or (called-interactively-p 'any)
 		gnorb-org-agenda-popup-bbdb))
-	   (let ((todo-only nil)
+	   (let ((org--matcher-tags-todo-only nil)
 		 (str (or str org-agenda-query-string))
 		 (re "^&?\\([-+:]\\)?\\({[^}]+}\\|LEVEL\\([<=>]\\{1,2\\}\\)\\([0-9]+\\)\\|\\(\\(?:[[:alnum:]_]+\\(?:\\\\-\\)*\\)+\\)\\([<>=]\\{1,2\\}\\)\\({[^}]+}\\|\"[^\"]*\"\\|-?[.0-9]+\\(?:[eE][-+]?[0-9]+\\)?\\)\\|[[:alnum:]_@#%]+\\)")
 		 or-terms term rest out-or acc tag-clause)
@@ -635,6 +660,7 @@ search."
 						  rec-tags))
 				     (case-fold-search t)
 				     (org-trust-scanner-tags t))
+				 ;; This is bad, we're lexically bound, now.
 				 (eval tag-clause)))))
 		      (bbdb-records))))))
 	  ((eq major-mode 'org-mode)

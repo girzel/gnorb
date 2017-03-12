@@ -25,12 +25,21 @@
 ;;; Code:
 
 (require 'gnus)
+(require 'gnus-sum)
+(require 'gnus-art)
+(require 'message)
+(require 'org)
+(require 'org-attach)
+(require 'org-capture)
 (require 'gnorb-utils)
+(require 'mm-decode)
 
 (declare-function org-gnus-article-link "org-gnus"
 		  (group newsgroups message-id x-no-archive))
 (declare-function org-gnus-follow-link "org-gnus"
 		  (group article))
+
+(defvar org-refile-targets)
 
 (defgroup gnorb-gnus nil
   "The Gnus bits of Gnorb."
@@ -160,7 +169,7 @@ each message."
     (when data
       (gnorb-gnus-attach-part data))))
 
-(defun gnorb-gnus-attach-part (handle &optional org-heading)
+(defun gnorb-gnus-attach-part (handle)
   "Attach HANDLE to an existing org heading."
   (let* ((filename (gnorb-gnus-save-part handle))
 	 (org-refile-targets gnorb-gnus-trigger-refile-targets)
@@ -246,7 +255,7 @@ save them into `gnorb-tmp-dir'."
     (when (and org-note-abort
 	       (or gnorb-gnus-capture-always-attach
 		   (org-capture-get :gnus-attachments)))
-     (condition-case error
+     (condition-case nil
 	 (progn (org-attach-delete-all)
 		(setq abort-note 'clean)
 		;; remove any gnorb-mail-header values here
