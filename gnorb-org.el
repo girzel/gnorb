@@ -444,7 +444,7 @@ around that link before you call this message."
 	       (message-mode-hook (copy-sequence message-mode-hook))
 	       mails)
 	  (when file
-	    (cons file attachments))
+	    (setq attachments (cons file attachments)))
 	  (when recs
 	    (setq recs
 		  (delq nil
