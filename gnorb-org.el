@@ -1,4 +1,4 @@
-;;; gnorb-org.el --- The Org-centric functions of gnorb
+;;; gnorb-org.el --- The Org-centric functions of gnorb -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014  Free Software Foundation, Inc.
 

@@ -1,4 +1,4 @@
-;;; gnorb-bbdb.el --- The BBDB-centric functions of gnorb
+;;; gnorb-bbdb.el --- The BBDB-centric functions of gnorb  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014  Free Software Foundation, Inc.
 

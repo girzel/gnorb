@@ -1,4 +1,4 @@
-;;; gnorb-utils.el --- Common utilities for all gnorb stuff.
+;;; gnorb-utils.el --- Common utilities for all gnorb stuff -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014  Free Software Foundation, Inc.
 

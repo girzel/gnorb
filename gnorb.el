@@ -1,4 +1,4 @@
-;;; gnorb.el --- Glue code between Gnus, Org, and BBDB
+;;; gnorb.el --- Glue code between Gnus, Org, and BBDB -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014  Free Software Foundation, Inc.
 

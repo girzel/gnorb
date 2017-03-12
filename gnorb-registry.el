@@ -1,4 +1,4 @@
-;;; gnorb-registry.el --- Registry implementation for Gnorb
+;;; gnorb-registry.el --- Registry implementation for Gnorb -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014  Free Software Foundation, Inc.
 

@@ -1,4 +1,4 @@
-;;; nngnorb.el --- Gnorb backend for Gnus
+;;; nngnorb.el --- Gnorb backend for Gnus -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014  Free Software Foundation, Inc.
 
