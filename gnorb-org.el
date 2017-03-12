@@ -39,12 +39,12 @@
   :type 'hook)
 
 (defcustom gnorb-org-trigger-actions
-  '(("todo state" . todo)
-    ("take note" . note)
-    ("don't associate" . no-associate)
-    ("only associate" . associate)
-    ("capture to child" . cap-child)
-    ("capture to sibling" . cap-sib))
+  '((?t "todo state" todo)
+    (?n "take note" note)
+    (?d "don't associate" no-associate)
+    (?o "only associate" associate)
+    (?c "capture to child" cap-child)
+    (?s "capture to sibling" cap-sib))
   "List of potential actions that can be taken on headings.
 
 When triggering an Org heading after receiving or sending a
@@ -64,12 +64,11 @@ The two \"capture\" options will use the value of
 template.
 
 You can also add custom actions to the list. Actions should be a
-cons of a string tag and a symbol indicating a custom function.
-This function will be called on the heading in question, and
-passed a plist containing information about the message from
-which we're triggering."
-  :group 'gnorb-org
-  :type 'list)
+list of three elements: a character key, a string tag and a
+symbol indicating a custom function.  The custom function will be
+called on the heading in question, and passed a plist containing
+information about the message from which we're triggering."
+:group 'gnorb-org :type 'list :version "1.1.3")
 
 (defcustom gnorb-org-msg-id-key "GNORB_MSG_ID"
   "The name of the org property used to store the Message-IDs
